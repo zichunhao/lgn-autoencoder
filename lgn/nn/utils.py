@@ -26,9 +26,6 @@ class NoLayer(nn.Module):
     def num_scalars(self):
         return 0
 
-
-# Save reps
-
 def save_grads(reps):
     for part in reps.values():
         part.requires_grad_()
