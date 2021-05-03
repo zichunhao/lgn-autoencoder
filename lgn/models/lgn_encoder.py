@@ -134,10 +134,13 @@ class LGNEncoder(CGModule):
         # Get data
         node_scalars, node_ps, node_mask, edge_mask = self.prepare_input(data)
 
-        latent_features, node_mask, edge_mask = self.graph_net(node_scalars, node_ps, node_mask, edge_mask)
-
-        return latent_features, edge_mask, edge_mask
-
+        # Can be simplied as self.graph_net(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
+        if not covariance_test:
+            latent_features, node_mask, edge_mask = self.graph_net(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
+            return latent_features, edge_mask, edge_mask
+        else:
+            latent_features, node_mask, edge_mask, nodes_all = self.graph_net(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
+            return latent_features, edge_mask, edge_mask, nodes_all
     """
     Extract input from data.
 
@@ -148,7 +151,7 @@ class LGNEncoder(CGModule):
 
     Returns
     -------
-    node_scalars : `torch.Tensor`
+    scalars : `torch.Tensor`
         Tensor of scalars for each node.
     node_ps: : `torch.Tensor`
         Momenta of the nodes

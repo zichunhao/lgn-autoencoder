@@ -10,6 +10,7 @@ from lgn.models.lgn_cg import LGNCG
 
 from lgn.nn import RadialFilters
 from lgn.nn import InputLinear, MixReps
+from lgn.g_lib.g_vec import GVec
 
 class LGNGraphNet(CGModule):
     """
@@ -140,6 +141,31 @@ class LGNGraphNet(CGModule):
         self.tau_output = GTau({(0,0): tau_output_scalars, (1,1): tau_output_vectors})
         self.mix_reps = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=device, dtype=dtype)
 
+    '''
+    The forward pass of the LGN GNN.
+
+    Parameters
+    ----------
+    node_scalars : `GTensor` or `torch.Tensor`
+        The node scalar features.
+        Shape: (2, batch_size, num_input_particles, tau_input_scalars, 1).
+    node_ps : `GTensor` or `torch.Tensor`
+        The node 4-vector features.
+        Shape: (2, batch_size, num_input_particles, tau_input_scalars, 4).
+    node_mask : `torch.Tensor`
+        The mask of node features.
+    edge_mask : `torch.Tensor`
+        The mask of edge features.
+
+    Returns
+    -------
+    node_features : `dict`
+        The dictionary that stores all relevant irreps.
+    node_mask : `torch.Tensor`
+        The mask of node features. (Unchanged)
+    edge_mask : `torch.Tensor`
+        The mask of edge features. (Unchanged)
+    '''
     def forward(self, node_scalars, node_ps, node_mask, edge_mask, covariance_test=False):
         # Calculate Zonal functions (edge features)
         zonal_functions_in, _, _ = self.zonal_fns_in(node_ps)
