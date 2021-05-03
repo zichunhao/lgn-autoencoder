@@ -58,8 +58,6 @@ class LGNGraphNet(CGModule):
     activation : `str`
         Optional, default: 'leakyrelu'
         The activation function for lgn.LGNCG
-    scale : `float` or `int`
-        Scaling parameter for node features.
     mlp : `bool`
         Optional, default: True
         Whether to include the extra MLP layer on scalar features in nodes.
@@ -83,7 +81,7 @@ class LGNGraphNet(CGModule):
     def __init__(self, num_input_particles, input_basis, tau_input_scalars, tau_input_vectors,
                  num_output_partcles, tau_output_scalars, tau_output_vectors, num_basis_fn,
                  maxdim, max_zf, num_cg_levels, num_channels, weight_init, level_gain,
-                 activation='leakyrelu', scale=1., mlp=True, mlp_depth=None, mlp_width=None,
+                 activation='leakyrelu', mlp=True, mlp_depth=None, mlp_width=None,
                  device=None, dtype=torch.float64, cg_dict=None):
         if device is None:
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -107,7 +105,6 @@ class LGNGraphNet(CGModule):
         self.input_basis = input_basis
         self.num_cg_levels = num_cg_levels
         self.num_channels = num_channels
-        self.scale = scale
         self.num_output_particles = num_output_partcles
 
         # Express input momenta in the basis of spherical harmonics
@@ -124,6 +121,7 @@ class LGNGraphNet(CGModule):
 
         # Input linear layer: Prepare input to the CG layers
         tau_in = GTau({(0,0): tau_input_scalars, (1,1): tau_input_vectors})
+        self.tau_dict = {'input': tau_in}
         tau_out = GTau({(l,l): num_channels[0] for l in range(max_zf[0] + 1)})
         self.input_func_node = MixReps(tau_in, tau_out, device=device, dtype=dtype)
 
@@ -136,10 +134,12 @@ class LGNGraphNet(CGModule):
                             activation=activation, device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)
 
         self.tau_cg_levels_node = self.lgn_cg.tau_levels_node
+        self.tau_dict['cg_layers'] = self.tau_cg_levels_node
 
         # Output layers
         self.tau_cg_levels_node[-1] = GTau({weight: int(value * num_input_particles / num_output_partcles) for weight, value in self.tau_cg_levels_node[-1]})
         self.tau_output = GTau({(0,0): tau_output_scalars, (1,1): tau_output_vectors})
+        self.tau_dict['output'] = self.tau_output
         self.mix_reps = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=device, dtype=dtype)
 
     '''

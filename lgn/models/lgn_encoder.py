@@ -8,7 +8,7 @@ from lgn.g_lib import GTau
 
 from lgn.models.lgn_graphnet import LGNGraphNet
 
-class LGNEncoder(CGModule):
+class LGNEncoder(LGNGraphNet):
     """
     The encoder of the LGN autoencoder.
 
@@ -51,7 +51,7 @@ class LGNEncoder(CGModule):
         The activation function for lgn.LGNCG
     scale : `float` or `int`
         Optional, default: 1.
-        Scaling parameter for node features.
+        Scaling parameter for input node features.
     mlp : `bool`
         Optional, default: True
         Whether to include the extra MLP layer on scalar features in nodes.
@@ -93,24 +93,18 @@ class LGNEncoder(CGModule):
         max_zf = expand_var_list(max_zf, num_cg_levels)
         num_channels = expand_var_list(num_channels, num_cg_levels)
 
-        super().__init__(maxdim=max(maxdim + max_zf), device=device, dtype=dtype, cg_dict=cg_dict)
+        super().__init__(num_input_particles=num_input_particles, input_basis='cartesian',
+                         tau_input_scalars=tau_particle_scalar, tau_input_vectors=tau_particle_vector,
+                         num_output_partcles=num_latent_particles, tau_output_scalars=tau_latent_scalars, tau_output_vectors=tau_latent_vectors,
+                         max_zf=max_zf, maxdim=max(maxdim + max_zf), num_cg_levels=num_cg_levels, num_channels=num_channels,
+                         weight_init=weight_init, level_gain=level_gain, num_basis_fn=num_basis_fn,
+                         activation=activation, mlp=mlp, mlp_depth=mlp_depth, mlp_width=mlp_width,
+                         device=device, dtype=dtype, cg_dict=cg_dict)
 
-        self.num_input_particles = num_input_particles
-        self.input_basis = 'cartesian'
-        self.num_latent_particles = num_latent_particles
         self.tau_latent = GTau({(0, 0): tau_latent_scalars, (1, 1): tau_latent_vectors})
-        self.num_cg_levels = num_cg_levels
-        self.num_basis_fn = num_basis_fn
         self.scale = scale
 
-        self.graph_net = LGNGraphNet(num_input_particles=self.num_input_particles, input_basis=self.input_basis,
-                                     tau_input_scalars=tau_particle_scalar, tau_input_vectors=tau_particle_vector,
-                                     num_output_partcles=self.num_latent_particles, tau_output_scalars=tau_latent_scalars, tau_output_vectors=tau_latent_vectors,
-                                     max_zf=max_zf, maxdim=maxdim, num_cg_levels=self.num_cg_levels, num_channels=num_channels,
-                                     weight_init=weight_init, level_gain=level_gain, num_basis_fn=self.num_basis_fn,
-                                     activation=activation, scale=scale, mlp=mlp, mlp_depth=mlp_depth, mlp_width=mlp_width,
-                                     device=device, dtype=dtype, cg_dict=cg_dict)
-        self.tau_latent = self.graph_net.tau_output
+        self.tau_latent = self.tau_output
 
     '''
     The forward pass of the LGN GNN.
@@ -136,14 +130,14 @@ class LGNEncoder(CGModule):
     '''
     def forward(self, data, covariance_test=False):
         # Get data
-        node_scalars, node_ps, node_mask, edge_mask = self.prepare_input(data)
+        node_scalars, node_ps, node_mask, edge_mask = self._prepare_input(data)
 
         # Can be simplied as self.graph_net(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
         if not covariance_test:
-            latent_features, node_mask, edge_mask = self.graph_net(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
+            latent_features, node_mask, edge_mask = super(LGNEncoder, self).forward(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
             return latent_features, edge_mask, edge_mask
         else:
-            latent_features, node_mask, edge_mask, nodes_all = self.graph_net(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
+            latent_features, node_mask, edge_mask, nodes_all = super(LGNEncoder, self).forward(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
             return latent_features, edge_mask, edge_mask, nodes_all
     """
     Extract input from data.
@@ -164,7 +158,7 @@ class LGNEncoder(CGModule):
     edge_mask: `torch.Tensor`
         Edge mask used for batching data.
     """
-    def prepare_input(self, data):
+    def _prepare_input(self, data):
 
         node_ps = data['p4'].to(device=self.device, dtype=self.dtype) * self.scale
 
