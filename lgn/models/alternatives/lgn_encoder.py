@@ -3,13 +3,10 @@ import logging
 import sys
 sys.path.insert(1, '../..')
 
-from lgn.cg_lib import CGModule, ZonalFunctionsRel, ZonalFunctions, normsq4
+from lgn.cg_lib import CGModule, normsq4
 from lgn.g_lib import GTau
 
-from lgn.models.lgn_cg import LGNCG
-
-from lgn.nn import RadialFilters
-from lgn.nn import InputLinear, MixReps
+from lgn.models.lgn_graphnet import LGNGraphNet
 
 class LGNEncoder(CGModule):
     """
@@ -19,10 +16,18 @@ class LGNEncoder(CGModule):
     ----------
     num_input_particles : `int`
         The number of input particles
-    num_latent_scalars : `int`
+    tau_particle_scalar : `int`
+        The multiplicity of scalars per particle
+        For the hls4ml 150-p jet data, it should be 1 (namely the particle mass -p^2).
+    tau_particle_vector : `int`
+        The multiplicity of vectors per particle.
+        For the hls4ml 150-p jet data, it should be 1 (namely the particle 4-momentum).
+    tau_latent_scalars : `int`
         Multiplicity of Lorentz scalars (0,0) in the latent_space.
-    num_latent_vectors : `int`
+    tau_latent_vectors : `int`
         Multiplicity of Lorentz 4-vectors (1,1) in the latent_space.
+    num_basis_fn : `int`
+        The number of basis function to use.
     maxdim : `list` of `int`
         Maximum weight in the output of CG products. (Expanded to list of
         length num_cg_levels)
@@ -36,14 +41,16 @@ class LGNEncoder(CGModule):
         length num_cg_levels)
     weight_init : `str`
         The type of weight initialization. The choices are 'randn' and 'rand'.
-    level_gain : list of floats
+    level_gain : `list` of `floats`
         The gain at each level. (args.level_gain = [1.])
-    num_basis_fn : `int`
-        The number of basis function to use.
+    num_latent_particles : `int`
+        Optional, default : 1
+        The number of particles of jets in the latent space.
     activation : `str`
         Optional, default: 'leakyrelu'
         The activation function for lgn.LGNCG
     scale : `float` or `int`
+        Optional, default: 1.
         Scaling parameter for node features.
     mlp : `bool`
         Optional, default: True
@@ -65,9 +72,9 @@ class LGNEncoder(CGModule):
         Optional, default: None
         Clebsch-gordan dictionary for taking the CG decomposition.
     """
-    def __init__(self, num_input_particles, num_input_scalars, num_input_vectors, num_latent_scalars, num_latent_vectors,
-                 maxdim, max_zf, num_cg_levels, num_channels, weight_init, level_gain,
-                 num_basis_fn, activation='leakyrelu', scale=1., mlp=True, mlp_depth=None, mlp_width=None,
+    def __init__(self, num_input_particles, tau_particle_scalar, tau_particle_vector, tau_latent_scalars, tau_latent_vectors,
+                 maxdim, num_basis_fn, max_zf, num_cg_levels, num_channels, weight_init, level_gain, num_latent_particles=1,
+                 activation='leakyrelu', scale=1., mlp=True, mlp_depth=None, mlp_width=None,
                  device=None, dtype=torch.float64, cg_dict=None):
 
         # The extra element accounts for the output channels
@@ -88,70 +95,91 @@ class LGNEncoder(CGModule):
 
         super().__init__(maxdim=max(maxdim + max_zf), device=device, dtype=dtype, cg_dict=cg_dict)
 
+        self.num_input_particles = num_input_particles
+        self.input_basis = 'cartesian'
+        self.num_latent_particles = num_latent_particles
+        self.tau_latent = GTau({(0, 0): tau_latent_scalars, (1, 1): tau_latent_vectors})
         self.num_cg_levels = num_cg_levels
-        self.num_channels = num_channels
+        self.num_basis_fn = num_basis_fn
         self.scale = scale
-        self.tau_latent = GTau({(0,0): num_latent_scalars, (1,1): num_latent_vectors})
 
-        # Express input momenta in the basis of spherical harmonics
-        self.zonal_fns_in = ZonalFunctions(max(max_zf), dtype=dtype, device=device, cg_dict=cg_dict)
-        # Relative position in momentum space
-        self.zonal_fns = ZonalFunctionsRel(max(max_zf), dtype=dtype, device=device, cg_dict=cg_dict)
+        self.graph_net = LGNGraphNet(num_input_particles=self.num_input_particles, input_basis=self.input_basis,
+                                     tau_input_scalars=tau_particle_scalar, tau_input_vectors=tau_particle_vector,
+                                     num_output_partcles=self.num_latent_particles, tau_output_scalars=tau_latent_scalars, tau_output_vectors=tau_latent_vectors,
+                                     max_zf=max_zf, maxdim=maxdim, num_cg_levels=self.num_cg_levels, num_channels=num_channels,
+                                     weight_init=weight_init, level_gain=level_gain, num_basis_fn=self.num_basis_fn,
+                                     activation=activation, scale=scale, mlp=mlp, mlp_depth=mlp_depth, mlp_width=mlp_width,
+                                     device=device, dtype=dtype, cg_dict=cg_dict)
+        self.tau_latent = self.graph_net.tau_output
 
-        # Position functions
-        self.rad_funcs = RadialFilters(max_zf, num_basis_fn, num_channels, num_cg_levels,
-                                       device=device, dtype=dtype)
-        tau_pos = self.rad_funcs.tau
+    '''
+    The forward pass of the LGN GNN.
 
-        tau_in = GTau({(0,0): num_input_scalars, (1,1): num_input_vectors})
-        tau_out = GTau({(l,l): num_channels[0] for l in range(max_zf[0] + 1)})
-        self.input_func_node = MixReps(tau_in, tau_out, device=device, dtype=dtype)
+    Parameters
+    ----------
+    data : `dict`
+        The dictionary that stores the hls4ml data, with relevant keys 'p4', 'node_mask', and 'edge_mask'.
+    covariance_test : `bool`
+        Optional, default: False
+        If False, return prediction (scalar reps) only.
+        If True, return both predictions and full node features, where the full node features
+        will be used to test Lorentz covariance.
 
-        tau_input_node = self.input_func_node.tau
-
-        # CG layers
-        self.lgn_cg = LGNCG(maxdim, max_zf, tau_input_node, tau_pos, num_cg_levels, num_channels,
-                            level_gain, weight_init, mlp=mlp, mlp_depth=mlp_depth, mlp_width=mlp_width,
-                            activation=activation, device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)
-
-        tau_cg_levels_node = self.lgn_cg.tau_levels_node
-
-        # Output layers
-        self.mix_to_latent = MixReps(tau_cg_levels_node[-1], self.tau_latent, device=device, dtype=dtype)
-
+    Returns
+    -------
+    node_features : `dict`
+        The dictionary that stores all relevant irreps.
+    node_mask : `torch.Tensor`
+        The mask of node features. (Unchanged)
+    edge_mask : `torch.Tensor`
+        The mask of edge features. (Unchanged)
+    '''
     def forward(self, data, covariance_test=False):
         # Get data
-        node_scalars, node_ps, node_mask, edge_mask = prepare_input(data, self.scale, self.num_cg_levels,
-                                                                    device=self.device, dtype=self.dtype)
+        node_scalars, node_ps, node_mask, edge_mask = self.prepare_input(data)
 
-        # Calculate Zonal functions (edge feature)
-        zonal_functions_in, _, _ = self.zonal_fns_in(node_ps)
-        # All input are so far real, so [real, imaginary] = [scalars, 0]
-        zonal_functions_in[(0, 0)] = torch.stack([node_scalars.unsqueeze(-1),
-                                                  torch.zeros_like(node_scalars.unsqueeze(-1))])
-        zonal_functions, norms, sq_norms = self.zonal_fns(node_ps, node_ps)
-
-        # Input layer
-        if self.num_cg_levels > 0:
-            rad_func_levels = self.rad_funcs(norms, edge_mask * (norms != 0).byte())
-            node_reps_in = self.input_func_node(zonal_functions_in)
+        # Can be simplied as self.graph_net(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
+        if not covariance_test:
+            latent_features, node_mask, edge_mask = self.graph_net(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
+            return latent_features, edge_mask, edge_mask
         else:
-            rad_func_levels = []
-            node_reps_in = self.input_func_node(node_scalars, node_mask)
+            latent_features, node_mask, edge_mask, nodes_all = self.graph_net(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
+            return latent_features, edge_mask, edge_mask, nodes_all
+    """
+    Extract input from data.
 
-        # CG layer
-        nodes_all = self.lgn_cg(node_reps_in, node_mask, rad_func_levels, zonal_functions)
+    Parameters
+    ----------
+    data : `dict`
+        The jet data.
 
-        # Output layer: output node features to latent space.
-        # Size for each rep: (2, batch_size, num_input_particles, tau_rep, dim_rep)
-        # (0,0): (2, batch_size, num_input_particles, tau_scalars, 1)
-        # (1,1): (2, batch_size, num_input_particles, tau_vectors, 4)
-        node_feature = self.mix_to_latent(nodes_all[-1]) # node_all[-1] is the updated feature in the last layer
+    Returns
+    -------
+    scalars : `torch.Tensor`
+        Tensor of scalars for each node.
+    node_ps: : `torch.Tensor`
+        Momenta of the nodes
+    node_mask : `torch.Tensor`
+        Node mask used for batching data.
+    edge_mask: `torch.Tensor`
+        Edge mask used for batching data.
+    """
+    def prepare_input(self, data):
 
-        # Size for each reshaped rep: (2, batch_size, num_output_partcles * tau_rep, dim_rep)
-        node_feature = {weight: reps.view(2, reps.shape[1], -1, reps.shape[-1]) for weight, reps in node_feature.items()}
+        node_ps = data['p4'].to(device=self.device, dtype=self.dtype) * self.scale
 
-        return node_feature, edge_mask, edge_mask
+        data['p4'].requires_grad_(True)
+
+        node_mask = data['node_mask'].to(device=self.device, dtype=torch.uint8)
+        edge_mask = data['edge_mask'].to(device=self.device, dtype=torch.uint8)
+
+        scalars = torch.ones_like(node_ps[:,:, 0]).unsqueeze(-1)
+        scalars = normsq4(node_ps).abs().sqrt().unsqueeze(-1)
+
+        if 'scalars' in data.keys():
+            scalars = torch.cat([scalars, data['scalars'].to(device=self.device, dtype=self.dtype)], dim=-1)
+
+        return scalars, node_ps, node_mask, edge_mask
 
 ############################## Helpers ##############################
 """
@@ -178,42 +206,3 @@ def expand_var_list(var, num_cg_levels):
         raise ValueError(f'Incorrect type of variables: {type(var)}. ' \
                          'The allowed data types are list, float, or int')
     return var_list
-
-"""
-Extract input from data.
-
-Parameters
-----------
-data : `dict`
-    The jet data.
-
-Returns
--------
-node_scalars : `torch.Tensor`
-    Tensor of scalars for each node.
-node_ps: : `torch.Tensor`
-    Momenta of the nodes
-node_mask : `torch.Tensor`
-    Node mask used for batching data.
-edge_mask: `torch.Tensor`
-    Edge mask used for batching data.
-"""
-def prepare_input(data, scale, cg_levels=True, device=None, dtype=None):
-
-    node_ps = data['p4'].to(device=device, dtype=dtype) * scale
-
-    data['p4'].requires_grad_(True)
-
-    node_mask = data['node_mask'].to(device=device, dtype=torch.uint8)
-    edge_mask = data['edge_mask'].to(device=device, dtype=torch.uint8)
-
-    scalars = torch.ones_like(node_ps[:,:, 0]).unsqueeze(-1)
-    scalars = normsq4(node_ps).abs().sqrt().unsqueeze(-1)
-
-    if 'scalars' in data.keys():
-        scalars = torch.cat([scalars, data['scalars'].to(device=device, dtype=dtype)], dim=-1)
-
-    if not cg_levels:
-        scalars = torch.stack(tuple(scalars for _ in range(scalars.shape[-1])), -2).to(device=device, dtype=dtype)
-
-    return scalars, node_ps, node_mask, edge_mask
