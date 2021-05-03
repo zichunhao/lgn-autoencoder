@@ -101,9 +101,7 @@ class LGNEncoder(LGNGraphNet):
                          activation=activation, mlp=mlp, mlp_depth=mlp_depth, mlp_width=mlp_width,
                          device=device, dtype=dtype, cg_dict=cg_dict)
 
-        self.tau_latent = GTau({(0, 0): tau_latent_scalars, (1, 1): tau_latent_vectors})
         self.scale = scale
-
         self.tau_latent = self.tau_output
 
     '''
