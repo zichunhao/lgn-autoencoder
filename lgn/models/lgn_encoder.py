@@ -108,6 +108,28 @@ class LGNEncoder(CGModule):
                                      activation=activation, scale=scale, mlp=mlp, mlp_depth=mlp_depth, mlp_width=mlp_width,
                                      device=device, dtype=dtype, cg_dict=cg_dict)
 
+    '''
+    The forward pass of the LGN GNN.
+
+    Parameters
+    ----------
+    data : `dict`
+        The dictionary that stores the hls4ml data, with relevant keys 'p4', 'node_mask', and 'edge_mask'.
+    covariance_test : `bool`
+        Optional, default: False
+        If False, return prediction (scalar reps) only.
+        If True, return both predictions and full node features, where the full node features
+        will be used to test Lorentz covariance.
+
+    Returns
+    -------
+    node_features : `dict`
+        The dictionary that stores all relevant irreps.
+    node_mask : `torch.Tensor`
+        The mask of node features. (Unchanged)
+    edge_mask : `torch.Tensor`
+        The mask of edge features. (Unchanged)
+    '''
     def forward(self, data, covariance_test=False):
         # Get data
         node_scalars, node_ps, node_mask, edge_mask = self.prepare_input(data)

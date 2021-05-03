@@ -169,7 +169,11 @@ class LGNGraphNet(CGModule):
 
         # Size for each reshaped rep: (2, batch_size, num_output_particles, tau_rep, dim_rep)
         node_features = {weight: reps.view(2, reps.shape[1], self.num_output_particles, -1, reps.shape[-1]) for weight, reps in node_features.items()}
-        return node_features, node_mask, edge_mask
+        if not covariance_test:
+            return node_features, node_mask, edge_mask
+        else:
+            nodes_all.append(GVec(node_features))
+            return node_features, node_mask, edge_mask, nodes_all
 
 ############################## Helpers ##############################
 """
