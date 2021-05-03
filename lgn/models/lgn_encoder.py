@@ -73,7 +73,7 @@ class LGNEncoder(CGModule):
         Clebsch-gordan dictionary for taking the CG decomposition.
     """
     def __init__(self, num_input_particles, tau_particle_scalar, tau_particle_vector, tau_latent_scalars, tau_latent_vectors,
-                 maxdim, num_basis_fn, max_zf, num_cg_levels, num_channels, weight_init, level_gain, num_latent_particles = 1,
+                 maxdim, num_basis_fn, max_zf, num_cg_levels, num_channels, weight_init, level_gain, num_latent_particles=1,
                  activation='leakyrelu', scale=1., mlp=True, mlp_depth=None, mlp_width=None,
                  device=None, dtype=torch.float64, cg_dict=None):
 
@@ -110,6 +110,7 @@ class LGNEncoder(CGModule):
                                      weight_init=weight_init, level_gain=level_gain, num_basis_fn=self.num_basis_fn,
                                      activation=activation, scale=scale, mlp=mlp, mlp_depth=mlp_depth, mlp_width=mlp_width,
                                      device=device, dtype=dtype, cg_dict=cg_dict)
+        self.tau_latent = self.graph_net.tau_output
 
     '''
     The forward pass of the LGN GNN.
