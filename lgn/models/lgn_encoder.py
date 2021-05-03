@@ -11,13 +11,15 @@ class LGNEncoder(LGNGraphNet):
     Parameters
     ----------
     num_input_particles : `int`
-        The number of input particles
+        The number of input particles.
     tau_particle_scalar : `int`
-        The multiplicity of scalars per particle
-        For the hls4ml 150-p jet data, it should be 1 (namely the particle mass -p^2).
+        The multiplicity of scalars per particle.
+        For the hls4ml 150-p jet data, it should be 1 (namely the particle invariant mass -p^2).
     tau_particle_vector : `int`
         The multiplicity of vectors per particle.
         For the hls4ml 150-p jet data, it should be 1 (namely the particle 4-momentum).
+    num_latent_particles : `int`
+        The number of particles of jets in the latent space.
     tau_latent_scalars : `int`
         Multiplicity of Lorentz scalars (0,0) in the latent_space.
     tau_latent_vectors : `int`
@@ -36,9 +38,6 @@ class LGNEncoder(LGNGraphNet):
         The type of weight initialization. The choices are 'randn' and 'rand'.
     level_gain : `list` of `floats`
         The gain at each level. (args.level_gain = [1.])
-    num_latent_particles : `int`
-        Optional, default : 1
-        The number of particles of jets in the latent space.
     activation : `str`
         Optional, default: 'leakyrelu'
         The activation function for lgn.LGNCG
@@ -65,8 +64,9 @@ class LGNEncoder(LGNGraphNet):
         Optional, default: None
         Clebsch-gordan dictionary for taking the CG decomposition.
     """
-    def __init__(self, num_input_particles, tau_particle_scalar, tau_particle_vector, tau_latent_scalars, tau_latent_vectors,
-                 maxdim, num_basis_fn, num_channels, max_zf, weight_init, level_gain, num_latent_particles=1,
+    def __init__(self, num_input_particles, tau_particle_scalar, tau_particle_vector,
+                 num_latent_particles, tau_latent_scalars, tau_latent_vectors,
+                 maxdim, num_basis_fn, num_channels, max_zf, weight_init, level_gain,
                  activation='leakyrelu', scale=1., mlp=True, mlp_depth=None, mlp_width=None,
                  device=None, dtype=torch.float64, cg_dict=None):
 
