@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 
-from math import pi
-
 from lgn.g_lib import GTau, GScalar
 
 class RadPolyTrig(nn.Module):
@@ -171,10 +169,6 @@ class RadialFilters(nn.Module):
             self.num_rad_channels = self.tau[0][(1, 1)]
         else:
             self.num_rad_channels = 0
-
-        # Other things
-
-
 
         self.zero = torch.tensor(0, device=device, dtype=dtype)
 
