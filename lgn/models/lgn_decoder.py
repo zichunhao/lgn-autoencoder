@@ -1,57 +1,50 @@
 import torch
 import logging
-import sys
-sys.path.insert(1, '../..')
 
-from lgn.cg_lib import CGModule, ZonalFunctionsRel, ZonalFunctions, normsq4
-from lgn.g_lib import GTau
+from lgn.cg_lib import normsq4
+from lgn.models.lgn_graphnet import LGNGraphNet
 
-from lgn.models.lgn_cg import LGNCG
-
-from lgn.nn import RadialFilters
-from lgn.nn import InputLinear, MixReps
-
-class Decoder(CGModule):
+class LGNEncoder(LGNGraphNet):
     """
     The encoder of the LGN autoencoder.
 
     Parameters
     ----------
-    num_output_scalars : `int`
-        Multiplicity of Lorentz scalars (0,0) in the output per jet.
-    num_output_vectors : `int`
-        Multiplicity of Lorentz 4-vectors (1,1) in the output per jet.
+    num_latent_particles : `int`
+        The number of particles in the latent sapce.
+    tau_latent_scalar : `int`
+        The multiplicity of scalars per particle in the latent space.
+    tau_latent_vector : `int`
+        The multiplicity of vectors per particle in the latent space.
+    num_output_particles : `int`
+        The number of particles of jets in the latent space.
+        For the hls4ml 150-p jet data, this should be 150.
+    tau_output_scalars : `int`
+        Multiplicity of Lorentz scalars (0,0) in the latent_space.
+        For the hls4ml 150-p jet data, it should be 1 (namely the particle invariant mass -p^2).
+    tau_output_vectors : `int`
+        Multiplicity of Lorentz 4-vectors (1,1) in the latent_space.
+        For the hls4ml 150-p jet data, it should be 1 (namely the particle 4-momentum).
     maxdim : `list` of `int`
-        Maximum weight in the output of CG products. (Expanded to list of
-        length num_cg_levels)
-    max_zf : `list` of `int`
-        Maximum weight in the output of the spherical harmonics  (Expanded to list of
-        length num_cg_levels)
-    num_cg_levels : int
-        Number of cg levels to use.
-    num_channels : `list` of `int`
-        Number of channels that the output of each CG are mixed to (Expanded to list of
-        length num_cg_levels)
-    weight_init : `str`
-        The type of weight initialization. The choices are 'randn' and 'rand'.
-    level_gain : list of floats
-        The gain at each level. (args.level_gain = [1.])
+        Maximum weight in the output of CG products, expanded or truncated to list of
+        length len(num_channels) - 1.
     num_basis_fn : `int`
         The number of basis function to use.
+    num_channels : `list` of `int`
+        Number of channels that the outputs of each CG layer are mixed to.
+    max_zf : `list` of `int`
+        Maximum weight in the output of the spherical harmonics, expanded or truncated to list of
+        length len(num_channels) - 1.
+    weight_init : `str`
+        The type of weight initialization. The choices are 'randn' and 'rand'.
+    level_gain : `list` of `floats`
+        The gain at each level. (args.level_gain = [1.])
     activation : `str`
         Optional, default: 'leakyrelu'
         The activation function for lgn.LGNCG
-    p4_into_CG : `bool`
-        Optional, default: False
-        Whether or not to feed in 4-momenta themselves to the first CG layer,
-        in addition to scalars.
-            - If true, MixReps will be used for the input linear layer of the model.
-            - If false, IntputLinear will be used.
-    add_beams : `bool`
-        Optional, default: False
-        Append two proton beams of the form (m^2,0,0,+-1) to each event
     scale : `float` or `int`
-        Scaling parameter for node features.
+        Optional, default: 1.
+        Scaling parameter for input node features.
     mlp : `bool`
         Optional, default: True
         Whether to include the extra MLP layer on scalar features in nodes.
@@ -72,15 +65,11 @@ class Decoder(CGModule):
         Optional, default: None
         Clebsch-gordan dictionary for taking the CG decomposition.
     """
-    def __init__(self, num_latent_scalars, num_latent_vectors,
-                 maxdim, max_zf, num_cg_levels, num_channels,
-                 weight_init, level_gain, num_basis_fn,
-                 activation='leakyrelu', p4_into_CG=True,
-                 add_beams=False, scale=1., mlp=True, mlp_depth=None, mlp_width=None,
+    def __init__(self, num_latent_particles, tau_latent_scalar, tau_latent_vector,
+                 num_output_particles, tau_output_scalars, tau_output_vectors,
+                 maxdim, num_basis_fn, num_channels, max_zf, weight_init, level_gain,
+                 activation='leakyrelu', scale=1., mlp=True, mlp_depth=None, mlp_width=None,
                  device=None, dtype=torch.float64, cg_dict=None):
-
-        # The extra element accounts for the output channels
-        assert len(num_channels) > num_cg_levels, f"num_channels ({num_channels}) must have a length larger than than num_cg_levels ({num_cg_levels})!"
 
         if device is None:
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -90,127 +79,83 @@ class Decoder(CGModule):
 
         logging.info(f'Initializing encoder with device: {device} and dtype: {dtype}')
 
-        level_gain = expand_var_list(level_gain, num_cg_levels)
-        maxdim = expand_var_list(maxdim, num_cg_levels)
-        max_zf = expand_var_list(max_zf, num_cg_levels)
-        num_channels = expand_var_list(num_channels, num_cg_levels)
+        super().__init__(num_input_particles=num_latent_particles, input_basis='canonical',
+                         tau_input_scalars=tau_latent_scalar, tau_input_vectors=tau_latent_vector,
+                         num_output_partcles=num_output_particles, tau_output_scalars=tau_output_scalars, tau_output_vectors=tau_output_vectors,
+                         max_zf=max_zf, maxdim=maxdim, num_channels=num_channels,
+                         weight_init=weight_init, level_gain=level_gain, num_basis_fn=num_basis_fn,
+                         activation=activation, mlp=mlp, mlp_depth=mlp_depth, mlp_width=mlp_width,
+                         device=device, dtype=dtype, cg_dict=cg_dict)
 
-        super().__init__(maxdim=max(maxdim + max_zf), device=device, dtype=dtype, cg_dict=cg_dict)
-
-        self.num_cg_levels = num_cg_levels
-        self.num_channels = num_channels
         self.scale = scale
-        self.p4_into_CG = p4_into_CG
-        self.tau_latent = GTau({(0,0): num_latent_scalars, (1,1): num_latent_vectors})
 
-        # spherical harmonics
-        if p4_into_CG:
-            # Express input momenta in the bases of spherical harmonics
-            self.zonal_fns_in = ZonalFunctions(max(max_zf), dtype=dtype,
-                                               device=device, cg_dict=cg_dict)
-        # relative position in momentum space
-        self.zonal_fns = ZonalFunctionsRel(max(max_zf), dtype=dtype,
-                                           device=device, cg_dict=cg_dict)
+    '''
+    The forward pass of the LGN GNN.
 
-        # Position functions
-        self.rad_funcs = RadialFilters(max_zf, num_basis_fn, num_channels, num_cg_levels,
-                                       device=device, dtype=dtype)
-        tau_pos = self.rad_funcs.tau
+    Parameters
+    ----------
+    node_features : `dict`
+        The dictionary of node_features from the encoder. The keys are (0,0) (scalar) and (1,1) (vector)
+    covariance_test : `bool`
+        Optional, default: False
+        If False, return prediction (scalar reps) only.
+        If True, return both generated output and full node features, where the full node features
+        will be used to test Lorentz covariance.
+    nodes_all : `list` of GVec
+        Optional, default: None
+        The full node features in the encoder.
 
-        if num_cg_levels:
-            if add_beams:
-                num_scalars_in = 2
-            else:
-                num_scalars_in = 1
-        else:
-            num_scalars_in = 150+2  # number of particles per jet (after padding)
-
-        num_scalars_out = num_channels[0]
-
-        # Input linear layer: self.input_func_node
-        if not num_cg_levels:
-            self.input_func_node = InputLinear(num_scalars_in, num_scalars_out,
-                                               device=device, dtype=dtype)
-        else:
-            tau_in = GTau({**{(0,0): num_scalars_in}, **{(l,l): 1 for l in range(1, max_zf[0] + 1)}})
-            tau_out = GTau({(l,l): num_scalars_out for l in range(max_zf[0] + 1)})
-            self.input_func_node = MixReps(tau_in, tau_out, device=device, dtype=dtype)
-
-        tau_input_node = self.input_func_node.tau
-
-        # CG layers
-        self.lgn_cg = LGNCG(maxdim, max_zf, tau_input_node, tau_pos,
-                            num_cg_levels, num_channels, level_gain, weight_init,
-                            mlp=mlp, mlp_depth=mlp_depth, mlp_width=mlp_width,
-                            activation=activation, device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)
-
-        tau_cg_levels_node = self.lgn_cg.tau_levels_node
-
-        # Output layers
-        self.mix_reps = MixReps(tau_cg_levels_node[-1], self.tau_latent, device=device, dtype=dtype)
-
-    def forward(self, data, covariance_test=False):
+    Returns
+    -------
+    node_features : `dict`
+        The dictionary that stores all relevant irreps.
+    If covariance_test is True, also:
+        nodes_all : `list` of GVec
+            The full node features in both encoder and decoder.
+    '''
+    def forward(self, data, covariance_test=False, nodes_all=None):
         # Get data
-        node_scalars, node_ps, node_mask, edge_mask = prepare_input(data, self.scale, self.num_cg_levels,
-                                                                    device=self.device, dtype=self.dtype)
+        node_scalars, node_ps, node_mask, edge_mask = self._prepare_input(data)
 
-        # Calculate Zonal functions
-        if self.p4_into_CG:
-            zonal_functions_in, _, _ = self.zonal_fns_in(node_ps)
-            # all input are so far reals, so [real, imaginary] = [scalars, 0]
-            zonal_functions_in[(0, 0)] = torch.stack([node_scalars.unsqueeze(-1),
-                                                      torch.zeros_like(node_scalars.unsqueeze(-1))])
-        zonal_functions, norms, sq_norms = self.zonal_fns(node_ps, node_ps)
-
-        # Input layer
-        if self.num_cg_levels > 0:
-            rad_func_levels = self.rad_funcs(norms, edge_mask * (norms != 0).byte())
-            # Feed scalars only
-            if not self.p4_into_CG:
-                node_reps_in = self.input_func_node(node_scalars, node_mask)
-            # Feed both scalars and 4-momenta
-            else:
-                node_reps_in = self.input_func_node(zonal_functions_in)
+        # Can be simplied as self.graph_net(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
+        if not covariance_test:
+            latent_features, node_mask, edge_mask = super(LGNEncoder, self).forward(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
+            return latent_features, edge_mask, edge_mask
         else:
-            rad_func_levels = []
-            node_reps_in = self.input_func_node(node_scalars, node_mask)
+            latent_features, node_mask, edge_mask, nodes_all = super(LGNEncoder, self).forward(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
+            return latent_features, edge_mask, edge_mask, nodes_all
+    """
+    Extract input from data.
 
-        # CG layer
-        nodes_all = self.lgn_cg(node_reps_in, node_mask, rad_func_levels, zonal_functions)
+    Parameters
+    ----------
+    data : `dict`
+        The jet data.
 
-        # Output
-        # size for each representation: (2, batch_size, num_input_particles, tau_rep, dim_rep)
-        # (0,0): (2, batch_size, num_input_particles, tau_scalars, 1)
-        # (1,1): (2, batch_size, num_input_particles, tau_vectors, 4)
-        node_feature = self.mix_reps(nodes_all[-1])
+    Returns
+    -------
+    scalars : `torch.Tensor`
+        Tensor of scalars for each node.
+    node_ps: : `torch.Tensor`
+        Momenta of the nodes
+    node_mask : `torch.Tensor`
+        Node mask used for batching data.
+    edge_mask: `torch.Tensor`
+        Edge mask used for batching data.
+    """
+    def _prepare_input(self, data):
 
-        # size for each representation: (2, batch_size, num_input_particles, tau_rep, dim_rep)
-        node_feature = {weight: reps.view(2, reps.shape[1], -1, reps.shape[-1]) for weight, reps in node_feature.items()}
+        node_ps = data['p4'].to(device=self.device, dtype=self.dtype) * self.scale
 
-        return node_feature
+        data['p4'].requires_grad_(True)
 
-############################## Helpers ##############################
-"""
-Expand variables in a list
+        node_mask = data['node_mask'].to(device=self.device, dtype=torch.uint8)
+        edge_mask = data['edge_mask'].to(device=self.device, dtype=torch.uint8)
 
-Parameters
-----------
-var : `list`, `int`, or `float`
-    The variables
-num_cg_levels : `int`
-    Number of cg levels to use.
+        scalars = torch.ones_like(node_ps[:,:, 0]).unsqueeze(-1)
+        scalars = normsq4(node_ps).abs().sqrt().unsqueeze(-1)
 
-Return
-------
-var_list : `list`
-    The list of variables. The length will be num_cg_levels.
-"""
-def expand_var_list(var, num_cg_levels):
-    if type(var) == list:
-        var_list = var + (num_cg_levels - len(var)) * [var[-1]]
-    elif type(var) in [float, int]:
-        var_list = [var] * num_cg_levels
-    else:
-        raise ValueError(f'Incorrect type of variables: {type(var)}. ' \
-                         'The allowed data types are list, float, or int')
-    return var_list
+        if 'scalars' in data.keys():
+            scalars = torch.cat([scalars, data['scalars'].to(device=self.device, dtype=self.dtype)], dim=-1)
+
+        return scalars, node_ps, node_mask, edge_mask

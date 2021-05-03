@@ -99,7 +99,7 @@ class LGNEncoder(LGNGraphNet):
     covariance_test : `bool`
         Optional, default: False
         If False, return prediction (scalar reps) only.
-        If True, return both predictions and full node features, where the full node features
+        If True, return both generated output and full node features, where the full node features
         will be used to test Lorentz covariance.
 
     Returns
@@ -110,6 +110,9 @@ class LGNEncoder(LGNGraphNet):
         The mask of node features. (Unchanged)
     edge_mask : `torch.Tensor`
         The mask of edge features. (Unchanged)
+    If covariance_test is True, also:
+        nodes_all : `list` of GVec
+            The full node features in the encoder.
     '''
     def forward(self, data, covariance_test=False):
         # Get data
