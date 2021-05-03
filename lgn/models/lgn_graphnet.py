@@ -1,7 +1,4 @@
 import torch
-import logging
-import sys
-sys.path.insert(1, '../..')
 
 from lgn.cg_lib import CGModule, ZonalFunctionsRel, ZonalFunctions
 from lgn.g_lib import GTau
@@ -9,7 +6,7 @@ from lgn.g_lib import GTau
 from lgn.models.lgn_cg import LGNCG
 
 from lgn.nn import RadialFilters
-from lgn.nn import InputLinear, MixReps
+from lgn.nn import MixReps
 from lgn.g_lib.g_vec import GVec
 
 class LGNGraphNet(CGModule):
@@ -40,17 +37,14 @@ class LGNGraphNet(CGModule):
         Multiplicity of Lorentz 4-vectors (1,1) in the output.
     num_basis_fn : `int`
         The number of basis function to use.
-    max_zf : `list` of `int`
-        Maximum weight in the output of the spherical harmonics  (Expanded to list of
-        length num_cg_levels)
     maxdim : `list` of `int`
-        Maximum weight in the output of CG products. (Expanded to list of
-        length num_cg_levels)
-    num_cg_levels : int
-        Number of cg levels to use.
+        Maximum weight in the output of CG products, expanded or truncated to list of
+        length len(num_channels) - 1.
     num_channels : `list` of `int`
-        Number of channels that the output of each CG are mixed to (Expanded to list of
-        length num_cg_levels)
+        Number of channels that the output of each CG are mixed to.
+    max_zf : `list` of `int`
+        Maximum weight in the output of the spherical harmonics, expanded or truncated to list of
+        length len(num_channels) - 1.
     weight_init : `str`
         The type of weight initialization. The choices are 'randn' and 'rand'.
     level_gain : list of floats
@@ -80,7 +74,7 @@ class LGNGraphNet(CGModule):
     """
     def __init__(self, num_input_particles, input_basis, tau_input_scalars, tau_input_vectors,
                  num_output_partcles, tau_output_scalars, tau_output_vectors, num_basis_fn,
-                 maxdim, max_zf, num_cg_levels, num_channels, weight_init, level_gain,
+                 maxdim, num_channels, max_zf, weight_init, level_gain,
                  activation='leakyrelu', mlp=True, mlp_depth=None, mlp_width=None,
                  device=None, dtype=torch.float64, cg_dict=None):
         if device is None:
@@ -89,58 +83,66 @@ class LGNGraphNet(CGModule):
         if dtype is None:
             dtype = torch.float64
 
+        num_cg_levels = len(num_channels) - 1
+
         # We parition the output so that there are num_input_particles particles
         assert (num_input_particles * tau_output_scalars % num_output_partcles == 0), \
         f'num_output_partcles {num_output_partcles} has to be a factor of num_input_particles * tau_output_scalars {num_input_particles * tau_output_scalars}!'
         assert (num_input_particles * tau_output_vectors % num_output_partcles == 0), \
         f'num_output_partcles {num_output_partcles} has to be a factor of num_input_particles * tau_output_vectors {num_input_particles * tau_output_vectors}!'
 
-        level_gain = expand_var_list(level_gain, num_cg_levels)
-        maxdim = expand_var_list(maxdim, num_cg_levels)
-        max_zf = expand_var_list(max_zf, num_cg_levels)
-        num_channels = expand_var_list(num_channels, num_cg_levels)
+        level_gain = adapt_var_list(level_gain, num_cg_levels)
+        maxdim = adapt_var_list(maxdim, num_cg_levels)
+        max_zf = adapt_var_list(max_zf, num_cg_levels)
 
         super().__init__(maxdim=max(maxdim + max_zf), device=device, dtype=dtype, cg_dict=cg_dict)
 
+        # Member varibles
         self.input_basis = input_basis
         self.num_cg_levels = num_cg_levels
+        self.num_basis_fn = num_basis_fn
+        self.max_zf = max_zf
         self.num_channels = num_channels
         self.num_output_particles = num_output_partcles
+        self.mlp = mlp
+        self.mlp_depth = mlp_depth
+        self.mlp_width = mlp_width
+        self.activation = activation
 
         # Express input momenta in the basis of spherical harmonics
-        self.zonal_fns_in = ZonalFunctions(max(max_zf), basis=self.input_basis,
+        self.zonal_fns_in = ZonalFunctions(max(self.max_zf), basis=self.input_basis,
                                            dtype=dtype, device=device, cg_dict=cg_dict)
-        # relative position in momentum space
-        self.zonal_fns = ZonalFunctionsRel(max(max_zf), basis=self.input_basis,
+        # Relative position in momentum space
+        self.zonal_fns = ZonalFunctionsRel(max(self.max_zf), basis=self.input_basis,
                                            dtype=dtype, device=device, cg_dict=cg_dict)
 
         # Position functions
-        self.rad_funcs = RadialFilters(max_zf, num_basis_fn, num_channels, num_cg_levels,
-                                       device=device, dtype=dtype)
+        self.rad_funcs = RadialFilters(self.max_zf, self.num_basis_fn, self.num_channels, self.num_cg_levels,
+                                       device=self.device, dtype=self.dtype)
         tau_pos = self.rad_funcs.tau
 
         # Input linear layer: Prepare input to the CG layers
         tau_in = GTau({(0,0): tau_input_scalars, (1,1): tau_input_vectors})
-        self.tau_dict = {'input': tau_in}
+        self.tau_dict = {'input': tau_in}  # A dictionary of multiplicities in the model (updated as the model is built)
         tau_out = GTau({(l,l): num_channels[0] for l in range(max_zf[0] + 1)})
         self.input_func_node = MixReps(tau_in, tau_out, device=device, dtype=dtype)
 
         tau_input_node = self.input_func_node.tau
 
         # CG layers
-        self.lgn_cg = LGNCG(maxdim, max_zf, tau_input_node, tau_pos,
-                            num_cg_levels, num_channels, level_gain, weight_init,
-                            mlp=mlp, mlp_depth=mlp_depth, mlp_width=mlp_width,
-                            activation=activation, device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)
+        self.lgn_cg = LGNCG(maxdim, self.max_zf, tau_input_node, tau_pos, self.num_cg_levels, self.num_channels,
+                            level_gain, weight_init, mlp=self.mlp, mlp_depth=self.mlp_depth, mlp_width=self.mlp_width,
+                            activation=self.activation, device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)
 
         self.tau_cg_levels_node = self.lgn_cg.tau_levels_node
         self.tau_dict['cg_layers'] = self.tau_cg_levels_node
 
         # Output layers
         self.tau_cg_levels_node[-1] = GTau({weight: int(value * num_input_particles / num_output_partcles) for weight, value in self.tau_cg_levels_node[-1]})
+        self.tau_dict['reshape'] = self.tau_cg_levels_node[-1]
         self.tau_output = GTau({(0,0): tau_output_scalars, (1,1): tau_output_vectors})
         self.tau_dict['output'] = self.tau_output
-        self.mix_reps = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=device, dtype=dtype)
+        self.mix_reps = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
 
     '''
     The forward pass of the LGN GNN.
@@ -206,7 +208,9 @@ class LGNGraphNet(CGModule):
 
 ############################## Helpers ##############################
 """
-Expand variables in a list
+Adapt variables.
+- If type(var) is `float` or `int`, adapt it to [var] * num_cg_levels.
+- If type(var) is `list`, adapt the length to num_cg_levels.
 
 Parameters
 ----------
@@ -220,9 +224,16 @@ Return
 var_list : `list`
     The list of variables. The length will be num_cg_levels.
 """
-def expand_var_list(var, num_cg_levels):
+def adapt_var_list(var, num_cg_levels):
     if type(var) == list:
-        var_list = var + (num_cg_levels - len(var)) * [var[-1]]
+        if len(var) < num_cg_levels:
+            var_list = var + (num_cg_levels - len(var)) * [var[-1]]
+        elif len(var) == num_cg_levels:
+            var_list = var
+        elif len(var) > num_cg_levels:
+            var_list = var[:num_cg_levels - 1]
+        else:
+            raise ValueError(f'Invalid length of var: {len(var)}')
     elif type(var) in [float, int]:
         var_list = [var] * num_cg_levels
     else:

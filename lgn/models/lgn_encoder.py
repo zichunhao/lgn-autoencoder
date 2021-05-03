@@ -1,11 +1,7 @@
 import torch
 import logging
-import sys
-sys.path.insert(1, '../..')
 
-from lgn.cg_lib import CGModule, normsq4
-from lgn.g_lib import GTau
-
+from lgn.cg_lib import normsq4
 from lgn.models.lgn_graphnet import LGNGraphNet
 
 class LGNEncoder(LGNGraphNet):
@@ -26,19 +22,16 @@ class LGNEncoder(LGNGraphNet):
         Multiplicity of Lorentz scalars (0,0) in the latent_space.
     tau_latent_vectors : `int`
         Multiplicity of Lorentz 4-vectors (1,1) in the latent_space.
+    maxdim : `list` of `int`
+        Maximum weight in the output of CG products, expanded or truncated to list of
+        length len(num_channels) - 1.
     num_basis_fn : `int`
         The number of basis function to use.
-    maxdim : `list` of `int`
-        Maximum weight in the output of CG products. (Expanded to list of
-        length num_cg_levels)
-    max_zf : `list` of `int`
-        Maximum weight in the output of the spherical harmonics  (Expanded to list of
-        length num_cg_levels)
-    num_cg_levels : int
-        Number of cg levels to use.
     num_channels : `list` of `int`
-        Number of channels that the output of each CG are mixed to (Expanded to list of
-        length num_cg_levels)
+        Number of channels that the outputs of each CG layer are mixed to.
+    max_zf : `list` of `int`
+        Maximum weight in the output of the spherical harmonics, expanded or truncated to list of
+        length len(num_channels) - 1.
     weight_init : `str`
         The type of weight initialization. The choices are 'randn' and 'rand'.
     level_gain : `list` of `floats`
@@ -73,12 +66,9 @@ class LGNEncoder(LGNGraphNet):
         Clebsch-gordan dictionary for taking the CG decomposition.
     """
     def __init__(self, num_input_particles, tau_particle_scalar, tau_particle_vector, tau_latent_scalars, tau_latent_vectors,
-                 maxdim, num_basis_fn, max_zf, num_cg_levels, num_channels, weight_init, level_gain, num_latent_particles=1,
+                 maxdim, num_basis_fn, num_channels, max_zf, weight_init, level_gain, num_latent_particles=1,
                  activation='leakyrelu', scale=1., mlp=True, mlp_depth=None, mlp_width=None,
                  device=None, dtype=torch.float64, cg_dict=None):
-
-        # The extra element accounts for the output channels
-        assert len(num_channels) > num_cg_levels, f"num_channels ({num_channels}) must have a length larger than than num_cg_levels ({num_cg_levels})!"
 
         if device is None:
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -88,15 +78,10 @@ class LGNEncoder(LGNGraphNet):
 
         logging.info(f'Initializing encoder with device: {device} and dtype: {dtype}')
 
-        level_gain = expand_var_list(level_gain, num_cg_levels)
-        maxdim = expand_var_list(maxdim, num_cg_levels)
-        max_zf = expand_var_list(max_zf, num_cg_levels)
-        num_channels = expand_var_list(num_channels, num_cg_levels)
-
         super().__init__(num_input_particles=num_input_particles, input_basis='cartesian',
                          tau_input_scalars=tau_particle_scalar, tau_input_vectors=tau_particle_vector,
                          num_output_partcles=num_latent_particles, tau_output_scalars=tau_latent_scalars, tau_output_vectors=tau_latent_vectors,
-                         max_zf=max_zf, maxdim=max(maxdim + max_zf), num_cg_levels=num_cg_levels, num_channels=num_channels,
+                         max_zf=max_zf, maxdim=maxdim, num_channels=num_channels,
                          weight_init=weight_init, level_gain=level_gain, num_basis_fn=num_basis_fn,
                          activation=activation, mlp=mlp, mlp_depth=mlp_depth, mlp_width=mlp_width,
                          device=device, dtype=dtype, cg_dict=cg_dict)
@@ -172,29 +157,3 @@ class LGNEncoder(LGNGraphNet):
             scalars = torch.cat([scalars, data['scalars'].to(device=self.device, dtype=self.dtype)], dim=-1)
 
         return scalars, node_ps, node_mask, edge_mask
-
-############################## Helpers ##############################
-"""
-Expand variables in a list
-
-Parameters
-----------
-var : `list`, `int`, or `float`
-    The variables
-num_cg_levels : `int`
-    Number of cg levels to use.
-
-Return
-------
-var_list : `list`
-    The list of variables. The length will be num_cg_levels.
-"""
-def expand_var_list(var, num_cg_levels):
-    if type(var) == list:
-        var_list = var + (num_cg_levels - len(var)) * [var[-1]]
-    elif type(var) in [float, int]:
-        var_list = [var] * num_cg_levels
-    else:
-        raise ValueError(f'Incorrect type of variables: {type(var)}. ' \
-                         'The allowed data types are list, float, or int')
-    return var_list
