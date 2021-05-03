@@ -16,10 +16,18 @@ class LGNEncoder(CGModule):
     ----------
     num_input_particles : `int`
         The number of input particles
+    tau_particle_scalar : `int`
+        The multiplicity of scalars per particle
+        For the hls4ml 150-p jet data, it should be 1 (namely the particle mass -p^2).
+    tau_particle_vector : `int`
+        The multiplicity of vectors per particle.
+        For the hls4ml 150-p jet data, it should be 1 (namely the particle 4-momentum).
     tau_latent_scalars : `int`
         Multiplicity of Lorentz scalars (0,0) in the latent_space.
     tau_latent_vectors : `int`
         Multiplicity of Lorentz 4-vectors (1,1) in the latent_space.
+    num_basis_fn : `int`
+        The number of basis function to use.
     maxdim : `list` of `int`
         Maximum weight in the output of CG products. (Expanded to list of
         length num_cg_levels)
@@ -35,12 +43,11 @@ class LGNEncoder(CGModule):
         The type of weight initialization. The choices are 'randn' and 'rand'.
     level_gain : list of floats
         The gain at each level. (args.level_gain = [1.])
-    num_basis_fn : `int`
-        The number of basis function to use.
     activation : `str`
         Optional, default: 'leakyrelu'
         The activation function for lgn.LGNCG
     scale : `float` or `int`
+        Optional, default: 1.
         Scaling parameter for node features.
     mlp : `bool`
         Optional, default: True

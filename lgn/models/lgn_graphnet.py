@@ -14,27 +14,36 @@ from lgn.nn import InputLinear, MixReps
 class LGNGraphNet(CGModule):
     """
     The LGN Graph Neural Network architecture. Encoder and decoders are variations of this.
-    However, it is not directly used in LGNEncoder and LGNDecoder because they have different
-    forward passes and therefore cannot be represented.
 
     Parameters
-    ----------
-    input_basis : `str`
-        The basis of the input.
-        Choices:
-        - 'cartesian': Cartesian coordinates
-        - 'canonical': The set of spherical harmonics (zonal functions).
+    ---------
     num_input_particles : `int`
         The number of particles in the input.
+    input_basis : `str`
+        The basis of the input.
+        Options:
+        - 'cartesian': Cartesian coordinates
+        - 'canonical': The set of spherical harmonics (zonal functions).
+    tau_input_scalars : int
+        The multiplicity of the input scalar.
+    tau_input_vectors : int
+        The multiplicity of the input vectors.
+    num_output_partcles : int
+        The number of particles in the output.
+        - For Encoder, it will be set to 1, which means that the latent space is equivalent to
+          one particle.
+        - For Decoder, it will be set to 150 (the number of particles per jet in the hls4ml 150-p data)
     tau_output_scalars : `int`
         Multiplicity of Lorentz scalars (0,0) in the output.
     tau_output_vectors : `int`
         Multiplicity of Lorentz 4-vectors (1,1) in the output.
-    maxdim : `list` of `int`
-        Maximum weight in the output of CG products. (Expanded to list of
-        length num_cg_levels)
+    num_basis_fn : `int`
+        The number of basis function to use.
     max_zf : `list` of `int`
         Maximum weight in the output of the spherical harmonics  (Expanded to list of
+        length num_cg_levels)
+    maxdim : `list` of `int`
+        Maximum weight in the output of CG products. (Expanded to list of
         length num_cg_levels)
     num_cg_levels : int
         Number of cg levels to use.
@@ -45,20 +54,9 @@ class LGNGraphNet(CGModule):
         The type of weight initialization. The choices are 'randn' and 'rand'.
     level_gain : list of floats
         The gain at each level. (args.level_gain = [1.])
-    num_basis_fn : `int`
-        The number of basis function to use.
     activation : `str`
         Optional, default: 'leakyrelu'
         The activation function for lgn.LGNCG
-    p4_into_CG : `bool`
-        Optional, default: False
-        Whether or not to feed in 4-momenta themselves to the first CG layer,
-        in addition to scalars.
-            - If true, MixReps will be used for the input linear layer of the model.
-            - If false, IntputLinear will be used.
-    add_beams : `bool`
-        Optional, default: False
-        Append two proton beams of the form (m^2,0,0,+-1) to each event
     scale : `float` or `int`
         Scaling parameter for node features.
     mlp : `bool`
