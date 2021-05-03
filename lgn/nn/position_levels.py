@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from lgn.g_lib import GTau, GScalar
+from lgn.g_lib import GScalar
 
 class RadPolyTrig(nn.Module):
     """
