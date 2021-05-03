@@ -41,8 +41,11 @@ class LGNEncoder(CGModule):
         length num_cg_levels)
     weight_init : `str`
         The type of weight initialization. The choices are 'randn' and 'rand'.
-    level_gain : list of floats
+    level_gain : `list` of `floats`
         The gain at each level. (args.level_gain = [1.])
+    num_latent_particles : `int`
+        Optional, default : 1
+        The number of particles of jets in the latent space.
     activation : `str`
         Optional, default: 'leakyrelu'
         The activation function for lgn.LGNCG
@@ -70,7 +73,7 @@ class LGNEncoder(CGModule):
         Clebsch-gordan dictionary for taking the CG decomposition.
     """
     def __init__(self, num_input_particles, tau_particle_scalar, tau_particle_vector, tau_latent_scalars, tau_latent_vectors,
-                 maxdim, num_basis_fn, max_zf, num_cg_levels, num_channels, weight_init, level_gain,
+                 maxdim, num_basis_fn, max_zf, num_cg_levels, num_channels, weight_init, level_gain, num_latent_particles = 1,
                  activation='leakyrelu', scale=1., mlp=True, mlp_depth=None, mlp_width=None,
                  device=None, dtype=torch.float64, cg_dict=None):
 
@@ -94,7 +97,7 @@ class LGNEncoder(CGModule):
 
         self.num_input_particles = num_input_particles
         self.input_basis = 'cartesian'
-        self.num_latent_particles = 1
+        self.num_latent_particles = num_latent_particles
         self.tau_latent = GTau({(0, 0): tau_latent_scalars, (1, 1): tau_latent_vectors})
         self.num_cg_levels = num_cg_levels
         self.num_basis_fn = num_basis_fn

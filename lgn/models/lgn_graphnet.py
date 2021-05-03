@@ -138,6 +138,7 @@ class LGNGraphNet(CGModule):
         self.tau_cg_levels_node = self.lgn_cg.tau_levels_node
 
         # Output layers
+        self.tau_cg_levels_node[-1] = GTau({weight: int(value * num_input_particles / num_output_partcles) for weight, value in self.tau_cg_levels_node[-1]})
         self.tau_output = GTau({(0,0): tau_output_scalars, (1,1): tau_output_vectors})
         self.mix_reps = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=device, dtype=dtype)
 
@@ -191,10 +192,12 @@ class LGNGraphNet(CGModule):
         # (0,0): (2, batch_size, num_input_particles, tau_scalars, 1)
         # (1,1): (2, batch_size, num_input_particles, tau_vectors, 4)
         node_features = nodes_all[-1]
-        node_features = self.mix_reps(node_features) # node_all[-1] is the updated feature in the last layer
 
         # Size for each reshaped rep: (2, batch_size, num_output_particles, tau_rep, dim_rep)
-        node_features = {weight: reps.view(2, reps.shape[1], self.num_output_particles, -1, reps.shape[-1]) for weight, reps in node_features.items()}
+        node_features = GVec({weight: reps.view(2, reps.shape[1], self.num_output_particles, -1, reps.shape[-1])
+                              for weight, reps in node_features.items()})
+        # Mix
+        node_features = self.mix_reps(node_features) # node_all[-1] is the updated feature in the last layer
         if not covariance_test:
             return node_features, node_mask, edge_mask
         else:
