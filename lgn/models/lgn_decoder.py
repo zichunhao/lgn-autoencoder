@@ -184,7 +184,7 @@ class Decoder(CGModule):
         # (1,1): (2, batch_size, num_input_particles, tau_vectors, 4)
         node_feature = self.mix_reps(nodes_all[-1])
 
-        # size for each representation: (2, batch_size, num_input_particles * tau_rep, dim_rep)
+        # size for each representation: (2, batch_size, num_input_particles, tau_rep, dim_rep)
         node_feature = {weight: reps.view(2, reps.shape[1], -1, reps.shape[-1]) for weight, reps in node_feature.items()}
 
         return node_feature
