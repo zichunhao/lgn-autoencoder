@@ -135,7 +135,7 @@ class LGNGraphNet(CGModule):
                             activation=self.activation, device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)
 
         self.tau_cg_levels_node = self.lgn_cg.tau_levels_node
-        self.tau_dict['cg_layers'] = self.tau_cg_levels_node
+        self.tau_dict['cg_layers'] = self.tau_cg_levels_node.copy()
 
         # Output layers
         self.tau_cg_levels_node[-1] = GTau({weight: int(value * num_input_particles / num_output_partcles) for weight, value in self.tau_cg_levels_node[-1]})
