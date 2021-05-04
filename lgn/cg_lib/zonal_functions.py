@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-from torch.nn import Module
 from math import sqrt
 
 from lgn.cg_lib import CGModule
@@ -41,14 +40,17 @@ class ZonalFunctionsRel(CGModule):
 
 
 def zonal_functions(cg_dict, p, max_zf, normalize=False, basis='cartesian'):
-    """Produce the list of zonal spherical functions evaluated at a given 4-vector p.
-    Input p: a real (1,1) rep torch tensor (any number of batches/atoms/channels),
+    """
+    Produce the list of zonal spherical functions evaluated at a given 4-vector p.
+    Input p:
+        A real (1,1) rep torch tensor (any number of batches/nodes/channels),
         presented as a dictionary with a single item.
         All momenta must have nonnegative norm, although we don't check for that.
-    Output: a rep vector consisting of (l,l) irrep tensors, from l=1 to l=max_zf
-     (same number of batches/atoms/channels)
-     the l=1 tensor equals the input (in canonical basis).
-     The higher l's are the values of the 'interesting' zonal functions."""
+    Output:
+        A rep vector consisting of (l,l) irrep tensors, from l=1 to l=max_zf (same number of batches/nodes/channels)
+        The l=1 tensor equals the input (in canonical basis).
+        The higher l's are the values of the 'interesting' zonal functions.
+    """
 
     if type(p) == dict:
         assert list(p.keys()) == [(1, 1)], 'p must contain only the (1,1) irrep!'
@@ -84,11 +86,15 @@ def zonal_functions(cg_dict, p, max_zf, normalize=False, basis='cartesian'):
     return GVec(zf)
 
 def zonal_functions4(cg_dict, p, max_zf, normalize=False):
-    """Produce the list of zonal spherical functions evaluated at a given 4-vector p.
-    Input p: a real torch tensor of shape ((batch),4)
-    Output: a rep vector consisting of (l,l) irrep tensors, from l=1 to l=max_zf
-     (same number of batches/atoms/channels) The l=1 tensor equals the input (in canonical basis).
-     The higher ones are the values of the zonal functions."""
+    """
+    Produce the list of zonal spherical functions evaluated at a given 4-vector p.
+    Input
+        p: a real torch tensor of shape ((batch),4)
+    Output:
+        A rep vector consisting of (l,l) irrep tensors, from l=1 to l=max_zf
+        (same number of batches/nodes/channels). The l=1 tensor equals the input (in canonical basis).
+        The higher ones are the values of the zonal functions.
+    """
 
     assert type(p) == torch.Tensor and p.shape[-1] == 4, 'p must be a tensor consisting of 4-vectors!'
     # Normalize the inputs to make the non-null 4-vectors have unit normself.
@@ -136,6 +142,19 @@ def zonal_functions_canonical(cg_dict, p, max_zf, normalize=False):
     return GVec(zf), norm.squeeze(-1), norm_sq.squeeze(-1)
 
 def normsq4(p):
+    """
+    Quickly calculate to calculate the norms of the four-vectors
+
+    Input
+    -----
+    p : `torch.Tensor`
+        4-moment in CARTESIAN coordinates.
+
+    Output
+    -----
+    p^2 : `torch.Tensor`
+        The norm square of p.
+    """
     # Quick hack to calculate the norms of the four-vectors
     # The last dimension of the input gets eaten up
     psq = torch.pow(p, 2)
@@ -168,10 +187,14 @@ def zonal_functions_rel(cg_dict, p1, p2, maxdim, normalize=False, basis='cartesi
     return zf_rel, rel_norms, rel_norms_sq
 
 def p_to_rep(p):
-    """Takes a batch of real 4-vectors (no complex dimension) as a tensor
-    in Cartesian coordinates (t,x,y,z) and converts to the canonical basis, adding a channel dimension of size 1.
-    Input: tensor of shape ((batch),4)
-    Output: a complex (1,1) irrep {(1,1):tensor} with tensor of shape (2,(batch),1,4) """
+    """
+    Takes a batch of real 4-vectors (no complex dimension) as a tensor in Cartesian coordinates (t,x,y,z)
+    and converts to the canonical basis, adding a channel dimension of size 1.
+    Input:
+        p : `torch.Tensor` of shape ((batch),4)
+    Output:
+        A complex (1,1) irrep {(1,1):tensor} with tensor of shape (2,(batch),1,4)
+    """
     device = p.device
     dtype = p.dtype
     cartesian4 = torch.tensor([[[1, 0, 0, 0], [0, 1 / sqrt(2.), 0, 0], [0, 0, 0, 1], [0, -1 / sqrt(2.), 0, 0]],
@@ -208,8 +231,11 @@ def p_cplx_to_rep(p):
     return GVec(rep)
 
 def rep_to_p(rep):
-    """Same unitary transformation in the opposite direction
-    Output: torch tensor with a complex dimension at position 0"""
+    """
+    Same unitary transformation in the opposite direction
+    Output:
+        `Torch.tensor` with a complex dimension at position 0.
+    """
     if isinstance(rep, GTensor) or type(rep) == dict:
         rep = rep[(1, 1)]
     device = rep.device
@@ -222,8 +248,10 @@ def rep_to_p(rep):
     return torch.squeeze(p, -1)
 
 def normsq(p):
-    """Computes the Lorentzian norm squared of reps presented in the canonical basis
-    If the rep contains multiple irreps, it outputs a dictionary of tensors, otherwise a tensor."""
+    """
+    Computes the Lorentzian norm squared of reps presented in the canonical basis.
+    If the rep contains multiple irreps, it outputs a dictionary of tensors, otherwise a tensor.
+    """
     if type(p) is dict or isinstance(p, GVec):
         pass
     else:
@@ -240,8 +268,10 @@ def metric(key):
     return torch.tensor(met, dtype=torch.float64).view([(k + 1) * (n + 1), (k + 1) * (n + 1)])
 
 def repdot(rep1, rep2):
-    """Lorentzian dot product of any two GVec's of the same representation type
-    written in the canonical basis. This dot product is invariant under LorentzD matrices."""
+    """
+    Lorentzian dot product of any two GVec's of the same representation type written in the canonical basis.
+    This dot product is invariant under LorentzD matrices.
+    """
     device = list(rep1.values())[0].device
     dtype = list(rep1.values())[0].dtype
     n = {}
