@@ -37,17 +37,6 @@ class JetDataset(Dataset):
 def initialize_data(path, batch_size, num_train, num_test=-1, num_val=-1):
     data = torch.load(path)
 
-    # Calculate node masks and edge masks
-    if 'labels' in data:
-        node_mask = data['labels']
-        node_mask = node_mask.to(torch.uint8)
-    else:
-        node_mask = data['p4'][...,0] != 0
-        node_mask = node_mask.to(torch.uint8)
-    edge_mask = node_mask.unsqueeze(1) * node_mask.unsqueeze(2)
-    data['node_mask'] = node_mask
-    data['edge_mask'] = edge_mask
-
     jet_data = JetDataset(data, shuffle=True) # The original data is not shuffled yet
 
     if not (num_test < 0 or num_val < 0): # Specified num_test and num_val
