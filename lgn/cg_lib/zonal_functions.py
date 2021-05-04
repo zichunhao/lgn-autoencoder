@@ -19,14 +19,17 @@ class ZonalFunctions(CGModule):
         super().__init__(cg_dict=cg_dict, maxdim=maxdim, device=device, dtype=dtype)
 
     def forward(self, pos, *ignore):
-        return zonal_functions4(self.cg_dict, pos, self.maxdim, normalize=self.normalize)
+        if self.basis == 'cartesian':
+            return zonal_functions4(self.cg_dict, pos, self.maxdim, normalize=self.normalize)
+        else:
+            return zonal_functions_canonical(self.cg_dict, pos, self.maxdim)
 
 
 class ZonalFunctionsRel(CGModule):
-    def __init__(self, maxdim, normalize=False, basis='cartesian',
-                 cg_dict=None, dtype=torch.float64, device=torch.device('cpu')):
+    def __init__(self, maxdim, normalize=False, basis='cartesian', cg_dict=None,
+                 dtype=torch.float64, device=torch.device('cpu')):
 
-        super(ZonalFunctionsRel, self).__init__()
+        super(ZonalFunctionsRel, self).__init__(cg_dict=cg_dict, maxdim=maxdim, device=device, dtype=dtype)
 
         self.normalize = normalize
         self.basis = basis
@@ -34,7 +37,7 @@ class ZonalFunctionsRel(CGModule):
         super().__init__(cg_dict=cg_dict, maxdim=maxdim, device=device, dtype=dtype)
 
     def forward(self, pos1, pos2):
-        return zonal_functions_rel(self.cg_dict, pos1, pos2, self.maxdim, normalize=self.normalize)
+        return zonal_functions_rel(self.cg_dict, pos1, pos2, self.maxdim, normalize=self.normalize, basis=self.basis)
 
 
 def zonal_functions(cg_dict, p, max_zf, normalize=False, basis='cartesian'):
@@ -99,7 +102,6 @@ def zonal_functions4(cg_dict, p, max_zf, normalize=False):
     p_rep = p_to_rep(p)
     zf = {(0, 0): torch.ones(p_rep[(1, 1)].shape[:-1] + (1,), device=p_rep.device, dtype=p_rep.dtype)}
     zf.update(p_rep)
-    new_zf = zf
 
     # Iteratively construct zonal functions and store them as entires in the outpit dict
     for l in range(2, max_zf + 1):
@@ -109,6 +111,30 @@ def zonal_functions4(cg_dict, p, max_zf, normalize=False):
         zf[(l, l)] = new_zf
     return GVec(zf), norm.squeeze(-1), norm_sq.squeeze(-1)
 
+def zonal_functions_canonical(cg_dict, p, max_zf, normalize=False):
+    if type(p) is dict or isinstance(p, GVec):
+        pass
+    else:
+        p = {(1, 1): p}
+    norm_sq = repdot(p, p)[(1,1)]
+    norm_sq = norm_sq.unsqueeze(-1)
+    mask = (norm_sq != 0)
+    norm = torch.where(mask, norm_sq / norm_sq.abs().sqrt(), norm_sq)
+    if normalize:
+        p[(1,1)] = torch.where(mask, p[(1,1)] / norm, p[(1,1)])
+    p_rep = GVec(p)
+    zf = {(0, 0): torch.ones(p_rep[(1, 1)].shape[:-1] + (1,), device=p_rep.device, dtype=p_rep.dtype)}
+    zf.update(p_rep)
+
+    # Iteratively construct zonal functions and store them as entires in the outpit dict
+    for l in range(2, max_zf + 1):
+        new_zf = cg_product(cg_dict, {(l - 1, l - 1): zf[(l - 1, l - 1)]}, p_rep, maxdim=l + 1)[(l, l)]
+        # This ensures that projecting onto the (l,l) component doesn't change the norm
+        new_zf *= sqrt(2 * l / (l + 1))
+        zf[(l, l)] = new_zf
+    zf = {weight: value.unsqueeze(-2) for weight, value in zf.items()}
+    return GVec(zf), norm.squeeze(-1), norm_sq.squeeze(-1)
+
 def normsq4(p):
     # Quick hack to calculate the norms of the four-vectors
     # The last dimension of the input gets eaten up
@@ -116,18 +142,28 @@ def normsq4(p):
     return 2 * psq[..., 0] - psq.sum(dim=-1)
 
 
-def zonal_functions_rel(cg_dict, p1, p2, maxdim, normalize=False):
-    """Computes the zonal functions applied to all pairwise differences
-     of 4-momenta in different channels (and broadcasts over higher batch dimensions).
-     The output has TWO channel dimensions corresponding to the
-     two channels whose difference was computed.
-     Input: batch of REAL 4-vectors given as a tensor of shape ((batch),4) in Cartesuab coords
-     Output: dictionary {(l,l):tensor} with l from 1 to maxdim-1"""
+def zonal_functions_rel(cg_dict, p1, p2, maxdim, normalize=False, basis='cartesian'):
+    """
+    Computes the zonal functions applied to all pairwise differences
+    of 4-momenta in different channels (and broadcasts over higher batch dimensions).
+    The output has TWO channel dimensions corresponding to the
+    two channels whose difference was computed.
+    Input:
+        batch of real 4-vectors given as a tensor of shape ((batch),4) in Cartesian coords
+    Output:
+        dictionary {(l,l):tensor} with l from 1 to maxdim-1
+    """
+    if basis == 'canonical':
+        p1 = rep_to_p(p1)
+        p2 = rep_to_p(p2)
 
     # Pairwise differences of four-momenta
     rel_p = p1.unsqueeze(-2) - p2.unsqueeze(-3)
 
-    zf_rel, rel_norms, rel_norms_sq = zonal_functions4(cg_dict, rel_p, maxdim, normalize=normalize)
+    if basis == 'cartesian':
+        zf_rel, rel_norms, rel_norms_sq = zonal_functions4(cg_dict, rel_p, maxdim, normalize=normalize)
+    else:
+        zf_rel, rel_norms, rel_norms_sq = zonal_functions_canonical(cg_dict, rel_p, maxdim, normalize=normalize)
 
     return zf_rel, rel_norms, rel_norms_sq
 
@@ -146,15 +182,25 @@ def p_to_rep(p):
     return GVec(rep)
 
 def p_cplx_to_rep(p):
-    """Takes a batch of 4-vectors either as a tensor or a
-    (1,1) irrep in Cartesian coordinates (t,x,y,z) and converts to the canonical basis.
-    Output: a (1,1) irrep"""
+    """
+    Takes a batch of 4-vectors either as a tensor or a (1,1) irrep in Cartesian coordinates (t,x,y,z)
+    and converts to the canonical basis.
+    Input
+    -----
+        p : `torch.Tensor` of shape (2,(batch),4)
+    Output
+    ------
+        A `GVec` that stores {(1,1): p_canonical}
+    """
     if type(p) == dict:
         p = p[(1, 1)]
-    assert p.shape[0] == 2, "the first dimension of p must be the complex dimension of size 2"
+    assert p.shape[0] == 2, "The first dimension of p must be the complex dimension of size 2"
+
     device = p.device
+    dtype = p.dtype
+
     cartesian4 = torch.tensor([[[1, 0, 0, 0], [0, 1 / sqrt(2.), 0, 0], [0, 0, 0, 1], [0, -1 / sqrt(2.), 0, 0]],
-                               [[0, 0, 0, 0], [0, 0, -1 / sqrt(2.), 0], [0, 0, 0, 0], [0, 0, -1 / sqrt(2.), 0]]], device=device)
+                               [[0, 0, 0, 0], [0, 0, -1 / sqrt(2.), 0], [0, 0, 0, 0], [0, 0, -1 / sqrt(2.), 0]]], device=device, dtype=dtype)
     p = torch.unsqueeze(p, -1)
     rep = torch.stack((torch.matmul(cartesian4[0], p[0]) - torch.matmul(cartesian4[1], p[1]),
                        torch.matmul(cartesian4[0], p[1]) + torch.matmul(cartesian4[1], p[0])), 0)
@@ -167,9 +213,10 @@ def rep_to_p(rep):
     if isinstance(rep, GTensor) or type(rep) == dict:
         rep = rep[(1, 1)]
     device = rep.device
+    dtype = rep.dtype
     assert rep.shape[0] == 2, "the first dimension of rep must be the complex dimension"
     cartesian4H = torch.tensor([[[1, 0, 0, 0], [0, 1 / sqrt(2.), 0, 0], [0, 0, 0, 1], [0, -1 / sqrt(2.), 0, 0]],
-                                [[0, 0, 0, 0], [0, 0, 1 / sqrt(2.), 0], [0, 0, 0, 0], [0, 0, 1 / sqrt(2.), 0]]], device=device).permute(0, 2, 1)
+                                [[0, 0, 0, 0], [0, 0, 1 / sqrt(2.), 0], [0, 0, 0, 0], [0, 0, 1 / sqrt(2.), 0]]], device=device, dtype=dtype).permute(0, 2, 1)
     rep = torch.unsqueeze(rep, -1)
     p = torch.stack((torch.matmul(cartesian4H[0], rep[0]) - torch.matmul(cartesian4H[1], rep[1]), torch.matmul(cartesian4H[0], rep[1]) + torch.matmul(cartesian4H[1], rep[0])), 0)
     return torch.squeeze(p, -1)
