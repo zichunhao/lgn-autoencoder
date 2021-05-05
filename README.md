@@ -7,8 +7,8 @@ To achieve Lorentz equivariance, the model works on the [irreducible representat
 
 ## References
 ### Relevant Group Equivariant Models
-- A. Bogatskiy et al., “Lorentz group equivariant neural network for particle physics”, [arXiv:2006.04780](https://arxiv.org/abs/2006.04780). Repository: [The Lorentz Group Network](https://github.com/fizisist/LorentzGroupNetwork).
-- F. Marc et al., ["A Practical Method for Constructing Equivariant Multilayer Perceptrons for Arbitrary Matrix Groups"](https://arxiv.org/abs/2104.09459). Repository: [A Practical Method for Constructing Equivariant Multilayer Perceptrons for Arbitrary Matrix Groups](https://github.com/mfinzi/equivariant-MLP).
+- A. Bogatskiy et al., “Lorentz group equivariant neural network for particle physics”, [arXiv:2006.04780](https://arxiv.org/abs/2006.04780). Repository: [Lorentz Group Network](https://github.com/fizisist/LorentzGroupNetwork).
+- F. Marc et al., "A Practical Method for Constructing Equivariant Multilayer Perceptrons for Arbitrary Matrix Groups", [arXiv:2104.09459](https://arxiv.org/abs/2104.09459). Repository: [A Practical Method for Constructing Equivariant Multilayer Perceptrons for Arbitrary Matrix Groups](https://github.com/mfinzi/equivariant-MLP).
 
 ### Backgrounds
 #### Group theory, the Lorentz group, and group representations
