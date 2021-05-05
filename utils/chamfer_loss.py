@@ -75,7 +75,7 @@ class ChamferLoss(nn.Module):
         Outputs
         -------
         dist : `torch.Tensor`
-            The matrix that represents distance between each particle in p and q
+            The matrix that represents distance between each particle in p and q.
             Shape : (batch_size, num_particles, num_particles)
         """
         if (p.shape[1] != q.shape[1]):
