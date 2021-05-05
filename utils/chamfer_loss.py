@@ -26,7 +26,7 @@ class ChamferLoss(nn.Module):
             2. The norm squared is computed.
             3. The result is converted to real.
     """
-    def __init__(self, norm_choice='real', device=None):
+    def __init__(self, norm_choice='canonical', device=None):
         super(ChamferLoss, self).__init__()
         if norm_choice.lower() not in ['real', 'cplx', 'complex', 'canonical']:
             raise ValueError(f"norm_choice can only be one of 'real', 'cplx', or 'canonical': {norm_choice}")
