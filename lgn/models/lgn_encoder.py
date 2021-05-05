@@ -186,22 +186,14 @@ class LGNEncoder(CGModule):
         zonal_functions_in[(0, 0)] = torch.stack([node_scalars.unsqueeze(-1),
                                                   torch.zeros_like(node_scalars.unsqueeze(-1))])
         zonal_functions, norms, sq_norms = self.zonal_fns(node_ps, node_ps)
-        print(f'node_ps.shape = {node_ps.shape}')
-        print(f'node_mask.shape = {node_mask.shape}')
-        print(f'edge_mask.shape = {edge_mask.shape}')
-        print(f'zonal_functions_in[(1,1)].shape = {zonal_functions_in[(1,1)].shape}')
-        print(f'zonal_functions[(1,1)].shape = {zonal_functions[(1,1)].shape}')
 
         # Input layer
         if self.num_cg_levels > 0:
             rad_func_levels = self.rad_funcs(norms, edge_mask * (norms != 0).byte())
             node_reps_in = self.input_func_node(zonal_functions_in)
-            print(f"rad_func_levels[0][(1,1)].shape = {rad_func_levels[0][(1,1)].shape}")
-            print(f"node_reps_in[(1,1)].shape = {node_reps_in[(1,1)].shape}")
         else:
             rad_func_levels = []
             node_reps_in = self.input_func_node(node_scalars, node_mask)
-            print(f"node_reps_in[(1,1)].shape = {node_reps_in[(1,1)].shape}")
 
         # CG layer
         nodes_all = self.lgn_cg(node_reps_in, node_mask, rad_func_levels, zonal_functions)
