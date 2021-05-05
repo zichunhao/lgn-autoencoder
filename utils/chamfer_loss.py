@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from lgn.cg_lib.zonal_functions import p_cplx_to_rep, repdot
 
 class ChamferLoss(nn.Module):
     """
@@ -20,11 +21,15 @@ class ChamferLoss(nn.Module):
             Shape: `(2, batch_size, num_particles)`
             2. Norm of the complex number is taken. Note that the result will be non-negative.
             Shape: `(batch_size, num_particles)`
+        - `'canonical'`
+            1. p is expressed in the basis of spherical harmonics, which is naturally defined in the field of complex numbers.
+            2. The norm squared is computed.
+            3. The result is converted to real.
     """
     def __init__(self, norm_choice='real', device=None):
         super(ChamferLoss, self).__init__()
-        if norm_choice.lower() not in ['real', 'cplx', 'complex']:
-            raise ValueError(f"norm_choice can only be one of 'real' or 'cplx': {norm_choice}")
+        if norm_choice.lower() not in ['real', 'cplx', 'complex', 'canonical']:
+            raise ValueError(f"norm_choice can only be one of 'real', 'cplx', or 'canonical': {norm_choice}")
 
         self.norm_choice = norm_choice
         self.device = device if (device is not None) else torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -95,6 +100,8 @@ class ChamferLoss(nn.Module):
 
         if self.norm_choice.lower() == 'real':
             dist = normsq_real(p1 - q1)
+        elif self.norm_choice.lower() == 'canonical':
+            dist = normsq_canonical(p1 - q1)
         else:
             dist = normsq_cplx(p1 - q1)
         return dist
@@ -142,6 +149,16 @@ def normsq_cplx(p4):
     pq = p4[0] * p4[1]
     m_im = 2 * (2 * pq[..., 0] - pq.sum(dim=-1))
     return torch.sqrt(torch.pow(m_real, 2) + torch.pow(m_im, 2) + 1e-12)
+
+def normsq_canonical(p4):
+    """
+    1. p is expressed in the basis of spherical harmonics, which is naturally defined in the field of complex numbers.
+    2. The norm squared is computed.
+    3. The result is converted to real.
+    """
+    p4 = p_cplx_to_rep(p4)
+    p_sq = repdot(p4, p4)[(1,1)]
+    return torch.pow(p_sq[0], 2) + torch.pow(p_sq[1], 2)
 
 def normsq_real(p4):
     """
