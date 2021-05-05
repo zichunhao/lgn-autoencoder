@@ -200,15 +200,17 @@ class LGNDecoder(CGModule):
         generated_features = self.mix_to_output(node_features) # node_all[-1] is the updated feature in the last layer
         generated_features[(1,1)] = rep_to_p(generated_features[(1,1)])  # Convert to Cartesian coordinates
         generated_ps = generated_features[(1,1)]
+        # Remove the dimension of multiplicity (i.e. each particle is represented by a single 4-vector)
+        generated_ps = generated_ps.squeeze(-2)
 
         if not covariance_test:
-            return generated_ps, latent_features
+            return generated_ps
         else:
             for i in range(len(decoder_nodes_all)):
                 nodes_all.append(decoder_nodes_all[i])
             nodes_all.append(GVec(node_features))
             nodes_all.append(GVec(latent_features))
-            return generated_ps, latent_features, nodes_all
+            return generated_ps, nodes_all
 
     """
     Extract input from data.
