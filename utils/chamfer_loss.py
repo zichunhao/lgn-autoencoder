@@ -2,9 +2,31 @@ import torch
 import torch.nn as nn
 
 class ChamferLoss(nn.Module):
-    def __init__(self, device=None):
+    """
+    Parameters
+    ----------
+    norm_choice : `str`
+        The choice to compute the norm squared of the complex 4-vector.
+        Optional, default: 'cplx'
+        Options:
+        - 'real'
+            1. Norm of p4 is taken so that it only contains real components.
+            Shape: (batch_size, num_particles, 4)
+            2. The Lorentz norm is computed using the Minkowskian metric (+, -, -, -).
+            Note that the result can be negative even though it is called the 'norm squared.'
+            Shape: (batch_size, num_particles)
+        - 'cplx' or 'complex'
+            1. Lorentz norm is computed first using the Minkowskian metric (+, -, -, -), resulting in a complex number.
+            Shape: (2, batch_size, num_particles)
+            2. Norm of the complex number is taken. Note that the result will be non-negative.
+            Shape: (batch_size, num_particles)
+    """
+    def __init__(self, norm_choice='real', device=None):
         super(ChamferLoss, self).__init__()
+        if norm_choice.lower() not in ['real', 'cplx', 'complex']:
+            raise ValueError(f"norm_choice can only be one of 'real' or 'cplx': {norm_choice}")
 
+        self.norm_choice = norm_choice
         self.device = device if (device is not None) else torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def forward(self, p, q):
@@ -70,7 +92,11 @@ class ChamferLoss(nn.Module):
 
         p1 = p.repeat(1, 1, 1, num_col).view(2, batch_size, -1, num_col, vec_dim).to(self.device)
         q1 = q.repeat(1, 1, num_row, 1).view(2, batch_size, num_row, -1, vec_dim).to(self.device)
-        dist = normsq(p1 - q1)
+
+        if self.norm_choice.lower() == 'real':
+            dist = normsq_real(p1 - q1)
+        else:
+            dist = normsq_cplx(p1 - q1)
         return dist
 
 def convert_to_complex(real_ps):
@@ -89,9 +115,39 @@ def convert_to_complex(real_ps):
     """
     return torch.stack((real_ps, torch.zeros_like(real_ps)), dim=0)
 
-def normsq(p4):
+def normsq_cplx(p4):
     """
-    Compute the norm squared p4^2 for complex p4.
+    Compute the norm squared p4^2 for complex p4 and then the take the norm of the complex number.
+    1. Loretnz norm is computed, resulting in a complex number.
+    Shape: (2, OTHER_DIMENSIONS)
+    2. Norm of the complex number is taken.
+    Shape: (OTHER_DIMENSIONS)
+
+    Input
+    -----
+    p4 : `torch.Tensor`
+        The 4-momenta with shape (2, OTHER_DIMENSIONS , 4)
+        p4 = [p, q], where p is the real component, and q is the imaginary component.
+    Output
+    -----
+    m : `torch.Tensor`
+        The norm square of p4
+        Recall p^2 = - m
+        Shape: (OTHER_DIMENSIONS)
+    """
+    p4_real_sq = torch.pow(p4[0], 2)
+    m_real = 2 * p4_real_sq[..., 0] - p4_real_sq.sum(dim=-1)
+    pq = p4[0] * p4[1]
+    m_im = 2 * (2 * pq[..., 0] - pq.sum(dim=-1))
+    return torch.sqrt(torch.pow(m_real, 2) + torch.pow(m_im, 2) + 1e-12)
+
+def normsq_real(p4):
+    """
+    Compute the norm of complex p4 and then find the Lorentz norm squared.
+    1. Norm of p4 is taken so that it only contains real components.
+    Shape: (OTHER_DIMENSIONS,4)
+    2. The Lorentz norm is computed using the Minkowskian metric (+, -, -, -).
+    Shape: (OTHER_DIMENSIONS)
 
     Input
     -----
@@ -103,13 +159,10 @@ def normsq(p4):
     m : `torch.Tensor`
         The norm square of p4
         Recall p^2 = - m
-        Shape: (2, ...)
+        Shape: (OTHER_DIMENSIONS)
     """
-    p4_real_sq = torch.pow(p4[0], 2)
-    m_real = 2 * p4_real_sq[..., 0] - p4_real_sq.sum(dim=-1)
-    pq = p4[0] * p4[1]
-    m_im = 2 * (2 * pq[..., 0] - pq.sum(dim=-1))
-    return torch.sqrt(torch.pow(m_real, 2) + torch.pow(m_im, 2) + 1e-12)
+    p4_norm = torch.sqrt(torch.pow(p4[0], 2) + torch.pow(p4[1], 2) + 1e-12)
+    return 2 * p4_norm[..., 0] - p4_norm.sum(dim=-1)
 
 ######################################## Unused ########################################
 def reshape_generated_ps(generated_ps):
