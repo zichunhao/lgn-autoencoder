@@ -139,7 +139,7 @@ def zonal_functions_canonical(cg_dict, p, max_zf, normalize=False):
         new_zf *= sqrt(2 * l / (l + 1))
         zf[(l, l)] = new_zf
     zf = {weight: value.unsqueeze(-2) for weight, value in zf.items()}
-    return GVec(zf), norm.squeeze(-1), norm_sq.squeeze(-1)
+    return GVec(zf), norm.squeeze(-1).squeeze(-1), norm_sq.squeeze(-1).squeeze(-1)
 
 def normsq4(p):
     """

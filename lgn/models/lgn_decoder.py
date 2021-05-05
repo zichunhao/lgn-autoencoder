@@ -1,10 +1,18 @@
 import torch
 import logging
 
-from lgn.cg_lib import normsq4
-from lgn.models.lgn_graphnet import LGNGraphNet
+from lgn.cg_lib import CGModule, ZonalFunctionsRel, ZonalFunctions
+from lgn.cg_lib.zonal_functions import p_cplx_to_rep, rep_to_p
+from lgn.g_lib import GTau, GVec
 
-class LGNEncoder(LGNGraphNet):
+from lgn.models.lgn_cg import LGNCG
+from lgn.nn import RadialFilters
+from lgn.nn import MixReps
+
+from lgn.models.utils import adapt_var_list
+
+
+class LGNDecoder(CGModule):
     """
     The encoder of the LGN autoencoder.
 
@@ -59,17 +67,17 @@ class LGNEncoder(LGNGraphNet):
             torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         The device to which the module is initialized.
     dtype : `torch.dtype`
-        Optional, default: torch.float64
+        Optional, default: None, in which case it will be set to torch.float64
         The data type to which the module is initialized.
     cg_dict : `CGDict`
         Optional, default: None
         Clebsch-gordan dictionary for taking the CG decomposition.
     """
-    def __init__(self, num_latent_particles, tau_latent_scalar, tau_latent_vector,
+    def __init__(self, num_latent_particles, tau_latent_scalars, tau_latent_vectors,
                  num_output_particles, tau_output_scalars, tau_output_vectors,
                  maxdim, num_basis_fn, num_channels, max_zf, weight_init, level_gain,
-                 activation='leakyrelu', scale=1., mlp=True, mlp_depth=None, mlp_width=None,
-                 device=None, dtype=torch.float64, cg_dict=None):
+                 activation='leakyrelu', mlp=True, mlp_depth=None, mlp_width=None,
+                 device=None, dtype=None, cg_dict=None):
 
         if device is None:
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -77,18 +85,63 @@ class LGNEncoder(LGNGraphNet):
         if dtype is None:
             dtype = torch.float64
 
-        logging.info(f'Initializing encoder with device: {device} and dtype: {dtype}')
+        num_cg_levels = len(num_channels) - 1
 
-        super().__init__(num_input_particles=num_latent_particles, input_basis='canonical',
-                         tau_input_scalars=tau_latent_scalar, tau_input_vectors=tau_latent_vector,
-                         num_output_partcles=num_output_particles, tau_output_scalars=tau_output_scalars, tau_output_vectors=tau_output_vectors,
-                         max_zf=max_zf, maxdim=maxdim, num_channels=num_channels,
-                         weight_init=weight_init, level_gain=level_gain, num_basis_fn=num_basis_fn,
-                         activation=activation, mlp=mlp, mlp_depth=mlp_depth, mlp_width=mlp_width,
-                         device=device, dtype=dtype, cg_dict=cg_dict)
+        level_gain = adapt_var_list(level_gain, num_cg_levels)
+        maxdim = adapt_var_list(maxdim, num_cg_levels)
+        max_zf = adapt_var_list(max_zf, num_cg_levels)
 
-        self.scale = scale
+        super().__init__(maxdim=max(maxdim + max_zf), device=device, dtype=dtype, cg_dict=cg_dict)
+        logging.info(f'Initializing decoder with device: {self.device} and dtype: {self.dtype}')
 
+        # Member varibles
+        self.input_basis = 'canonical'  # Will convert it from Cartesian
+        self.num_latent_particles = num_latent_particles
+        self.tau_latent_scalars = tau_latent_scalars
+        self.tau_latent_vectors = tau_latent_vectors
+        self.tau_dict = {'input': GTau({(0,0): tau_latent_scalars, (1,1): tau_latent_vectors})}
+
+        self.num_output_particles = num_output_particles
+
+        self.num_cg_levels = num_cg_levels
+        self.num_basis_fn = num_basis_fn
+        self.max_zf = max_zf
+        self.num_channels = num_channels
+
+        self.mlp = mlp
+        self.mlp_depth = mlp_depth
+        self.mlp_width = mlp_width
+        self.activation = activation
+
+        tau_mix_to_graph = GTau({weight: self.num_output_particles for weight in [(0,0), (1,1)]})
+        self.latent_to_graph = MixReps(self.tau_dict['input'], tau_mix_to_graph, device=self.device, dtype=self.dtype)
+
+        tau_mix_to_cg = GTau({weight: num_channels[0] for weight in [(0,0), (1,1)]})
+        self.input_func_node = MixReps(GTau({weight: 1 for weight in [(0,0), (1,1)]}), tau_mix_to_cg, device=self.device, dtype=self.dtype)
+
+
+        self.zonal_fns_in = ZonalFunctions(max(self.max_zf), basis=self.input_basis,
+                                           dtype=dtype, device=device, cg_dict=cg_dict)
+        self.zonal_fns = ZonalFunctionsRel(max(self.max_zf), basis=self.input_basis,
+                                           dtype=dtype, device=device, cg_dict=cg_dict)
+
+        # Position functions
+        self.rad_funcs = RadialFilters(self.max_zf, self.num_basis_fn, self.num_channels, self.num_cg_levels,
+                                       input_basis=self.input_basis, device=self.device, dtype=self.dtype)
+        tau_pos = self.rad_funcs.tau
+
+        tau_input_node = self.input_func_node.tau
+
+        self.lgn_cg = LGNCG(maxdim, self.max_zf, tau_input_node, tau_pos, self.num_cg_levels, self.num_channels,
+                            level_gain, weight_init, mlp=self.mlp, mlp_depth=self.mlp_depth, mlp_width=self.mlp_width,
+                            activation=self.activation, device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)
+
+        self.tau_cg_levels_node = self.lgn_cg.tau_levels_node
+        self.tau_dict['cg_layers'] = self.tau_cg_levels_node.copy()
+
+        self.tau_output = GTau({(0,0): tau_output_scalars, (1,1): tau_output_vectors})
+        self.tau_dict['output'] = self.tau_output
+        self.mix_to_output = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
     '''
     The forward pass of the LGN GNN.
 
@@ -113,17 +166,50 @@ class LGNEncoder(LGNGraphNet):
         nodes_all : `list` of GVec
             The full node features in both encoder and decoder.
     '''
-    def forward(self, data, covariance_test=False, nodes_all=None):
+    def forward(self, latent_features, covariance_test=False, nodes_all=None):
+        if covariance_test and (nodes_all is None):
+            raise ValueError('covariance_test is set to True, but the full node features from the encoder is not passed in!')
         # Get data
-        node_scalars, node_ps, node_mask, edge_mask = self._prepare_input(data)
+        node_ps, node_scalars, node_mask, edge_mask = self._prepare_input(latent_features)
 
-        # Can be simplied as self.graph_net(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
-        if not covariance_test:
-            latent_features, node_mask, edge_mask = super(LGNEncoder, self).forward(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
-            return latent_features, edge_mask, edge_mask
+        zonal_functions_in, _, _ = self.zonal_fns_in(node_ps)
+        zonal_functions, norms, sq_norms = self.zonal_fns(node_ps, node_ps)
+
+        # print(f"node_ps.shape = {node_ps.shape}")
+        # print(f"node_mask.shape = {node_mask.shape}")
+        # print(f"edge_mask.shape = {edge_mask.shape}")
+        # print(f'norms.shape = {norms.shape}')
+        # print(f'zonal_functions_in[(1,1)].shape = {zonal_functions_in[(1,1)].shape}')
+        # print(f'zonal_functions[(1,1)].shape = {zonal_functions[(1,1)].shape}')
+
+        if self.num_cg_levels > 0:
+            rad_func_levels = self.rad_funcs(norms, edge_mask * (norms != 0).byte())
+            # print(f"rad_func_levels[0][(1,1)] = {rad_func_levels[0][(1,1)].shape}")
+            # print(f'zonal_functions_in.tau = {zonal_functions_in.tau}')
+            node_reps_in = self.input_func_node(zonal_functions_in)
+            # print(f"node_reps_in[(1,1)].shape = {node_reps_in[(1,1)].shape}")
         else:
-            latent_features, node_mask, edge_mask, nodes_all = super(LGNEncoder, self).forward(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
-            return latent_features, edge_mask, edge_mask, nodes_all
+            rad_func_levels = []
+            node_reps_in = self.input_func_node(node_scalars, node_mask)
+
+        # CG layers
+        decoder_nodes_all = self.lgn_cg(node_reps_in, node_mask, rad_func_levels, zonal_functions)
+        node_features = decoder_nodes_all[-1]
+
+        # Mix to output
+        generated_features = self.mix_to_output(node_features) # node_all[-1] is the updated feature in the last layer
+        generated_features[(1,1)] = rep_to_p(generated_features[(1,1)])  # Convert to Cartesian coordinates
+        generated_ps = generated_features[(1,1)]
+
+        if not covariance_test:
+            return generated_ps, latent_features
+        else:
+            for i in range(len(decoder_nodes_all)):
+                nodes_all.append(decoder_nodes_all[i])
+            nodes_all.append(GVec(node_features))
+            nodes_all.append(GVec(latent_features))
+            return generated_ps, latent_features, nodes_all
+
     """
     Extract input from data.
 
@@ -143,19 +229,15 @@ class LGNEncoder(LGNGraphNet):
     edge_mask: `torch.Tensor`
         Edge mask used for batching data.
     """
-    def _prepare_input(self, data):
+    def _prepare_input(self, latent_features):
+        node_features = self.latent_to_graph(latent_features)
+        node_features = {weight: value.squeeze(-3) for weight, value in node_features.items()}
+        node_ps = node_features[(1,1)]
+        node_scalars = node_features[(0,0)]
 
-        node_ps = data['p4'].to(device=self.device, dtype=self.dtype) * self.scale
+        batch_size = node_ps.shape[1]
+        node_mask = torch.zeros(2, batch_size, self.num_output_particles)
+        edge_mask = torch.zeros(2, batch_size, self.num_output_particles, self.num_output_particles)
 
-        data['p4'].requires_grad_(True)
-
-        node_mask = data['node_mask'].to(device=self.device, dtype=torch.uint8)
-        edge_mask = data['edge_mask'].to(device=self.device, dtype=torch.uint8)
-
-        scalars = torch.ones_like(node_ps[:,:, 0]).unsqueeze(-1)
-        scalars = normsq4(node_ps).abs().sqrt().unsqueeze(-1)
-
-        if 'scalars' in data.keys():
-            scalars = torch.cat([scalars, data['scalars'].to(device=self.device, dtype=self.dtype)], dim=-1)
-
-        return scalars, node_ps, node_mask, edge_mask
+        node_ps = p_cplx_to_rep(node_ps)[(1,1)] # Convert to canonical basis
+        return node_ps, node_scalars, node_mask, edge_mask
