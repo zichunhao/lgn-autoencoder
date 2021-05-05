@@ -42,10 +42,12 @@ class ZonalFunctionsRel(CGModule):
 def zonal_functions(cg_dict, p, max_zf, normalize=False, basis='cartesian'):
     """
     Produce the list of zonal spherical functions evaluated at a given 4-vector p.
+
     Input p:
         A real (1,1) rep torch tensor (any number of batches/nodes/channels),
         presented as a dictionary with a single item.
         All momenta must have nonnegative norm, although we don't check for that.
+
     Output:
         A rep vector consisting of (l,l) irrep tensors, from l=1 to l=max_zf (same number of batches/nodes/channels)
         The l=1 tensor equals the input (in canonical basis).
@@ -89,8 +91,11 @@ def zonal_functions4(cg_dict, p, max_zf, normalize=False):
     """
     Produce the list of zonal spherical functions evaluated at a given 4-vector p.
     Input
+    -----
         p: a real torch tensor of shape ((batch),4)
-    Output:
+
+    Output
+    -----
         A rep vector consisting of (l,l) irrep tensors, from l=1 to l=max_zf
         (same number of batches/nodes/channels). The l=1 tensor equals the input (in canonical basis).
         The higher ones are the values of the zonal functions.
@@ -167,9 +172,13 @@ def zonal_functions_rel(cg_dict, p1, p2, maxdim, normalize=False, basis='cartesi
     of 4-momenta in different channels (and broadcasts over higher batch dimensions).
     The output has TWO channel dimensions corresponding to the
     two channels whose difference was computed.
-    Input:
+
+    Input
+    -----
         batch of real 4-vectors given as a tensor of shape ((batch),4) in Cartesian coords
-    Output:
+
+    Output
+    -----
         dictionary {(l,l):tensor} with l from 1 to maxdim-1
     """
     if basis == 'canonical':
@@ -190,9 +199,13 @@ def p_to_rep(p):
     """
     Takes a batch of real 4-vectors (no complex dimension) as a tensor in Cartesian coordinates (t,x,y,z)
     and converts to the canonical basis, adding a channel dimension of size 1.
-    Input:
+
+    Input
+    -----
         p : `torch.Tensor` of shape ((batch),4)
-    Output:
+
+    Output
+    -----
         A complex (1,1) irrep {(1,1):tensor} with tensor of shape (2,(batch),1,4)
     """
     device = p.device
@@ -208,9 +221,11 @@ def p_cplx_to_rep(p):
     """
     Takes a batch of 4-vectors either as a tensor or a (1,1) irrep in Cartesian coordinates (t,x,y,z)
     and converts to the canonical basis.
+
     Input
     -----
         p : `torch.Tensor` of shape (2,(batch),4)
+
     Output
     ------
         A `GVec` that stores {(1,1): p_canonical}
