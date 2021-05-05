@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class ChamferLoss(nn.Module):
-    def __init__(self, device):
+    def __init__(self, device=None):
         super(ChamferLoss, self).__init__()
 
         self.device = device if (device is not None) else torch.device('cuda' if torch.cuda.is_available() else 'cpu')
