@@ -123,10 +123,7 @@ def get_bool(arg):
 def get_device(arg):
     if arg is None:
         return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    if arg.lower() in ('gpu', 'cuda'):
-        arg.device = torch.device('cuda')
-    elif arg.lower() == 'cpu':
+    if arg.lower() == 'cpu':
         device = torch.device('cpu')
     else:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
