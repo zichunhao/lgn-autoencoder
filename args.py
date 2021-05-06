@@ -72,7 +72,7 @@ def setup_argparse():
                         help='Batch size.')
     parser.add_argument('--num-epochs', type=int, default=64, metavar='',
                         help='Number of epochs for training.')
-    parser.add_argument('--loss-choice', type=str, default='canonical', metavar='',
+    parser.add_argument('--loss-norm-choice', type=str, default='canonical', metavar='',
                         help="Choice of calculating the norms of 4-vectors when calculating the loss. " \
                         "Options: ('canonical', 'real', 'cplx'). " \
                         "'canonical': Write p in the basis of zonal functions, take the dot product, and find the norm out of the complex scalar. " \

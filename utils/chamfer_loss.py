@@ -6,7 +6,7 @@ class ChamferLoss(nn.Module):
     """
     Parameters
     ----------
-    norm_choice : `str`
+    loss_norm_choice : `str`
         The choice to compute the norm squared of the complex 4-vector.
         Optional, default: `'cplx'`
         Options:
@@ -26,12 +26,12 @@ class ChamferLoss(nn.Module):
             2. The norm squared is computed.
             3. The result is converted to real.
     """
-    def __init__(self, norm_choice='canonical', device=None):
+    def __init__(self, loss_norm_choice='canonical', device=None):
         super(ChamferLoss, self).__init__()
-        if norm_choice.lower() not in ['real', 'cplx', 'complex', 'canonical']:
-            raise ValueError(f"norm_choice can only be one of 'real', 'cplx', or 'canonical': {norm_choice}")
+        if loss_norm_choice.lower() not in ['real', 'cplx', 'complex', 'canonical']:
+            raise ValueError(f"loss_norm_choice can only be one of 'real', 'cplx', or 'canonical': {loss_norm_choice}")
 
-        self.norm_choice = norm_choice
+        self.loss_norm_choice = loss_norm_choice
         self.device = device if (device is not None) else torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def forward(self, p, q):
@@ -98,9 +98,9 @@ class ChamferLoss(nn.Module):
         p1 = p.repeat(1, 1, 1, num_col).view(2, batch_size, -1, num_col, vec_dim).to(self.device)
         q1 = q.repeat(1, 1, num_row, 1).view(2, batch_size, num_row, -1, vec_dim).to(self.device)
 
-        if self.norm_choice.lower() == 'real':
+        if self.loss_norm_choice.lower() == 'real':
             dist = normsq_real(p1 - q1)
-        elif self.norm_choice.lower() == 'canonical':
+        elif self.loss_norm_choice.lower() == 'canonical':
             dist = normsq_canonical(p1 - q1)
         else:
             dist = normsq_cplx(p1 - q1)
