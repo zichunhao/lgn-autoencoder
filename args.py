@@ -38,11 +38,11 @@ def setup_argparse():
 
     parser.add_argument('--encoder-num-channels', nargs="+", type=int, default=[2, 3, 2, 1], metavar='',
                         help='Number of channels (or multiplicity or all irreps) in each CG layer in the encoder.')
-    parser.add_argument('--decoder-num-cg-levels', nargs="+", type=int, default=[2, 3, 2, 1], metavar='',
+    parser.add_argument('--decoder-num-channels', nargs="+", type=int, default=[2, 3, 2, 1], metavar='',
                         help='Number of channels (or multiplicity or all irreps) in each CG layer in the decoder.')
 
-    parser.add_argument('--max-dim', nargs="+", type=int, default=[2], metavar='',
-                        help='Maximum weights in the model. Each element in maxdim will be capped to 2 because we only want 4-momentum, ' \
+    parser.add_argument('--maxdim', nargs="+", type=int, default=[2], metavar='',
+                        help='Maximum weights in the model. Each element in maxdim will be capped to 1 because we only want 4-momentum, ' \
                         'i.e. the (1/2,1/2) representation, in the end, while irreps with different weights are mixed independently.')
     parser.add_argument('--max-zf', nargs="+", type=int, default=[2], metavar='',
                         help='Maximum dimensions of zonal functions. Default: [2].')
@@ -51,6 +51,8 @@ def setup_argparse():
 
     parser.add_argument('--weight-init', type=str, default='randn', metavar='',
                         help="Weight initialization distribution to use. Options: ['randn', 'rand']. Default: 'randn'.")
+    parser.add_argument('--level-gain', nargs="+", type=float, default=[1.], metavar='',
+                        help="Gain at each level. Default: [1.].")
     parser.add_argument('--activation', type=str, default='leakyrelu', metavar='',
                         help="Activation function used in MLP layers. Options: ['relu', 'elu', 'leakyrelu', 'sigmoid', 'logsigmoid']. Default: 'leakyrelu'.")
     parser.add_argument('--mlp', type=get_bool, default=True,

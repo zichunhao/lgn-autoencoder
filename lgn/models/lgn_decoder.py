@@ -89,7 +89,7 @@ class LGNDecoder(CGModule):
 
         level_gain = adapt_var_list(level_gain, num_cg_levels)
         maxdim = adapt_var_list(maxdim, num_cg_levels)
-        maxdim = [2 if dim > 2 or dim < 0 else dim for dim in maxdim]  # Cap maxdim to 2
+        maxdim = [2 if dim > 2 or dim < 0 else dim for dim in maxdim]  # Cap maxdim to 1
         max_zf = adapt_var_list(max_zf, num_cg_levels)
 
         super().__init__(maxdim=max(maxdim + max_zf), device=device, dtype=dtype, cg_dict=cg_dict)

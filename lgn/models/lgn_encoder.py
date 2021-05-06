@@ -127,7 +127,7 @@ class LGNEncoder(CGModule):
         # Input linear layer: Prepare input to the CG layers
         tau_in = GTau({(0,0): tau_input_scalars, (1,1): tau_input_vectors})
         self.tau_dict = {'input': tau_in}  # A dictionary of multiplicities in the model (updated as the model is built)
-        tau_out = GTau({(l,l): num_channels[0] for l in range(max_zf[0] + 1)})
+        tau_out = GTau({weight: num_channels[0] for weight in [(0,0), (1,1)]})
         self.input_func_node = MixReps(tau_in, tau_out, device=device, dtype=dtype)
 
         tau_input_node = self.input_func_node.tau
