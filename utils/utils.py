@@ -8,9 +8,8 @@ def create_model_folder(args):
     return make_dir(osp.join(args.outpath, get_model_fname(args)))
 
 def get_model_fname(args):
-    maxzf = max(args.maxzf) if type(args.maxzf) == list else args.maxzf
-    maxdim = max(args.maxdim) if type(args.maxdim) == list else args.maxdim
-    model_fname = f"LGNAutoencoder_numLatentScalar_{args.num_latent_scalars}_numLatentVectors_{args.num_latent_vectors}_maxzf_{maxzf}_maxdim_{maxdim}"
+    maxzf = max(args.maxzf) if (type(args.maxzf) == list) else args.maxzf
+    model_fname = f"LGNAutoencoder_numLP_{args.num_latent_particles}_tauLS_{args.num_latent_scalars}_tauLV_{args.num_latent_vectors}_maxzf_{maxzf}"
     return model_fname
 
 def make_dir(path):
