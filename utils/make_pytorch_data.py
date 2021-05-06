@@ -1,3 +1,6 @@
+import os
+import os.path as osp
+import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 import logging
@@ -106,3 +109,71 @@ def prepare_input(data, scale, cg_levels=True, device=None, dtype=None):
         scalars = torch.stack(tuple(scalars for _ in range(scalars.shape[-1])), -2).to(device=device, dtype=dtype)
 
     return scalars, node_ps, node_mask, edge_mask
+
+######################################## Data preprocessing ########################################
+def load_pt_file(filename, path='./hls4ml/150p/'):
+    path = path + filename
+    print(f"loading {path}...")
+    data = torch.load(path)
+    return data
+
+# [eta, phi, pt, tag] -> [E, px, py, pz, p, tag]
+def cartesian(p_list):
+    eta, phi, pt, tag = p_list
+    if tag > 0: # real data
+        tag = 1
+        px = pt * np.cos(phi)
+        py = pt * np.sin(phi)
+        pz = pt * np.sinh(eta)
+        E = np.sqrt(2) * pt * np.cosh(eta)
+    else: # padded data
+        tag = 0
+        px = py = pz = E = 0
+    return [E, px, py, pz, tag]
+
+def convert_to_cartesian(jet_data, name_str, save=False):
+    print(f"preprocessing {name_str}...")
+
+    shape = list(jet_data.shape)
+    shape[-1] += 1 # [eta, phi, pt, tag] -> [E, px, py, pz, tag]
+    shape = tuple(shape) # (_,_,4)
+
+    p_cartesian_tag = np.zeros(shape)
+
+    print("basis conversion...")
+    for jet in range(len(jet_data)):
+        for particle in range(len(jet_data[jet])):
+            p_cartesian_tag[jet][particle] = cartesian(jet_data[jet][particle])
+
+    p_cartesian = torch.from_numpy(p_cartesian_tag[:,:,:4])
+    labels = torch.from_numpy(p_cartesian_tag[:,:,-1])
+    Nobj = labels.sum(dim=-1)
+    jet_data_cartesian = {'p4': p_cartesian, 'labels': labels, 'Nobj': Nobj}
+
+    if save:
+        print(f"saving {name_str}...")
+        filename = name_str + '_cartesian.pt'
+        path = './150p/cartesian/'
+        if not osp.isdir(path):
+            os.makedirs(path)
+        path += filename
+        torch.save(jet_data_cartesian, path)
+        print(f"{name_str} saved as {path}")
+
+    return jet_data_cartesian
+
+if __name__ == "__main__":
+    # data loading
+    dir = '../hls4ml/150p/mask/'
+    all_g_jets_150p_polarrel_mask = load_pt_file('all_g_jets_150p_polarrel_mask.pt', path=dir).numpy()
+    all_q_jets_150p_polarrel_mask = load_pt_file('all_q_jets_150p_polarrel_mask.pt', path=dir).numpy()
+    all_t_jets_150p_polarrel_mask = load_pt_file('all_t_jets_150p_polarrel_mask.pt', path=dir).numpy()
+    all_w_jets_150p_polarrel_mask = load_pt_file('all_w_jets_150p_polarrel_mask.pt', path=dir).numpy()
+    all_z_jets_150p_polarrel_mask = load_pt_file('all_z_jets_150p_polarrel_mask.pt', path=dir).numpy()
+
+    # converting to cartesian coordinates: [eta, phi, pt, tag] -> [E, px, py, pz]
+    all_g_jets_150p_polarrel_mask_cartesian = convert_to_cartesian(all_g_jets_150p_polarrel_mask, "g_jets_150p", save=True)
+    all_q_jets_150p_polarrel_mask_cartesian = convert_to_cartesian(all_q_jets_150p_polarrel_mask, "q_jets_150p", save=True)
+    all_t_jets_150p_polarrel_mask_cartesian = convert_to_cartesian(all_t_jets_150p_polarrel_mask, "t_jets_150p", save=True)
+    all_w_jets_150p_polarrel_mask_cartesian = convert_to_cartesian(all_w_jets_150p_polarrel_mask, "w_jets_150p", save=True)
+    all_z_jets_150p_polarrel_mask_cartesian = convert_to_cartesian(all_z_jets_150p_polarrel_mask, "z_jets_150p", save=True)
