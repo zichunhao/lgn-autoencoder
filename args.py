@@ -83,7 +83,7 @@ def setup_argparse():
                         "'cplx': Take the dot product and then find the norm out the the complex scalar. " \
                         "Default: 'canonical.'")
 
-    parser.add_argument('--save-dir', type=str, default='mnist_trained_models', metavar='',
+    parser.add_argument('--save-dir', type=str, default='autoencoder_trained_models', metavar='',
                         help='The directory to save trained models and figures.')
     parser.add_argument('--custom-suffix', type=str, default=None, metavar='',
                         help='Custom suffix of the saving directory.')
