@@ -3,14 +3,9 @@ import os.path as osp
 import torch
 import matplotlib.pyplot as plt
 
-def create_model_folder(args, model):
-    if not osp.isdir(args.outpath):
-        os.makedirs(args.outpath)
-
-    model_fname = get_model_fname(args)
-    outpath = osp.join(args.outpath, model_fname)
-
-    return make_dir(outpath)
+def create_model_folder(args):
+    make_dir(args.outpath)
+    return make_dir(osp.join(args.outpath, get_model_fname(args)))
 
 def get_model_fname(args):
     maxzf = max(args.maxzf) if type(args.maxzf) == list else args.maxzf

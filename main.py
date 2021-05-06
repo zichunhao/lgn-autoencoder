@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from args import setup_argparse
 from utils.make_pytorch_data import initialize_data
 from lgn.models.autotest import lgn_tests
-from utils.utils import create_model_folder
+from utils.utils import create_model_folder, get_model_fname
 
 from lgn.models.lgn_encoder import LGNEncoder
 from lgn.models.lgn_decoder import LGNDecoder
@@ -51,3 +51,25 @@ if __name__ == "__main__":
                          num_basis_fn=args.num_basis_fn, activation=args.activation,
                          mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
                          device=args.device, dtype=args.dtype)
+
+    # Both on gpu
+    if (next(encoder.parameters()).is_cuda and next(encoder.parameters()).is_cuda):
+        print('The models are initialized on GPU...')
+    # One on cpu and the other on gpu
+    elif (next(encoder.parameters()).is_cuda or next(encoder.parameters()).is_cuda):
+        raise AssertionError("The encoder and decoder are not trained on the same device!")
+    # Both on cpu
+    else:
+        print('The models are initialized on CPU...')
+
+    print(f'Training over {args.num_epochs} epochs...')
+
+    '''Training'''
+    # Load existing model
+    if args.load_to_train:
+        outpath = args.load_path
+        encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'), map_location=args.device))
+        decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_encoder_weights.pth'), map_location=args.device))
+    # Create new model
+    else:
+        outpath = create_model_folder(args)
