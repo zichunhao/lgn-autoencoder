@@ -110,6 +110,7 @@ def prepare_input(data, scale, cg_levels=True, device=None, dtype=None):
 
     return scalars, node_ps, node_mask, edge_mask
 
+
 ######################################## Data preprocessing ########################################
 def load_pt_file(filename, path='./hls4ml/150p/'):
     path = path + filename
@@ -165,15 +166,8 @@ def convert_to_cartesian(jet_data, name_str, save=False):
 if __name__ == "__main__":
     # data loading
     dir = '../hls4ml/150p/mask/'
-    all_g_jets_150p_polarrel_mask = load_pt_file('all_g_jets_150p_polarrel_mask.pt', path=dir).numpy()
-    all_q_jets_150p_polarrel_mask = load_pt_file('all_q_jets_150p_polarrel_mask.pt', path=dir).numpy()
-    all_t_jets_150p_polarrel_mask = load_pt_file('all_t_jets_150p_polarrel_mask.pt', path=dir).numpy()
-    all_w_jets_150p_polarrel_mask = load_pt_file('all_w_jets_150p_polarrel_mask.pt', path=dir).numpy()
-    all_z_jets_150p_polarrel_mask = load_pt_file('all_z_jets_150p_polarrel_mask.pt', path=dir).numpy()
+    jet = ['g', 'q', 't', 'w', 'z']
 
-    # converting to cartesian coordinates: [eta, phi, pt, tag] -> [E, px, py, pz]
-    all_g_jets_150p_polarrel_mask_cartesian = convert_to_cartesian(all_g_jets_150p_polarrel_mask, "g_jets_150p", save=True)
-    all_q_jets_150p_polarrel_mask_cartesian = convert_to_cartesian(all_q_jets_150p_polarrel_mask, "q_jets_150p", save=True)
-    all_t_jets_150p_polarrel_mask_cartesian = convert_to_cartesian(all_t_jets_150p_polarrel_mask, "t_jets_150p", save=True)
-    all_w_jets_150p_polarrel_mask_cartesian = convert_to_cartesian(all_w_jets_150p_polarrel_mask, "w_jets_150p", save=True)
-    all_z_jets_150p_polarrel_mask_cartesian = convert_to_cartesian(all_z_jets_150p_polarrel_mask, "z_jets_150p", save=True)
+    for type in jet:
+        polarrel_mask = load_pt_file(f'all_{type}_jets_150p_polarrel_mask.pt', path=dir).numpy()
+        convert_to_cartesian(polarrel_mask, f"{type}_jets_150p", save=True)
