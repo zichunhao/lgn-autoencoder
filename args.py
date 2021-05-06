@@ -2,14 +2,15 @@ import argparse
 import torch
 
 def setup_argparse():
-    parser = argparse.ArgumentParser(description='LGN classifier options')
-
+    parser = argparse.ArgumentParser(description='LGN Autoencoder Options')
 
     ######################################### Data options #########################################
     parser.add_argument('-j', '--jet-type', type=str, required=True, metavar='',
                         help="The jet type to train. Options: ('g', 'q', 't', 'w', 'z').")
-    parser.add_argument('--file-path', type=str, default='hls4ml', metavar='',
+    parser.add_argument('--file-path', type=str, default='hls4ml/cartesian', metavar='',
                         help='The path of the data.')
+    parser.add_argument('--file-suffix', type=str, default='jets_150p_cartesian.pt', metavar='',
+                        help="The suffix of the file. Default: 'jets_150p_cartesian.pt'")
     parser.add_argument('--num-train', type=int, default=5, metavar='',
                         help='Number of samples to train on. Default: 528000')
     parser.add_argument('--num-val', type=int, default=5, metavar='',
@@ -88,7 +89,7 @@ def setup_argparse():
     # Loading existing models
     parser.add_argument('--load-to-train', type=get_bool, default=False, metavar='',
                         help='Whether to load existing (trained) model for training.')
-    parser.add_argument('--load-model-path', type=str, default=None, metavar='',
+    parser.add_argument('--load-path', type=str, default=None, metavar='',
                         help='Path of the trained model to load.')
     parser.add_argument('--load-epoch', type=int, default=None, metavar='',
                         help='Epoch number of the trained model to load.')

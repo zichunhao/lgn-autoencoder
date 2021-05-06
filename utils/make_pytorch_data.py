@@ -65,7 +65,7 @@ def initialize_data(path, batch_size, num_train, num_test=-1, num_val=-1):
 
     print('Data loaded')
 
-    return train_loader, test_loader, valid_loader
+    return train_loader, valid_loader, test_loader
 
 """
 Extract input from data.
