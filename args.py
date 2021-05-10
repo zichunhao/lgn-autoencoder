@@ -29,8 +29,8 @@ def setup_argparse():
     parser.add_argument('--tau-jet-vectors', type=int, default=1, metavar='',
                         help='Multiplicity of 4-vectors per particle in the jet. Default: 1 for the hls4ml 150p data.')
 
-    parser.add_argument('--num-latent-particles', type=int, default=1, metavar='',
-                        help='Number of particles per jet in the latent space.')
+    parser.add_argument('--map_to_latent', type=str, default='sum', metavar='',
+                        help="The method to map to latent space. Choice: ('sum', 'mix')")
     parser.add_argument('--tau-latent-scalars', type=int, default=3, metavar='',
                         help='Multiplicity of scalars per particle in the latent space.')
     parser.add_argument('--tau-latent-vectors', type=int, default=2, metavar='',

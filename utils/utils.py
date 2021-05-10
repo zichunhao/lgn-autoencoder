@@ -8,7 +8,7 @@ def create_model_folder(args):
     return make_dir(osp.join(args.save_dir, get_model_fname(args)))
 
 def get_model_fname(args):
-    model_fname = f"LGNAutoencoder_numLP_{args.num_latent_particles}_tauLS_{args.tau_latent_scalars}_tauLV_{args.tau_latent_vectors}"
+    model_fname = f"LGNAutoencoder_{args.map_to_latent}_tauLS_{args.tau_latent_scalars}_tauLV_{args.tau_latent_vectors}"
     return model_fname
 
 def make_dir(path):

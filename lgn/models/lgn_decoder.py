@@ -18,8 +18,6 @@ class LGNDecoder(CGModule):
 
     Parameters
     ----------
-    num_latent_particles : `int`
-        The number of particles in the latent sapce.
     tau_latent_scalar : `int`
         The multiplicity of scalars per particle in the latent space.
     tau_latent_vector : `int`
@@ -73,7 +71,7 @@ class LGNDecoder(CGModule):
         Optional, default: None
         Clebsch-gordan dictionary for taking the CG decomposition.
     """
-    def __init__(self, num_latent_particles, tau_latent_scalars, tau_latent_vectors,
+    def __init__(self, tau_latent_scalars, tau_latent_vectors,
                  num_output_particles, tau_output_scalars, tau_output_vectors,
                  maxdim, num_basis_fn, num_channels, max_zf, weight_init, level_gain,
                  activation='leakyrelu', mlp=True, mlp_depth=None, mlp_width=None,
@@ -97,7 +95,6 @@ class LGNDecoder(CGModule):
 
         # Member varibles
         self.input_basis = 'canonical'  # Will convert it from Cartesian
-        self.num_latent_particles = num_latent_particles
         self.tau_latent_scalars = tau_latent_scalars
         self.tau_latent_vectors = tau_latent_vectors
         self.tau_dict = {'input': GTau({(0,0): tau_latent_scalars, (1,1): tau_latent_vectors})}
@@ -143,31 +140,33 @@ class LGNDecoder(CGModule):
         self.tau_output = GTau({(0,0): tau_output_scalars, (1,1): tau_output_vectors})
         self.tau_dict['output'] = self.tau_output
         self.mix_to_output = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
-    '''
-    The forward pass of the LGN GNN.
 
-    Parameters
-    ----------
-    node_features : `dict`
-        The dictionary of node_features from the encoder. The keys are (0,0) (scalar) and (1,1) (vector)
-    covariance_test : `bool`
-        Optional, default: False
-        If False, return prediction (scalar reps) only.
-        If True, return both generated output and full node features, where the full node features
-        will be used to test Lorentz covariance.
-    nodes_all : `list` of GVec
-        Optional, default: None
-        The full node features in the encoder.
 
-    Returns
-    -------
-    node_features : `dict`
-        The dictionary that stores all relevant irreps.
-    If covariance_test is True, also:
-        nodes_all : `list` of GVec
-            The full node features in both encoder and decoder.
-    '''
     def forward(self, latent_features, covariance_test=False, nodes_all=None):
+        '''
+        The forward pass of the LGN GNN.
+
+        Parameters
+        ----------
+        node_features : `dict`
+            The dictionary of node_features from the encoder. The keys are (0,0) (scalar) and (1,1) (vector)
+        covariance_test : `bool`
+            Optional, default: False
+            If False, return prediction (scalar reps) only.
+            If True, return both generated output and full node features, where the full node features
+            will be used to test Lorentz covariance.
+        nodes_all : `list` of GVec
+            Optional, default: None
+            The full node features in the encoder.
+
+        Returns
+        -------
+        node_features : `dict`
+            The dictionary that stores all relevant irreps.
+        If covariance_test is True, also:
+            nodes_all : `list` of GVec
+                The full node features in both encoder and decoder.
+        '''
         if covariance_test and (nodes_all is None):
             raise ValueError('covariance_test is set to True, but the full node features from the encoder is not passed in!')
         # Get data

@@ -123,7 +123,6 @@ class RadPolyTrig(nn.Module):
             elif len(s) == 4:
                 if self.input_basis == 'canonical':
                     radial_functions = [linear(rad_prod).view(s + (self.num_channels, )) for linear in self.linear] * (self.max_zf)
-                    detectnan(radial_functions)
                 else:
                     raise NotImplementedError("Complex cartesian not implemented. Consider converting node features to the canonical basis using p_cplx_to_rep.")
         elif self.mix == 'real':
