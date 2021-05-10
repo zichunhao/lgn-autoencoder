@@ -8,7 +8,13 @@ def create_model_folder(args):
     return make_dir(osp.join(args.save_dir, get_model_fname(args)))
 
 def get_model_fname(args):
-    model_fname = f"LGNAutoencoder_numLP_{args.num_latent_particles}_tauLS_{args.tau_latent_scalars}_tauLV_{args.tau_latent_vectors}"
+    encoder_cg = ''
+    decoder_cg = ''
+    for i in range(len(args.encoder_num_channels)):
+        encoder_cg += str(args.encoder_num_channels[i])
+    for i in range(len(args.decoder_num_channels)):
+        decoder_cg += str(args.decoder_num_channels[i])
+    model_fname = f"LGNAutoencoder_{args.jet_type}Jet_{args.map_to_latent}_tauLS{args.tau_latent_scalars}_tauLV{args.tau_latent_vectors}_encoderCG{encoder_cg}_decoderCG{decoder_cg}"
     return model_fname
 
 def make_dir(path):
@@ -30,6 +36,7 @@ def save_data(data, data_name, is_train, outpath, epoch=-1):
             torch.save(data, f"{outpath}/{data_name}_epoch_{epoch+1}.pkl")
         else:
             torch.save(data, f"{outpath}/{data_name}.pkl")
+        return
 
     if epoch >= 0:
         if is_train:

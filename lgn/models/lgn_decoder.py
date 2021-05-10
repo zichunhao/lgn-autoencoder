@@ -18,8 +18,6 @@ class LGNDecoder(CGModule):
 
     Parameters
     ----------
-    num_latent_particles : `int`
-        The number of particles in the latent sapce.
     tau_latent_scalar : `int`
         The multiplicity of scalars per particle in the latent space.
     tau_latent_vector : `int`
@@ -73,7 +71,7 @@ class LGNDecoder(CGModule):
         Optional, default: None
         Clebsch-gordan dictionary for taking the CG decomposition.
     """
-    def __init__(self, num_latent_particles, tau_latent_scalars, tau_latent_vectors,
+    def __init__(self, tau_latent_scalars, tau_latent_vectors,
                  num_output_particles, tau_output_scalars, tau_output_vectors,
                  maxdim, num_basis_fn, num_channels, max_zf, weight_init, level_gain,
                  activation='leakyrelu', mlp=True, mlp_depth=None, mlp_width=None,
@@ -97,7 +95,6 @@ class LGNDecoder(CGModule):
 
         # Member varibles
         self.input_basis = 'canonical'  # Will convert it from Cartesian
-        self.num_latent_particles = num_latent_particles
         self.tau_latent_scalars = tau_latent_scalars
         self.tau_latent_vectors = tau_latent_vectors
         self.tau_dict = {'input': GTau({(0,0): tau_latent_scalars, (1,1): tau_latent_vectors})}
@@ -143,66 +140,75 @@ class LGNDecoder(CGModule):
         self.tau_output = GTau({(0,0): tau_output_scalars, (1,1): tau_output_vectors})
         self.tau_dict['output'] = self.tau_output
         self.mix_to_output = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
-    '''
-    The forward pass of the LGN GNN.
 
-    Parameters
-    ----------
-    node_features : `dict`
-        The dictionary of node_features from the encoder. The keys are (0,0) (scalar) and (1,1) (vector)
-    covariance_test : `bool`
-        Optional, default: False
-        If False, return prediction (scalar reps) only.
-        If True, return both generated output and full node features, where the full node features
-        will be used to test Lorentz covariance.
-    nodes_all : `list` of GVec
-        Optional, default: None
-        The full node features in the encoder.
 
-    Returns
-    -------
-    node_features : `dict`
-        The dictionary that stores all relevant irreps.
-    If covariance_test is True, also:
-        nodes_all : `list` of GVec
-            The full node features in both encoder and decoder.
-    '''
     def forward(self, latent_features, covariance_test=False, nodes_all=None):
+        '''
+        The forward pass of the LGN GNN.
+
+        Parameters
+        ----------
+        node_features : `dict`
+            The dictionary of node_features from the encoder. The keys are (0,0) (scalar) and (1,1) (vector)
+        covariance_test : `bool`
+            Optional, default: False
+            If False, return prediction (scalar reps) only.
+            If True, return both generated output and full node features, where the full node features
+            will be used to test Lorentz covariance.
+        nodes_all : `list` of GVec
+            Optional, default: None
+            The full node features in the encoder.
+
+        Returns
+        -------
+        node_features : `dict`
+            The dictionary that stores all relevant irreps.
+        If covariance_test is True, also:
+            nodes_all : `list` of GVec
+                The full node features in both encoder and decoder.
+        '''
         if covariance_test and (nodes_all is None):
             raise ValueError('covariance_test is set to True, but the full node features from the encoder is not passed in!')
         # Get data
         node_ps, node_scalars, node_mask, edge_mask = self._prepare_input(latent_features)
 
         zonal_functions_in, _, _ = self.zonal_fns_in(node_ps)
+
         zonal_functions, norms, sq_norms = self.zonal_fns(node_ps, node_ps)
 
+        decoder_nodes_all = []
 
         if self.num_cg_levels > 0:
             rad_func_levels = self.rad_funcs(norms, edge_mask * (norms != 0).byte())
             node_reps_in = self.input_func_node(zonal_functions_in)
+            decoder_nodes_all.append(node_reps_in)
         else:
             rad_func_levels = []
             node_reps_in = self.input_func_node(node_scalars, node_mask)
+            decoder_nodes_all.append(node_reps_in)
 
         # CG layers
-        decoder_nodes_all = self.lgn_cg(node_reps_in, node_mask, rad_func_levels, zonal_functions)
-        node_features = decoder_nodes_all[-1]
+        decoder_cg_nodes = self.lgn_cg(node_reps_in, node_mask, rad_func_levels, zonal_functions)
+        for i in range(len(decoder_cg_nodes)):
+            decoder_nodes_all.append(decoder_cg_nodes[i])
+
+        node_features = decoder_cg_nodes[-1]
 
         # Mix to output
         generated_features = self.mix_to_output(node_features) # node_all[-1] is the updated feature in the last layer
-        generated_features[(1,1)] = rep_to_p(generated_features[(1,1)])  # Convert to Cartesian coordinates
-        generated_ps = generated_features[(1,1)]
-        # Remove the dimension of multiplicity (i.e. each particle is represented by a single 4-vector)
+        decoder_nodes_all.append(generated_features)
+        generated_ps = generated_features[(1,1)].clone()
+        generated_ps = rep_to_p(generated_ps)  # Convert to Cartesian coordinates
+        # Remove the dimension of multiplicity (i.e. each particle is represented by a single 4-vector), like in input jet
         generated_ps = generated_ps.squeeze(-2)
 
         if not covariance_test:
             return generated_ps
         else:
-            for i in range(len(decoder_nodes_all)):
-                nodes_all.append(decoder_nodes_all[i])
-            nodes_all.append(GVec(node_features))
-            nodes_all.append(GVec(latent_features))
-            return generated_ps, nodes_all
+            for i in range(len(decoder_cg_nodes)):
+                nodes_all.append(decoder_cg_nodes[i])
+            nodes_all.append(GVec(generated_features))
+            return generated_features, nodes_all
 
     """
     Extract input from data.

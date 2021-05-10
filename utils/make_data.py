@@ -70,27 +70,26 @@ def initialize_data(path, batch_size, num_train, num_test=-1, num_val=-1):
 
     return train_loader, valid_loader, test_loader
 
-"""
-Extract input from data.
-
-Parameters
-----------
-data : `dict`
-    The jet data.
-
-Returns
--------
-node_scalars : `torch.Tensor`
-    Tensor of scalars for each node.
-node_ps: : `torch.Tensor`
-    Momenta of the nodes
-node_mask : `torch.Tensor`
-    Node mask used for batching data.
-edge_mask: `torch.Tensor`
-    Edge mask used for batching data.
-"""
 def prepare_input(data, scale, cg_levels=True, device=None, dtype=None):
+    """
+    Extract input from data.
 
+    Parameters
+    ----------
+    data : `dict`
+        The jet data.
+
+    Returns
+    -------
+    node_scalars : `torch.Tensor`
+        Tensor of scalars for each node.
+    node_ps: : `torch.Tensor`
+        Momenta of the nodes
+    node_mask : `torch.Tensor`
+        Node mask used for batching data.
+    edge_mask: `torch.Tensor`
+        Edge mask used for batching data.
+    """
 
     node_ps = data['p4'].to(device=device, dtype=dtype) * scale
 

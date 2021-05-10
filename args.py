@@ -29,16 +29,16 @@ def setup_argparse():
     parser.add_argument('--tau-jet-vectors', type=int, default=1, metavar='',
                         help='Multiplicity of 4-vectors per particle in the jet. Default: 1 for the hls4ml 150p data.')
 
-    parser.add_argument('--num-latent-particles', type=int, default=1, metavar='',
-                        help='Number of particles per jet in the latent space.')
+    parser.add_argument('--map-to-latent', type=str, default='sum', metavar='',
+                        help="The method to map to latent space. Choice: ('sum', 'mix')")
     parser.add_argument('--tau-latent-scalars', type=int, default=3, metavar='',
                         help='Multiplicity of scalars per particle in the latent space.')
     parser.add_argument('--tau-latent-vectors', type=int, default=2, metavar='',
                         help='Multiplicity of 4-vectors per particle the latent space.')
 
-    parser.add_argument('--encoder-num-channels', nargs="+", type=int, default=[1,1], metavar='',
+    parser.add_argument('--encoder-num-channels', nargs="+", type=int, default=[2,3,2,1], metavar='',
                         help='Number of channels (or multiplicity or all irreps) in each CG layer in the encoder.')
-    parser.add_argument('--decoder-num-channels', nargs="+", type=int, default=[1,1], metavar='',
+    parser.add_argument('--decoder-num-channels', nargs="+", type=int, default=[2,3,2,1], metavar='',
                         help='Number of channels (or multiplicity or all irreps) in each CG layer in the decoder.')
 
     parser.add_argument('--maxdim', nargs="+", type=int, default=[2], metavar='',

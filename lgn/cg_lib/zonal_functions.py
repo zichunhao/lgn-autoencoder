@@ -19,8 +19,8 @@ class ZonalFunctions(CGModule):
     def forward(self, pos, *ignore):
         if self.basis == 'cartesian':
             return zonal_functions4(self.cg_dict, pos, self.maxdim, normalize=self.normalize)
-        else:
-            return zonal_functions_canonical(self.cg_dict, pos, self.maxdim)
+        else:  # canonical, complex
+            return zonal_functions_canonical(self.cg_dict, pos, self.maxdim, normalize=self.normalize)
 
 
 class ZonalFunctionsRel(CGModule):
@@ -59,9 +59,9 @@ def zonal_functions(cg_dict, p, max_zf, normalize=False, basis='cartesian'):
     elif type(p) == torch.Tensor:
         assert p.shape[-1] == 4, 'p must be a tensor consisting of 4-vectors!'
 
-    if basis == 'cartesian':
+    if basis.lower() == 'cartesian':
         p = p_to_rep(p)[(1, 1)]
-    elif basis == 'canonical':
+    elif basis.lower() == 'canonical':
         pass
     else:
         raise ValueError('parameter "basis" must be either "cartesian" or "canonical"!')
@@ -103,13 +103,14 @@ def zonal_functions4(cg_dict, p, max_zf, normalize=False):
     assert type(p) == torch.Tensor and p.shape[-1] == 4, 'p must be a tensor consisting of 4-vectors!'
     # Normalize the inputs to make the non-null 4-vectors have unit normself.
     # If the 4-vector is complex in Cartesian coordinates, this normalizes only the REAL part of the norm-squared
-    norm_sq = normsq4(p).unsqueeze(-1) + 1e-12
+    norm_sq = normsq4(p).unsqueeze(-1) + eps(p)
     mask = (norm_sq != 0)
     norm = torch.where(mask, norm_sq / (norm_sq.abs().sqrt()), norm_sq)
     if normalize:
         p = torch.where(mask, p / (norm), p)
 
     p_rep = p_to_rep(p)
+    # print(f"real p_rep.shape = {p_rep[(1,1)].shape}")
     zf = {(0, 0): torch.ones(p_rep[(1, 1)].shape[:-1] + (1,), device=p_rep.device, dtype=p_rep.dtype)}
     zf.update(p_rep)
 
@@ -119,6 +120,7 @@ def zonal_functions4(cg_dict, p, max_zf, normalize=False):
         # This ensures that projecting onto the (l,l) component doesn't change the norm
         new_zf *= sqrt(2 * l / (l + 1))
         zf[(l, l)] = new_zf
+    # print(f"real zf: {zf[(1,1)].shape}")
     return GVec(zf), norm.squeeze(-1), norm_sq.squeeze(-1)
 
 def zonal_functions_canonical(cg_dict, p, max_zf, normalize=False):
@@ -126,12 +128,13 @@ def zonal_functions_canonical(cg_dict, p, max_zf, normalize=False):
         pass
     else:
         p = {(1, 1): p}
+
     norm_sq = repdot(p, p)[(1,1)]
-    norm_sq = norm_sq.unsqueeze(-1) + 1e-12
-    mask = (norm_sq != 0)
-    norm = torch.where(mask, norm_sq / (norm_sq.abs().sqrt()), norm_sq)
+    norm_sq = norm_sq + eps(norm_sq)
+    norm = norm_sq / (norm_sq.abs().sqrt())
+
     if normalize:
-        p[(1,1)] = torch.where(mask, p[(1,1)] / (norm), p[(1,1)])
+        p[(1,1)] = p[(1,1)] / norm
     p_rep = GVec(p)
     zf = {(0, 0): torch.ones(p_rep[(1, 1)].shape[:-1] + (1,), device=p_rep.device, dtype=p_rep.dtype)}
     zf.update(p_rep)
@@ -143,7 +146,7 @@ def zonal_functions_canonical(cg_dict, p, max_zf, normalize=False):
         new_zf *= sqrt(2 * l / (l + 1))
         zf[(l, l)] = new_zf
     zf = {weight: value.unsqueeze(-2) for weight, value in zf.items()}
-    return GVec(zf), norm.squeeze(-1).squeeze(-1), norm_sq.squeeze(-1).squeeze(-1)
+    return GVec(zf), norm.squeeze(-1), norm_sq.squeeze(-1)
 
 def normsq4(p):
     """
@@ -180,10 +183,6 @@ def zonal_functions_rel(cg_dict, p1, p2, maxdim, normalize=False, basis='cartesi
     -----
         dictionary {(l,l):tensor} with l from 1 to maxdim-1
     """
-    if basis == 'canonical':
-        p1 = rep_to_p(p1)
-        p2 = rep_to_p(p2)
-
     # Pairwise differences of four-momenta
     rel_p = p1.unsqueeze(-2) - p2.unsqueeze(-3)
 
@@ -302,3 +301,10 @@ def repdot(rep1, rep2):
     #     n=n[key]
 
     return n
+
+def eps(data):
+    if isinstance(data, torch.Tensor):
+        if data.dtype in [torch.float64, torch.double]:
+            return 1e-16
+    else:
+        return 1e-12

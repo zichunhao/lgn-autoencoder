@@ -10,5 +10,5 @@ from lgn.cg_lib.cg_ops_tau import cg_product_tau
 # Now for your regularly scheduled imports
 from lgn.cg_lib.cg_ops import CGProduct, cg_product
 
-from lgn.cg_lib.zonal_functions import zonal_functions, zonal_functions4, zonal_functions_rel, p_to_rep, rep_to_p, normsq, normsq4
+from lgn.cg_lib.zonal_functions import zonal_functions, zonal_functions4, zonal_functions_rel, p_to_rep, rep_to_p, normsq, normsq4, p_cplx_to_rep
 from lgn.cg_lib.zonal_functions import ZonalFunctions, ZonalFunctionsRel
