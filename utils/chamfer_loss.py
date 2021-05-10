@@ -148,7 +148,7 @@ def normsq_cplx(p4):
     m_real = 2 * p4_real_sq[..., 0] - p4_real_sq.sum(dim=-1)
     pq = p4[0] * p4[1]
     m_im = 2 * (2 * pq[..., 0] - pq.sum(dim=-1))
-    return torch.sqrt(torch.pow(m_real, 2) + torch.pow(m_im, 2) + 1e-12)
+    return torch.sqrt(torch.pow(m_real, 2) + torch.pow(m_im, 2))
 
 def normsq_canonical(p4):
     """
@@ -181,7 +181,7 @@ def normsq_real(p4):
         Recall p^2 = - m
         Shape: `(OTHER_DIMENSIONS)`
     """
-    p4_norm = torch.sqrt(torch.pow(p4[0], 2) + torch.pow(p4[1], 2) + 1e-12)
+    p4_norm = torch.sqrt(torch.pow(p4[0], 2) + torch.pow(p4[1], 2))
     return 2 * p4_norm[..., 0] - p4_norm.sum(dim=-1)
 
 ######################################## Unused ########################################

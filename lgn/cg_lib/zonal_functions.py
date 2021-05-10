@@ -6,7 +6,6 @@ from lgn.cg_lib import CGModule
 from lgn.cg_lib import cg_product
 from lgn.g_lib import GVec, GTensor
 
-
 class ZonalFunctions(CGModule):
     def __init__(self, maxdim, normalize=False, basis='cartesian',
                  cg_dict=None, dtype=torch.float64, device=torch.device('cpu')):
@@ -72,7 +71,7 @@ def zonal_functions(cg_dict, p, max_zf, normalize=False, basis='cartesian'):
     if normalize:
         norm = torch.sqrt(torch.abs(normsq(p)[0]))
         mask = (norm != 0)
-        p = torch.where(mask, p / norm, p)
+        p = torch.where(mask, p / (norm), p)
 
     p = {(1, 1): p}
     zf = {(0, 0): torch.ones(p[(1, 1)].shape[:-1] + (1,), device = p[(1, 1)].device, dtype=p[(1, 1)].dtype)}
@@ -104,11 +103,11 @@ def zonal_functions4(cg_dict, p, max_zf, normalize=False):
     assert type(p) == torch.Tensor and p.shape[-1] == 4, 'p must be a tensor consisting of 4-vectors!'
     # Normalize the inputs to make the non-null 4-vectors have unit normself.
     # If the 4-vector is complex in Cartesian coordinates, this normalizes only the REAL part of the norm-squared
-    norm_sq = normsq4(p).unsqueeze(-1)
+    norm_sq = normsq4(p).unsqueeze(-1) + 1e-12
     mask = (norm_sq != 0)
-    norm = torch.where(mask, norm_sq / norm_sq.abs().sqrt(), norm_sq)
+    norm = torch.where(mask, norm_sq / (norm_sq.abs().sqrt()), norm_sq)
     if normalize:
-        p = torch.where(mask, p / norm, p)
+        p = torch.where(mask, p / (norm), p)
 
     p_rep = p_to_rep(p)
     zf = {(0, 0): torch.ones(p_rep[(1, 1)].shape[:-1] + (1,), device=p_rep.device, dtype=p_rep.dtype)}
@@ -128,11 +127,11 @@ def zonal_functions_canonical(cg_dict, p, max_zf, normalize=False):
     else:
         p = {(1, 1): p}
     norm_sq = repdot(p, p)[(1,1)]
-    norm_sq = norm_sq.unsqueeze(-1)
+    norm_sq = norm_sq.unsqueeze(-1) + 1e-12
     mask = (norm_sq != 0)
-    norm = torch.where(mask, norm_sq / norm_sq.abs().sqrt(), norm_sq)
+    norm = torch.where(mask, norm_sq / (norm_sq.abs().sqrt()), norm_sq)
     if normalize:
-        p[(1,1)] = torch.where(mask, p[(1,1)] / norm, p[(1,1)])
+        p[(1,1)] = torch.where(mask, p[(1,1)] / (norm), p[(1,1)])
     p_rep = GVec(p)
     zf = {(0, 0): torch.ones(p_rep[(1, 1)].shape[:-1] + (1,), device=p_rep.device, dtype=p_rep.dtype)}
     zf.update(p_rep)

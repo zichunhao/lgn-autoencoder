@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from lgn.g_lib import GScalar
+from lgn.models.utils import detectnan
 
 class RadPolyTrig(nn.Module):
     """
@@ -77,7 +78,7 @@ class RadPolyTrig(nn.Module):
             self.linear = None
             self.radial_types = (self.num_basis_fn,) * (max_zf)
         else:
-            raise ValueError('Can only specify mix = real, cplx, or none! {}'.format(mix))
+            raise ValueError(f'Can only specify mix = real, cplx, or none: {mix}')
 
         self.zero = torch.tensor(0, device=device, dtype=dtype)
 
@@ -100,25 +101,19 @@ class RadPolyTrig(nn.Module):
     def forward(self, norms, edge_mask):
         # Shape to resize to at the end
         s = norms.shape
-        # print(f"len(s) = {len(s)}")
-        # print(f"s = {s}")
 
         # Mask and reshape
         edge_mask = (edge_mask.byte()).unsqueeze(-1)
         norms = norms.unsqueeze(-1)
 
         # Lorentzian-bell radial functions: a + 1 / (b + c^2 p^2) when not masked
-        rad_trig = torch.where(edge_mask, self.b * (torch.ones_like(self.b) + (self.c * norms).pow(2)).pow(-1) + self.a, self.zero).unsqueeze(-1)
+        rad_trig = torch.where(edge_mask, self.b * (torch.ones_like(self.b) + (self.c * norms).pow(2) + 1e-12).pow(-1) + self.a, self.zero).unsqueeze(-1)
+
         if self.input_basis == 'canonical':
             rad_prod = rad_trig.view(s + (-1, 2 * self.num_basis_fn,))
-            # print(f"s + (self.num_channels,) = {s + (self.num_channels,)}")
         else:
             rad_prod = rad_trig.view(s + (1, 2 * self.num_basis_fn,))
-            # print(f"s + (self.num_channels,) = {s + (self.num_channels,2)}")
 
-        # print(f"s = {s}")
-        # print(f"self.num_channels = {self.num_channels}")
-        # print(f"self.max_zf = {self.max_zf}")
 
         # Apply linear mixing function, if desired
         if self.mix == 'cplx' or (self.mix is True):
@@ -129,6 +124,7 @@ class RadPolyTrig(nn.Module):
             elif len(s) == 4:
                 if self.input_basis == 'canonical':
                     radial_functions = [linear(rad_prod).view(s + (self.num_channels, )) for linear in self.linear] * (self.max_zf)
+                    detectnan(radial_functions)
                 else:
                     raise NotImplementedError("Complex cartesian not implemented. Consider converting node features to the canonical basis using p_cplx_to_rep.")
         elif self.mix == 'real':
@@ -187,7 +183,7 @@ class RadialFilters(nn.Module):
         rad_funcs = [RadPolyTrig(max_zf[level], num_basis_fn, num_channels_out[level], mix=mix, input_basis=input_basis,
                                  device=device, dtype=dtype) for level in range(self.num_levels)]
         self.rad_funcs = nn.ModuleList(rad_funcs)
-        self.tau = [{(l, l): rad_func.radial_types[l - 1] for l in range(0, maxzf + 1)} for rad_func, maxzf in zip(self.rad_funcs, max_zf)]
+        self.tau = [{(l, l): rad_func.radial_types[l - 1] for l in range(0, max_zf + 1)} for rad_func, max_zf in zip(self.rad_funcs, max_zf)]
 
         if len(self.tau) > 0:
             self.num_rad_channels = self.tau[0][(1, 1)]

@@ -173,10 +173,6 @@ class LGNGraphNet(CGModule):
         zonal_functions_in[(0, 0)] = torch.stack([node_scalars.unsqueeze(-1),
                                                   torch.zeros_like(node_scalars.unsqueeze(-1))])
         zonal_functions, norms, sq_norms = self.zonal_fns(node_ps, node_ps)
-        print(f'node_ps.shape = {node_ps.shape}')
-        print(f'node_mask.shape = {node_mask.shape}')
-        print(f'edge_mask.shape = {edge_mask.shape}')
-        print(f'node_mask.shape = {node_mask.shape}')
 
         # Input layer
         if self.num_cg_levels > 0:

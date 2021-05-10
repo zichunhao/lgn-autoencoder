@@ -9,7 +9,7 @@ from lgn.models.lgn_cg import LGNCG
 from lgn.nn import RadialFilters
 from lgn.nn import MixReps
 
-from lgn.models.utils import adapt_var_list
+from lgn.models.utils import adapt_var_list, detectnan
 
 
 class LGNDecoder(CGModule):
@@ -176,19 +176,10 @@ class LGNDecoder(CGModule):
         zonal_functions_in, _, _ = self.zonal_fns_in(node_ps)
         zonal_functions, norms, sq_norms = self.zonal_fns(node_ps, node_ps)
 
-        # print(f"node_ps.shape = {node_ps.shape}")
-        # print(f"node_mask.shape = {node_mask.shape}")
-        # print(f"edge_mask.shape = {edge_mask.shape}")
-        # print(f'norms.shape = {norms.shape}')
-        # print(f'zonal_functions_in[(1,1)].shape = {zonal_functions_in[(1,1)].shape}')
-        # print(f'zonal_functions[(1,1)].shape = {zonal_functions[(1,1)].shape}')
 
         if self.num_cg_levels > 0:
             rad_func_levels = self.rad_funcs(norms, edge_mask * (norms != 0).byte())
-            # print(f"rad_func_levels[0][(1,1)] = {rad_func_levels[0][(1,1)].shape}")
-            # print(f'zonal_functions_in.tau = {zonal_functions_in.tau}')
             node_reps_in = self.input_func_node(zonal_functions_in)
-            # print(f"node_reps_in[(1,1)].shape = {node_reps_in[(1,1)].shape}")
         else:
             rad_func_levels = []
             node_reps_in = self.input_func_node(node_scalars, node_mask)

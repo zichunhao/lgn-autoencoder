@@ -11,11 +11,11 @@ def setup_argparse():
                         help='The path of the data.')
     parser.add_argument('--file-suffix', type=str, default='jets_150p_cartesian.pt', metavar='',
                         help="The suffix of the file. Default: 'jets_150p_cartesian.pt'")
-    parser.add_argument('--num-train', type=int, default=5, metavar='',
+    parser.add_argument('--num-train', type=int, default=50, metavar='',
                         help='Number of samples to train on. Default: 528000')
-    parser.add_argument('--num-val', type=int, default=5, metavar='',
+    parser.add_argument('--num-val', type=int, default=1, metavar='',
                         help='Number of samples to validate on. Default: -1.')
-    parser.add_argument('--num-test', type=int, default=5, metavar='',
+    parser.add_argument('--num-test', type=int, default=1, metavar='',
                         help='Number of samples to test eqvuivariance on. Default: -1.')
     parser.add_argument('--scale', type=float, default=1., metavar='',
                         help='The rescaling factor of the input 4-momenta. Default: 1.')
@@ -29,23 +29,21 @@ def setup_argparse():
     parser.add_argument('--tau-jet-vectors', type=int, default=1, metavar='',
                         help='Multiplicity of 4-vectors per particle in the jet. Default: 1 for the hls4ml 150p data.')
 
-    parser.add_argument('--num-latent-particles', type=int, default=150, metavar='',
-                        help='Number of particles per jet in the latent space. Default: 150 for the hls4ml 150p data.')
+    parser.add_argument('--num-latent-particles', type=int, default=1, metavar='',
+                        help='Number of particles per jet in the latent space.')
     parser.add_argument('--tau-latent-scalars', type=int, default=3, metavar='',
                         help='Multiplicity of scalars per particle in the latent space.')
     parser.add_argument('--tau-latent-vectors', type=int, default=2, metavar='',
                         help='Multiplicity of 4-vectors per particle the latent space.')
 
-    parser.add_argument('--encoder-num-channels', nargs="+", type=int, default=[2, 3, 2, 1], metavar='',
+    parser.add_argument('--encoder-num-channels', nargs="+", type=int, default=[1,1], metavar='',
                         help='Number of channels (or multiplicity or all irreps) in each CG layer in the encoder.')
-    parser.add_argument('--decoder-num-channels', nargs="+", type=int, default=[2, 3, 2, 1], metavar='',
+    parser.add_argument('--decoder-num-channels', nargs="+", type=int, default=[1,1], metavar='',
                         help='Number of channels (or multiplicity or all irreps) in each CG layer in the decoder.')
 
     parser.add_argument('--maxdim', nargs="+", type=int, default=[2], metavar='',
                         help='Maximum weights in the model. Each element in maxdim will be capped to 1 because we only want 4-momentum, ' \
                         'i.e. the (1/2,1/2) representation, in the end, while irreps with different weights are mixed independently.')
-    parser.add_argument('--max-zf', nargs="+", type=int, default=[2], metavar='',
-                        help='Maximum dimensions of zonal functions. Default: [2].')
     parser.add_argument('--num-basis-fn', type=int, default=10, metavar='',
                         help='Number of basis function to express edge features. Default: [2].')
 
@@ -69,13 +67,13 @@ def setup_argparse():
                         "Default: -1, which means deciding device based on whether gpu is available.")
     parser.add_argument('--dtype', type=get_dtype, default=torch.float64, metavar='',
                         help="Data type to which the model is initialized. Options: ('float', 'float64', 'double'). Default: float64")
-    parser.add_argument('--lr', type=float, default=1e-4, metavar='',
+    parser.add_argument('--lr', type=float, default=1e-5, metavar='',
                         help='Learning rate of the backpropagation.')
-    parser.add_argument('--batch-size', type=int, default=8, metavar='',
+    parser.add_argument('-b', '--batch-size', type=int, default=2, metavar='',
                         help='Batch size.')
     parser.add_argument('--num-epochs', type=int, default=64, metavar='',
                         help='Number of epochs for training.')
-    parser.add_argument('--loss-norm-choice', type=str, default='canonical', metavar='',
+    parser.add_argument('--loss-norm-choice', type=str, default='real', metavar='',
                         help="Choice of calculating the norms of 4-vectors when calculating the loss. " \
                         "Options: ('canonical', 'real', 'cplx'). " \
                         "'canonical': Write p in the basis of zonal functions, take the dot product, and find the norm out of the complex scalar. " \

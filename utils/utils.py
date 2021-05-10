@@ -4,12 +4,11 @@ import torch
 import matplotlib.pyplot as plt
 
 def create_model_folder(args):
-    make_dir(args.outpath)
-    return make_dir(osp.join(args.outpath, get_model_fname(args)))
+    make_dir(args.save_dir)
+    return make_dir(osp.join(args.save_dir, get_model_fname(args)))
 
 def get_model_fname(args):
-    maxzf = max(args.maxzf) if (type(args.maxzf) == list) else args.maxzf
-    model_fname = f"LGNAutoencoder_numLP_{args.num_latent_particles}_tauLS_{args.num_latent_scalars}_tauLV_{args.num_latent_vectors}_maxzf_{maxzf}"
+    model_fname = f"LGNAutoencoder_numLP_{args.num_latent_particles}_tauLS_{args.tau_latent_scalars}_tauLV_{args.tau_latent_vectors}"
     return model_fname
 
 def make_dir(path):
@@ -22,7 +21,7 @@ def save_data(data, data_name, is_train, outpath, epoch=-1):
     Save data like losses and dts. If epoch is -1, the data will be considered a global data, such as
     the losses over all epochs.
     '''
-    outpath = osp.join(outpath, "model_evaluations/pkl_files")
+    outpath = make_dir(osp.join(outpath, "model_evaluations/pkl_files"))
     if isinstance(data, torch.Tensor):
         data = data.cpu()
 

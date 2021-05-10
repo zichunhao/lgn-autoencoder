@@ -28,16 +28,22 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
     epoch_total_loss = 0
 
     for i, batch in enumerate(loader):
-
+        print(f"batch = {i+1}")
         latent_features = encoder(batch, covariance_test=False)
         p4_gen = decoder(latent_features, covariance_test=False)
+        if (p4_gen != p4_gen).any():
+            raise RuntimeError('NaN data!')
         generated_data.append(p4_gen)
+        print(p4_gen)
 
         p4_target = batch['p4']
         target_data.append(p4_target)
 
-        loss = ChamferLoss(norm_choice=args.loss_norm_choice)
+        loss = torch.nn.MSELoss()
+        # loss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
         batch_loss = loss(p4_gen, p4_target)  # preds, targets
+        if (batch_loss != batch_loss).any():
+            raise RuntimeError('Batch loss is NaN!')
         epoch_total_loss += batch_loss.item()
 
         # Backward propagation
@@ -58,18 +64,17 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         torch.save(encoder.state_dict(), f"{outpath}/weights_encoder/epoch_{epoch+1}_encoder_weights.pth")
         torch.save(decoder.state_dict(), f"{outpath}/weights_decoder/epoch_{epoch+1}_decoder_weights.pth")
 
-    return generated_data, epoch_avg_loss
+    return epoch_avg_loss, generated_data
 
 @torch.no_grad()
 def validate(args, loader, encoder, decoder, epoch, outpath, device):
     with torch.no_grad():
-        generated_data, epoch_avg_loss = train(args, loader=loader, encoder=encoder, decoder=decoder,
+        epoch_avg_loss, generated_data = train(args, loader=loader, encoder=encoder, decoder=decoder,
                                                optimizer_encoder=None, optimizer_decoder=None,
                                                epoch=epoch, outpath=outpath, is_train=False, device=device)
     return generated_data, epoch_avg_loss
 
-def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
-               epoch, outpath, is_train=True, device=None):
+def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_encoder, optimizer_decoder, outpath, device=None):
 
     if device is None:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -86,10 +91,10 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
 
         # Training
         start = time.time()
-        train_avg_loss, train_gen_imgs = train(train_loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
-                                               epoch, outpath, is_train=True, device=device)
+        train_avg_loss, train_gen = train(args, train_loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
+                                          epoch, outpath, is_train=True, device=device)
         # Validation
-        valid_avg_loss, valid_gen_imgs = validate(args, valid_loader, encoder, decoder, epoch, outpath, device=device)
+        valid_avg_loss, valid_gen = validate(args, valid_loader, encoder, decoder, epoch, outpath, device=device)
 
         dt = time.time() - start
         dts.append(dt)
@@ -106,11 +111,9 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
             plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
                               data_name=f"losses to up to {epoch+1}", outpath=outpath, global_data=True)
 
-
     # Save global data
     save_data(data=train_avg_losses, data_name='losses', is_train=True, outpath=outpath, epoch=-1)
     save_data(data=valid_avg_losses, data_name='losses', is_train=False, outpath=outpath, epoch=-1)
-    save_data(data=dts, data_name="dts", epoch="global", outpath=outpath, is_train=False, global_data=True)
     save_data(data=dts, data_name='dts', is_train=None, outpath=outpath, epoch=-1)
 
     return train_avg_losses, valid_avg_losses, dts
