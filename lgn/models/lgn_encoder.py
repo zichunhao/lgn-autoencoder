@@ -9,7 +9,7 @@ from lgn.models.lgn_cg import LGNCG
 from lgn.nn import RadialFilters
 from lgn.nn import MixReps
 
-from lgn.models.utils import adapt_var_list, detectnan
+from lgn.models.utils import adapt_var_list
 
 class LGNEncoder(CGModule):
     """

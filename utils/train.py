@@ -34,7 +34,6 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         if (p4_gen != p4_gen).any():
             raise RuntimeError('NaN data!')
         generated_data.append(p4_gen)
-        print(p4_gen)
 
         p4_target = batch['p4']
         target_data.append(p4_target)

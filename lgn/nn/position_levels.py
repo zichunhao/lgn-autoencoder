@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 
 from lgn.g_lib import GScalar
-from lgn.models.utils import detectnan
 
 class RadPolyTrig(nn.Module):
     """
