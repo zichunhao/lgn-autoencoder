@@ -35,7 +35,11 @@ if __name__ == "__main__":
     encoder = LGNEncoder(num_input_particles=args.num_jet_particles,
                          tau_input_scalars=args.tau_jet_scalars,
                          tau_input_vectors=args.tau_jet_vectors,
+<<<<<<< HEAD
                          map_to_latent=args.map_to_latent,
+=======
+                         map_to_latent=args.map_to_latent, 
+>>>>>>> f21819d4848254078966d30691e57daf19dd8f05
                          tau_latent_scalars=args.tau_latent_scalars,
                          tau_latent_vectors=args.tau_latent_vectors,
                          maxdim=args.maxdim, max_zf=[1],
