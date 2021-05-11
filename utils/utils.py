@@ -8,7 +8,6 @@ def create_model_folder(args):
     return make_dir(osp.join(args.save_dir, get_model_fname(args)))
 
 def get_model_fname(args):
-<<<<<<< HEAD
     encoder_cg = ''
     decoder_cg = ''
     for i in range(len(args.encoder_num_channels)):
@@ -16,9 +15,6 @@ def get_model_fname(args):
     for i in range(len(args.decoder_num_channels)):
         decoder_cg += str(args.decoder_num_channels[i])
     model_fname = f"LGNAutoencoder_{args.jet_type}Jet_{args.map_to_latent}_tauLS{args.tau_latent_scalars}_tauLV{args.tau_latent_vectors}_encoderCG{encoder_cg}_decoderCG{decoder_cg}"
-=======
-    model_fname = f"LGNAutoencoder_{args.map_to_latent}_tauLS_{args.tau_latent_scalars}_tauLV_{args.tau_latent_vectors}"
->>>>>>> f21819d4848254078966d30691e57daf19dd8f05
     return model_fname
 
 def make_dir(path):
