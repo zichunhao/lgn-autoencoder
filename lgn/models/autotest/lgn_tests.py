@@ -84,7 +84,7 @@ def boost_equivariance(encoder, decoder, data, alpha_range, device, dtype, cg_di
 	return gammas, dev_output, dev_internal
 
 def rot_equivariance(encoder, decoder, data, device, dtype, cg_dict):
-	thetas = np.arange(0, 2 * pi, step=pi/10)
+	thetas = np.arange(0, 2 * pi + 0.1, step=pi/10)
 	rot_input = []
 	rot_output = []
 	rot_input_nodes_all = []
