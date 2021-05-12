@@ -1,5 +1,5 @@
 # Equivariance Test Results
-This directory shows the result of equivariance test. The rotation angles range from `0` to `2pi`, and the Lorentz factors range from `0` to `11013.2`. Two results are compared by definition of equivariance:
+This directory shows the result of equivariance test (from [`../lgn/models/autotest`](https://github.com/zichunhao/lgn-autoencoder/tree/main/lgn/models/autotest)). The rotation angles range from `0` to `2pi`, and the Lorentz factors range from `0` to `11013.2`. Two results are compared by definition of equivariance:
 1. The input is transformed and then fed into the network.
 2. The input is fed into the network, and the output is transformed.
 
