@@ -96,7 +96,8 @@ def setup_argparse():
 
     ################################## Equivariance test options ##################################
     parser.add_argument('--beta-max', type=float, default=10., metavar='',
-                        help='The ')
+                        help='The largest beta value of equivariance test, where gamma = cosh(beta).' \
+						'Default: 10, so that gamma = 11013.2')
 
 
 
