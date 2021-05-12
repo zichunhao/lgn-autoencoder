@@ -40,7 +40,7 @@ def covariance_test(encoder, decoder, data, test_type, beta_max=None, cg_dict=No
 	if test_type.lower() in ['boost', 'boosts']:
 		if beta_max is None:
 			beta_max = 10.
-		alpha_range = np.arange(0, beta_max, step=beta_max/25.)
+		alpha_range = np.arange(0, beta_max+.01, step=beta_max/25.)
 		gammas, boost_dev_output, boost_dev_internal = boost_equivariance(encoder, decoder, data, alpha_range, device, dtype, cg_dict)
 		covariance_test_result['gammas'] = gammas
 		covariance_test_result['boost_dev_output'] = boost_dev_output
