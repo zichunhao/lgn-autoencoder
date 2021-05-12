@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 from args import setup_argparse
 from utils.make_data import initialize_data
-from lgn.models.autotest import lgn_tests
+from utils.autotest import lgn_tests
 from utils.utils import create_model_folder
 from utils.train import train_loop
 
