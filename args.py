@@ -42,8 +42,8 @@ def setup_argparse():
                         help='Number of channels (or multiplicity or all irreps) in each CG layer in the decoder.')
 
     parser.add_argument('--maxdim', nargs="+", type=int, default=[2], metavar='',
-                        help='Maximum weights in the model. Each element in maxdim will be capped to 1 because we only want 4-momentum, ' \
-                        'i.e. the (1/2,1/2) representation, in the end, while irreps with different weights are mixed independently.')
+                        help='Maximum weights in the model. Each element in maxdim will be capped to 2 because then tensor product' \
+						'of two (1/2, 1/2) irreps can be CG decomposed up to (1,1). Weights are multiplied by 2 to so that keys have integer values.')
     parser.add_argument('--num-basis-fn', type=int, default=10, metavar='',
                         help='Number of basis function to express edge features. Default: [2].')
 
