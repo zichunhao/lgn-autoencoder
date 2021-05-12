@@ -11,15 +11,19 @@ To achieve Lorentz equivariance, the model works on the [irreducible representat
 - F. Marc et al., "A Practical Method for Constructing Equivariant Multilayer Perceptrons for Arbitrary Matrix Groups", [arXiv:2104.09459](https://arxiv.org/abs/2104.09459). Repository: [A Practical Method for Constructing Equivariant Multilayer Perceptrons for Arbitrary Matrix Groups](https://github.com/mfinzi/equivariant-MLP).
 
 ### Backgrounds
-#### Group theory, the Lorentz group, and group representations
+#### Group theory and group representations
 - A. Zee, ["Group Theory in a Nutshell for Physicists"](https://press.princeton.edu/books/hardcover/9780691162690/group-theory-in-a-nutshell-for-physicists). Princeton University Press, 2016. ISBN 9781400881185.
-- B. Hall, ["Lie Groups, Lie Algebras, and Representations: An Elementary Introduction"](https://link.springer.com/book/10.1007/978-3-319-13467-3). Graduate Texts in Mathematics. Springer, doi: [10.1007/978-3-319-13467-3](https://doi.org/10.1007/978-3-319-13467-3). ISBN 9783319134673.
+- B. Hall, "Lie Groups, Lie Algebras, and Representations: An Elementary Introduction". Graduate Texts in Mathematics. Springer, doi: [10.1007/978-3-319-13467-3](https://doi.org/10.1007/978-3-319-13467-3). ISBN 9783319134673.
 - D. Arovas, ["Lecture Notes on Group Theory in Physics (A Work in Progress)"](https://courses.physics.ucsd.edu/2016/Spring/physics220/LECTURES/GROUP_THEORY.pdf). Accessed Nov. 22, 2020.
 - D. Dummit and R. Foote, ["Abstract Algebra"](https://www.wiley.com/en-us/Abstract+Algebra%2C+3rd+Edition-p-9780471433347). Wiley, 3rd edition, 2003. ISBN 9780471433347.
-- H. Georgi, ["Lie Algebras In Particle Physics: from Isospin To Unified Theories"](https://www.amazon.com/Lie-Algebras-Particle-Physics-Frontiers/dp/0738202339). CRC Press, 2018. ISBN 9780429978845.
-- H. Muller-kirsten and A. Wiedemann, ["Introduction To Supersymmetry"](https://www.worldscientific.com/worldscibooks/10.1142/7594). World Scientific Lecture Notes In Physics. World Scientific Publishing Company, 2nd edition, 2010. ISBN 9789813100961.
+- H. Georgi, ["Lie Algebras In Particle Physics: from Isospin To Unified Theories"](https://www.amazon.com/Lie-Algebras-Particle-Physics-Frontiers/dp/0738202339). CRC Press, 2018, doi: [10.1201/9780429499210](https://doi.org/10.1201/9780429499210) ISBN 9780429978845.
+- H. Muller-kirsten and A. Wiedemann, "Introduction To Supersymmetry". World Scientific Lecture Notes In Physics. World Scientific Publishing Company, 2nd edition, 2010, doi: [10.1142/7594](https://doi.org/10.1142/7594). ISBN 9789813100961.
+
+#### The Lorentz group and its representations
+- K. Rao, "Linear Algebra and Group Theory for Physicists". Text and Readings in Physical Sciences, Springer, 2nd edition, 2006, doi: [10.1007/978-93-86279-32-3](https://doi.org/10.1007/978-93-86279-32-3). ISBN 9789386279323.
+- R. Sexl and H. Urbantke, "Relativity, Groups, Particles: Special Relativity and Relativistic Symmetry in Field and Particle Physics". Springer, 2001, doi: [10.1007/978-3-7091-6234-7](https://doi.org/10.1007/978-3-7091-6234-7). ISBN 9783709162347.
 
 #### The deep connection between group theory and particle physics
-- E. Wigner, ["On Unitary Representations of the Inhomogeneous Lorentz Group"](https://www.jstor.org/stable/1968551?seq=1), Annals of Mathematics **40** (1939), no. 1, 149-204, doi: [10.2307/1968551](https://doi.org/10.2307/1968551).
+- E. Wigner, "On Unitary Representations of the Inhomogeneous Lorentz Group", Annals of Mathematics **40** (1939), no. 1, 149-204, doi: [10.2307/1968551](https://doi.org/10.2307/1968551).
 - M. Schwartz, ["Quantum Field Theory and the Standard Model"](https://www.cambridge.org/us/academic/subjects/physics/theoretical-physics-and-mathematical-physics/quantum-field-theory-and-standard-model). Cambridge University Press, 2013. ISBN 9781107034730.
-- S. Weinberg. ["The Quantum Theory of Fields, Volume 1: Foundations"](https://www.cambridge.org/core/books/quantum-theory-of-fields/22986119910BF6A2EFE42684801A3BDF). Cambridge University Press, 1995, doi: [10.1017/CBO9781139644167](https://doi.org/10.1017/CBO9781139644167).
+- S. Weinberg. "The Quantum Theory of Fields, Volume 1: Foundations". Cambridge University Press, 1995, doi: [10.1017/CBO9781139644167](https://doi.org/10.1017/CBO9781139644167).
