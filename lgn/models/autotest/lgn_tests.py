@@ -7,6 +7,7 @@ from math import sqrt, cosh, pi
 import logging
 
 from lgn.g_lib import rotations as rot
+from lgn.models.autotest.utils import get_internal_dev_stats, get_output, get_dev
 
 
 def _gen_rot(angles, maxdim, device=torch.device('cpu'), dtype=torch.float64, cg_dict=None):
@@ -108,13 +109,6 @@ def rot_equivariance(encoder, decoder, data, device, dtype, cg_dict):
 
 	return thetas, dev_output, dev_internal
 
-def get_dev(transform_input, transform_output, transform_input_nodes_all, transform_output_nodes_all):
-	# Output equivariance
-	dev_output = [{weight: ((transform_input[i][weight] - transform_output[i][weight]) / (transform_output[i][weight])).abs().max() for weight in [(0,0), (1,1)]} for i in range(len(transform_output))]
-	# Equivariance of all internal features
-	dev_internal = [[{weight: ((transform_input_nodes_all[i][j][weight] - transform_output_nodes_all[i][j][weight]) / transform_output_nodes_all[i][j][weight]).abs().max() for weight in [(0,0), (1,1)]} for j in range(len(transform_output_nodes_all[i]))] for i in range(len(transform_output_nodes_all))]
-	return dev_output, dev_internal
-
 def lgn_tests(encoder, decoder, dataloader, args, epoch, beta_max=None, tests=['covariance','permutation','batch'], cg_dict=None):
 
 	t0 = time.time()
@@ -149,12 +143,3 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, beta_max=None, tests=['
 	print("Time it took testing equivariance of epoch", epoch+1, "is:", round(dt/60,2), "min")
 
 	return lgn_test_results
-
-
-def get_output(encoder, decoder, data, covariance_test=False):
-	"""
-	Get output and all internal features from the autoencoder.
-	"""
-	latent_features, encoder_nodes_all = encoder(data, covariance_test=covariance_test)
-	generated_features, nodes_all = decoder(latent_features, covariance_test=covariance_test, nodes_all=encoder_nodes_all)
-	return generated_features, nodes_all

@@ -11,11 +11,11 @@ def setup_argparse():
                         help='The path of the data.')
     parser.add_argument('--file-suffix', type=str, default='jets_150p_cartesian.pt', metavar='',
                         help="The suffix of the file. Default: 'jets_150p_cartesian.pt'")
-    parser.add_argument('--num-train', type=int, default=50, metavar='',
+    parser.add_argument('--num-train', type=int, default=2, metavar='',
                         help='Number of samples to train on. Default: 528000')
-    parser.add_argument('--num-val', type=int, default=1, metavar='',
+    parser.add_argument('--num-val', type=int, default=2, metavar='',
                         help='Number of samples to validate on. Default: -1.')
-    parser.add_argument('--num-test', type=int, default=1, metavar='',
+    parser.add_argument('--num-test', type=int, default=2, metavar='',
                         help='Number of samples to test eqvuivariance on. Default: -1.')
     parser.add_argument('--scale', type=float, default=1., metavar='',
                         help='The rescaling factor of the input 4-momenta. Default: 1.')
@@ -93,6 +93,12 @@ def setup_argparse():
                         help='Path of the trained model to load.')
     parser.add_argument('--load-epoch', type=int, default=None, metavar='',
                         help='Epoch number of the trained model to load.')
+
+    ################################## Equivariance test options ##################################
+    parser.add_argument('--beta-max', type=float, default=10., metavar='',
+                        help='The ')
+
+
 
     args = parser.parse_args()
 
