@@ -14,7 +14,7 @@ def get_model_fname(args):
         encoder_cg += str(args.encoder_num_channels[i])
     for i in range(len(args.decoder_num_channels)):
         decoder_cg += str(args.decoder_num_channels[i])
-    model_fname = f"LGNAutoencoder_{args.jet_type}Jet_{args.map_to_latent}_tauLS{args.tau_latent_scalars}_tauLV{args.tau_latent_vectors}_encoderCG{encoder_cg}_decoderCG{decoder_cg}"
+    model_fname = f"LGNAutoencoder_{args.jet_type}Jet_{args.map_to_latent}_tauLS{args.tau_latent_scalars}_tauLV{args.tau_latent_vectors}_encoder{encoder_cg}_decoder{decoder_cg}"
     return model_fname
 
 def make_dir(path):
@@ -33,21 +33,21 @@ def save_data(data, data_name, is_train, outpath, epoch=-1):
 
     if is_train is None:
         if epoch >= 0:
-            torch.save(data, f"{outpath}/{data_name}_epoch_{epoch+1}.pkl")
+            torch.save(data, osp.join(outpath, f'{data_name}_epoch_{epoch+1}.pkl'))
         else:
-            torch.save(data, f"{outpath}/{data_name}.pkl")
+            torch.save(data, osp.join(outpath, f'{data_name}.pkl'))
         return
 
     if epoch >= 0:
         if is_train:
-            torch.save(data, f"{outpath}/train_{data_name}_epoch_{epoch+1}.pkl")
+            torch.save(data, osp.join(outpath, f'train_{data_name}_epoch_{epoch+1}.pkl'))
         else:
-            torch.save(data, f"{outpath}/valid_{data_name}_epoch_{epoch+1}.pkl")
+            torch.save(data, osp.join(outpath, f'valid_{data_name}_epoch_{epoch+1}.pkl'))
     else:
         if is_train:
-            torch.save(data, f"{outpath}/train_{data_name}.pkl")
+            torch.save(data, osp.join(outpath, f'train_{data_name}.pkl'))
         else:
-            torch.save(data, f"{outpath}/valid_{data_name}.pkl")
+            torch.save(data, osp.join(outpath, f'valid_{data_name}.pkl'))
 
 
 def plot_eval_results(args, data, data_name, outpath, global_data=True):
