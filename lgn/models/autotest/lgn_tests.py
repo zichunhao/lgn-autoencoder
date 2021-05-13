@@ -113,7 +113,8 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, tests=[
 
 	t0 = time.time()
 
-	logging.info("Testing network for symmetries:")
+	print("Testing equivariance...")
+	logging.info("Testing equivariance")
 	encoder.eval()
 	decoder.eval()
 
@@ -121,22 +122,20 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, tests=[
 
 	data = next(iter(dataloader))
 	if 'covariance' in tests:
+		print("Boost equivariance test begins...")
 		logging.info('Boost equivariance test begins...')
 		boost_results = covariance_test(encoder, decoder, data, test_type='boost', cg_dict=cg_dict, alpha_max=alpha_max)
+		print("Boost equivariance test completed!")
 		logging.info('Boost equivariance test completed!')
 
+		print("Rotation equivariance test begins...")
 		logging.info('Rotation equivariance test begins...')
 		lgn_test_results.update(boost_results)
 		rotation_results = covariance_test(encoder, decoder, data, test_type='rotation', cg_dict=cg_dict)
+		print("Rotation equivariance test completed!")
 		logging.info('Rotation equivariance test completed!')
 
 		lgn_test_results.update(rotation_results)
-	# if 'permutation' in tests:
-	# 	permutation_results = permutation_test(encoder, decoder, data)
-	# 	lgn_test_results['permutation_invariance'] = permutation_results
-	# if 'batch' in tests:
-	# 	batch_results = batch_test(encoder, decoder, data)
-	# 	lgn_test_results['batch_invariance'] = batch_results
 
 	logging.info('Test complete!')
 	dt = time.time() - t0
