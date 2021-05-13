@@ -112,10 +112,10 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
                   outpath=outpath, epoch=epoch)
         plot_p(args, real_data=train_target, gen_data=train_gen, save_dir=outpath_train_jet_plots,
                polar_max=args.polar_max, cartesian_max=args.cartesian_max,
-               num_bins=args.num_bins, cutoff=args.cutoff, epoch=epoch, fill=False)
+               num_bins=args.num_bins, cutoff=args.cutoff, epoch=epoch)
         plot_p(args, real_data=valid_target, gen_data=valid_gen, save_dir=outpath_valid_jet_plots,
                polar_max=args.polar_max, cartesian_max=args.cartesian_max,
-               num_bins=args.num_bins, cutoff=args.cutoff, epoch=epoch, fill=False)
+               num_bins=args.num_bins, cutoff=args.cutoff, epoch=epoch)
 
         dts.append(dt)
         train_avg_losses.append(train_avg_loss)

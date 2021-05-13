@@ -6,10 +6,12 @@ from utils.utils import make_dir
 
 
 def plot_p(args, real_data, gen_data, save_dir, polar_max=[0.15, np.pi/4, np.pi/4], cartesian_max=(0.02, 0.02, 0.02),
-           num_bins=201, cutoff=1e-6, epoch=None, fill=False, show=False):
+           num_bins=201, cutoff=1e-6, epoch=None, show=False):
 
-    plot_p_polar(args, real_data, gen_data, save_dir, max_val=polar_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=fill, show=show)
-    plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=cartesian_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=fill, show=show)
+    plot_p_polar(args, real_data, gen_data, save_dir, max_val=polar_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=False, show=show)
+    plot_p_polar(args, real_data, gen_data, save_dir, max_val=polar_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=True, show=show)
+    plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=cartesian_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=False, show=show)
+    plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=cartesian_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=True, show=show)
 
 
 def plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=[0.02, 0.02, 0.02], num_bins=201, cutoff=1e-6, epoch=None, density=False, fill=False, show=False):
@@ -48,7 +50,8 @@ def plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=[0.02, 0.02, 0
         Whether to show plot.
         Optional, default: `False`
     """
-
+    if fill:
+        save_dir = osp.join(save_dir, 'filled')
     save_dir = make_dir(osp.join(save_dir, 'cartesian'))
     px_real, py_real, pz_real = get_p_cartesian(real_data, cutoff=cutoff)
     px_gen, py_gen, pz_gen = get_p_cartesian(gen_data, cutoff=cutoff)
@@ -132,7 +135,8 @@ def plot_p_polar(args, real_data, gen_data, save_dir, max_val=[0.15, np.pi, np.p
         Whether to show plot.
         Optional, default: `False`
     """
-
+    if fill:
+        save_dir = osp.join(save_dir, 'filled')
     save_dir = make_dir(osp.join(save_dir, 'polar'))
     pt_real, eta_real, phi_real = get_p_polar(real_data, cutoff=cutoff)
     pt_gen, eta_gen, phi_gen = get_p_polar(gen_data, cutoff=cutoff)
