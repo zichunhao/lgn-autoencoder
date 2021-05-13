@@ -7,7 +7,7 @@ from math import sqrt, cosh, pi
 import logging
 
 from lgn.g_lib import rotations as rot
-from lgn.models.autotest.utils import get_internal_dev_stats, get_output, get_dev
+from lgn.models.autotest.utils import get_output, get_dev
 
 
 def _gen_rot(angles, maxdim, device=torch.device('cpu'), dtype=torch.float64, cg_dict=None):

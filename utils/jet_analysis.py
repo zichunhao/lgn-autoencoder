@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
 import os.path as osp
 
 from utils.utils import make_dir
