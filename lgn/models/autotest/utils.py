@@ -83,7 +83,7 @@ def plot_internal_dev(dev_internal, alphas, transform_type, weight, save_path, s
 	plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 
 	if show_all:
-		plt.legend(bbox_to_anchor=(1.05, 0.9))
+		plt.legend(bbox_to_anchor=(1.05, 0.8))
 	else:
 		plt.legend(loc='best')
 
