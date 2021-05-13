@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
 import os
 import os.path as osp
 
@@ -82,8 +83,7 @@ def plot_internal_dev(dev_internal, alphas, transform_type, weight, save_path, s
 	plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 
 	if show_all:
-		# plt.legend(loc='best', bbox_to_anchor=(1.05, 1))
-		plt.legend(loc='best', bbox_to_anchor=(1.05, 1))
+		plt.legend(bbox_to_anchor=(1.05, 1.3))
 	else:
 		plt.legend(loc='best')
 
@@ -103,6 +103,8 @@ def plot_internal_dev(dev_internal, alphas, transform_type, weight, save_path, s
 
 def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
 	make_dir(save_path)
+	pkl_path = make_dir(osp.join(save_path, "pkl"))
+
 	if weight not in [(0,0), (1,1)]:
 		raise ValueError("Weight has to be one of (0,0) and (1,1)")
 
@@ -114,15 +116,19 @@ def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
 	if transform_type.lower() in ['boost', 'boosts']:
 		if weight == (1,1):
 			title = fr'Boost equivariance test of generated {irrep_str} $p^\mu$'
+			torch.save(dev, osp.join(pkl_path, "boost_equivariance_p4.pkl"))
 		else:
 			title = f'Boost equivariance test of generated {irrep_str}'
+			torch.save(dev, osp.join(pkl_path, "boost_equivariance_scalars.pkl"))
 		plt.title(title, y=1.05)
 		plt.xlabel(r'Lorentz factor $\gamma$')
 	elif transform_type.lower() in ['rot', 'rots', 'rotation', 'rotatons']:
 		if weight == (1,1):
 			title = fr'Rotation equivariance test of generated {irrep_str} $p^\mu$'
+			torch.save(dev, osp.join(pkl_path, "rot_equivariance_p4.pkl"))
 		else:
 			title = f'Rotation equivariance test of generated {irrep_str}'
+			torch.save(dev, osp.join(pkl_path, "rot_equivariance_scalars.pkl"))
 		plt.title(title, y=1.05)
 		plt.xlabel(r'Rotation angle $\theta$ (rad)')
 
