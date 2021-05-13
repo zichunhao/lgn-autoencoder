@@ -9,9 +9,11 @@ def plot_p(args, real_data, gen_data, save_dir, polar_max=[0.15, np.pi/4, np.pi/
            num_bins=201, cutoff=1e-6, epoch=None, show=False):
 
     plot_p_polar(args, real_data, gen_data, save_dir, max_val=polar_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=False, show=show)
-    plot_p_polar(args, real_data, gen_data, save_dir, max_val=polar_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=True, show=show)
     plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=cartesian_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=False, show=show)
-    plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=cartesian_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=True, show=show)
+
+    if args.fill:
+        plot_p_polar(args, real_data, gen_data, save_dir, max_val=polar_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=True, show=show)
+        plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=cartesian_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=True, show=show)
 
 
 def plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=[0.02, 0.02, 0.02], num_bins=201, cutoff=1e-6, epoch=None, density=False, fill=False, show=False):

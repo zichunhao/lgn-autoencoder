@@ -104,6 +104,8 @@ def setup_argparse():
                         help='Number of bins in the histogram.')
     parser.add_argument('--cutoff', type=float, default=1e-7, metavar='',
                         help='Cutoff value of (3-)momenta magnitude to be included in the historgram. Default: 1e-7.')
+    parser.add_argument('--fill', default=False, action='store_true',
+                        help='Whether to plot filled histograms as well. True only if called in the command line.')
 
     ################################## Equivariance test options ##################################
     parser.add_argument('--equivariance-test', default=False, action='store_true',
