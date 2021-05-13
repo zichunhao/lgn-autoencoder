@@ -50,7 +50,7 @@ def save_data(data, data_name, is_train, outpath, epoch=-1):
             torch.save(data, osp.join(outpath, f'valid_{data_name}.pkl'))
 
 
-def plot_eval_results(args, data, data_name, outpath, global_data=True):
+def plot_eval_results(args, data, data_name, outpath, global_data=False):
     '''
     Plot evaluation results
     '''
@@ -91,5 +91,5 @@ def plot_eval_results(args, data, data_name, outpath, global_data=True):
     plt.ylabel(data_name)
     plt.title(data_name)
     save_name = "_".join(data_name.lower().split(" "))
-    plt.savefig(f"{outpath}/{save_name}.pdf")
+    plt.savefig(osp.join(outpath, f"{save_name}.pdf"))
     plt.close()
