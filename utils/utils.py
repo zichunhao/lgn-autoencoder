@@ -54,7 +54,7 @@ def plot_eval_results(args, data, data_name, outpath, global_data=False):
     '''
     Plot evaluation results
     '''
-    outpath = make_dir(osp.join(outpath, "model_evaluations"))
+    outpath = make_dir(osp.join(outpath, "model_evaluations/evaluation_plots"))
     if args.load_to_train:
         start = args.load_epoch + 1
         end = start + args.num_epochs
@@ -74,8 +74,8 @@ def plot_eval_results(args, data, data_name, outpath, global_data=False):
             train = train.detach().cpu().numpy()
         if isinstance(valid, torch.Tensor):
             valid = valid.detach().cpu().numpy()
-        plt.plot(x, train, label='Train')
-        plt.plot(x, valid, label='Valid')
+        plt.plot(x, train, label='Train', alpha=0.8)
+        plt.plot(x, valid, label='Valid', alpha=0.8)
         plt.legend()
     # only one type of data (e.g. dt)
     else:
