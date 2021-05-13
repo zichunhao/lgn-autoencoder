@@ -16,6 +16,9 @@ from utils.train import train_loop
 from lgn.models.lgn_encoder import LGNEncoder
 from lgn.models.lgn_decoder import LGNDecoder
 
+from lgn.models.autotest.lgn_tests import lgn_tests
+from lgn.models.autotest.utils import plot_all_dev
+
 torch.autograd.set_detect_anomaly(True)
 
 if __name__ == "__main__":
@@ -82,5 +85,8 @@ if __name__ == "__main__":
 
     outpath = create_model_folder(args)
     train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_encoder, optimizer_decoder, outpath, args.device)
+
+    dev = lgn_tests(encoder, decoder, test_loader, args, alpha_max=args.alpha_max, epoch=args.num_epochs, cg_dict=encoder.cg_dict)
+    plot_all_dev(dev, osp.join(outpath, 'model_evaluations/equivariance_tests'))
 
     print("Training completed!")
