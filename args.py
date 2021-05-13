@@ -1,5 +1,6 @@
 import argparse
 import torch
+import numpy as np
 
 def setup_argparse():
     parser = argparse.ArgumentParser(description='LGN Autoencoder Options')
@@ -71,7 +72,7 @@ def setup_argparse():
                         help='Learning rate of the backpropagation.')
     parser.add_argument('-b', '--batch-size', type=int, default=2, metavar='',
                         help='Batch size.')
-    parser.add_argument('--num-epochs', type=int, default=64, metavar='',
+    parser.add_argument('-e', '--num-epochs', type=int, default=64, metavar='',
                         help='Number of epochs for training.')
     parser.add_argument('--loss-norm-choice', type=str, default='real', metavar='',
                         help="Choice of calculating the norms of 4-vectors when calculating the loss. " \
@@ -94,17 +95,26 @@ def setup_argparse():
     parser.add_argument('--load-epoch', type=int, default=None, metavar='',
                         help='Epoch number of the trained model to load.')
 
-    ################################## Equivariance test options ##################################
-    parser.add_argument('--beta-max', type=float, default=10., metavar='',
-                        help='The largest beta value of equivariance test, where gamma = cosh(beta).' \
-						'Default: 10, so that gamma = 11013.2')
+    ################################### Model evaluation options ###################################
+    parser.add_argument('--polar-max', nargs="+", type=float, default=[0.15, np.pi/4, np.pi/4], metavar='',
+                        help='List of maximum values of (pt, eta, phi) in the histogram. Default: [0.15, np.pi/4, np.pi/4].')
+    parser.add_argument('--cartesian-max', nargs="+", type=float, default=[0.02, 0.02, 0.02], metavar='',
+                        help='List of maximum values of (px, py, pz) in the histogram. Default: [0.02, 0.02, 0.02].')
+    parser.add_argument('--num_bins', type=int, default=201, metavar='',
+                        help='Number of bins in the histogram.')
+    parser.add_argument('--cutoff', type=float, default=1e-7, metavar='',
+                        help='Cutoff value of (3-)momenta magnitude to be included in the historgram. Default: 1e-7.')
 
+    ################################## Equivariance test options ##################################
+    parser.add_argument('--alpha-max', type=float, default=10., metavar='',
+                        help='The maximum alpha value of equivariance test, where gamma = cosh(alpha).' \
+						'Default: 10., at which gamma = 11013.2')
 
 
     args = parser.parse_args()
 
     if args.load_to_train and ((args.load_model_path is None) or (args.load_epoch is None)):
-        parser.error("--load-to-train requires --load-model-path and --load-epoch.")
+        raise ValueError("--load-to-train requires --load-model-path and --load-epoch.")
 
     return args
 
