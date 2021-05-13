@@ -106,9 +106,12 @@ def setup_argparse():
                         help='Cutoff value of (3-)momenta magnitude to be included in the historgram. Default: 1e-7.')
 
     ################################## Equivariance test options ##################################
+    parser.add_argument('--equivariance-test', default=False, action='store_true',
+                        help='Whether to take the equivariance test after all trainings on the last model. True only when it is called.' \
+                        'Default: False.')
     parser.add_argument('--alpha-max', type=float, default=10., metavar='',
                         help='The maximum alpha value of equivariance test, where gamma = cosh(alpha).' \
-						'Default: 10., at which gamma = 11013.2')
+						'Default: 10., at which gamma = 11013.2.')
 
 
     args = parser.parse_args()
