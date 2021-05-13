@@ -6,7 +6,6 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
 import torch
-import matplotlib.pyplot as plt
 
 from args import setup_argparse
 from utils.make_data import initialize_data
@@ -86,6 +85,7 @@ if __name__ == "__main__":
     outpath = create_model_folder(args)
     train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_encoder, optimizer_decoder, outpath, args.device)
 
+    # Equivariance tests
     dev = lgn_tests(encoder, decoder, test_loader, args, alpha_max=args.alpha_max, epoch=args.num_epochs, cg_dict=encoder.cg_dict)
     plot_all_dev(dev, osp.join(outpath, 'model_evaluations/equivariance_tests'))
 
