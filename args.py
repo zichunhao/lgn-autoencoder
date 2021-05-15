@@ -114,6 +114,9 @@ def setup_argparse():
     parser.add_argument('--alpha-max', type=float, default=10., metavar='',
                         help='The maximum alpha value of equivariance test, where gamma = cosh(alpha).' \
 						'Default: 10., at which gamma = 11013.2.')
+    parser.add_argument('--theta-max', type=float, default=2*np.pi, metavar='',
+                        help='The maximum theta value of equivariance test.' \
+						'Default: 2 pi.')
 
 
     args = parser.parse_args()

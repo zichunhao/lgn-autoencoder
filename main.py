@@ -87,7 +87,8 @@ if __name__ == "__main__":
 
     # Equivariance tests
     if args.equivariance_test:
-        dev = lgn_tests(encoder, decoder, test_loader, args, alpha_max=args.alpha_max, epoch=args.num_epochs, cg_dict=encoder.cg_dict)
+        dev = lgn_tests(encoder, decoder, test_loader, args, alpha_max=args.alpha_max,
+                        theta_max=args.theta_max, epoch=args.num_epochs, cg_dict=encoder.cg_dict)
         plot_all_dev(dev, osp.join(outpath, 'model_evaluations/equivariance_tests'))
 
     print("Training completed!")
