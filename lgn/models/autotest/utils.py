@@ -73,17 +73,19 @@ def plot_internal_dev(dev_internal, alphas, transform_type, weight, save_path, s
 	irrep_str = '4-vector' if weight == (1,1) else 'scalar'
 
 	if show_all:
+		colors = list(plt.cm.tab20(np.arange(len(dev_layers[weight])))) + ["indigo"]
 		for i in range(len(dev_layers[weight])):
-		    plt.plot(alphas, dev_layers[weight][i], label=f"layer {i+1}")
-	plt.plot(alphas, dev_internal_mean[weight], label="layers mean")
+		    plt.plot(alphas, dev_layers[weight][i], label=f"layer {i+1}", color=colors[i], linewidth=0.9)
+		plt.plot(alphas, dev_internal_mean[weight], label="layers mean", color='black', linestyle='dashed', linewidth=1.4)
 	if not show_all:
+		plt.plot(alphas, dev_internal_mean[weight], label="layers mean")
 		plt.plot(alphas, dev_internal_max[weight], label="layers max")
 
 	plt.ylabel('relative deviation')
 	plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 
 	if show_all:
-		plt.legend(bbox_to_anchor=(1.05, 0.8))
+		plt.legend(bbox_to_anchor=(1.04,0.85), loc="upper left")
 	else:
 		plt.legend(loc='best')
 
@@ -96,9 +98,9 @@ def plot_internal_dev(dev_internal, alphas, transform_type, weight, save_path, s
 
 	plt.tight_layout()
 	if show_all:
-		plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_internal_{irrep_str}_all.pdf"))
+		plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_internal_{irrep_str}_all.pdf"), bbox_inches='tight')
 	else:
-		plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_internal_{irrep_str}.pdf"))
+		plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_internal_{irrep_str}.pdf"), bbox_inches='tight')
 	plt.close()
 
 def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
@@ -135,7 +137,7 @@ def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
 	plt.ylabel('Relative deviation')
 	plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 
-	plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_generated_{irrep_str}.pdf"))
+	plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_generated_{irrep_str}.pdf"), bbox_inches='tight')
 	plt.close()
 
 def plot_all_dev(dev, save_path):
