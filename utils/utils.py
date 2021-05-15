@@ -91,5 +91,5 @@ def plot_eval_results(args, data, data_name, outpath, global_data=False):
     plt.ylabel(data_name)
     plt.title(data_name)
     save_name = "_".join(data_name.lower().split(" "))
-    plt.savefig(osp.join(outpath, f"{save_name}.pdf"))
+    plt.savefig(osp.join(outpath, f"{save_name}.pdf"), bbox_inches='tight')
     plt.close()
