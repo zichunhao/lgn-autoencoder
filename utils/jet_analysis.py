@@ -98,7 +98,7 @@ def plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=[0.02, 0.02, 0
         filename = f'{filename}_epoch_{epoch+1}'
     if density:
         filename = f'{filename}_density'
-    plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches = "tight")
+    plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches = "tight", transparent=True)
     if show:
         plt.show()
     plt.close()
@@ -186,7 +186,7 @@ def plot_p_polar(args, real_data, gen_data, save_dir, max_val=[0.15, np.pi, np.p
         filename = f'{filename}_epoch_{epoch+1}'
     if density:
         filename = f'{filename}_density'
-    plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches = "tight")
+    plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches = "tight", transparent=True)
     if show:
         plt.show()
     plt.close()

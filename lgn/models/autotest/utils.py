@@ -98,9 +98,9 @@ def plot_internal_dev(dev_internal, alphas, transform_type, weight, save_path, s
 
 	plt.tight_layout()
 	if show_all:
-		plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_internal_{irrep_str}_all.pdf"), bbox_inches='tight')
+		plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_internal_{irrep_str}_all.pdf"), bbox_inches='tight', transparent=True)
 	else:
-		plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_internal_{irrep_str}.pdf"), bbox_inches='tight')
+		plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_internal_{irrep_str}.pdf"), bbox_inches='tight', transparent=True)
 	plt.close()
 
 def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
@@ -137,7 +137,7 @@ def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
 	plt.ylabel('Relative deviation')
 	plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 
-	plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_generated_{irrep_str}.pdf"), bbox_inches='tight')
+	plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_generated_{irrep_str}.pdf"), bbox_inches='tight', transparent=True)
 	plt.close()
 
 def plot_all_dev(dev, save_path):
