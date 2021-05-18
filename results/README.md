@@ -1,6 +1,6 @@
 # Results
 ## Poster
-The file `OURS-Poster.pdf` is the poster for the Online Undergraduate Research Symposium (OURS) held at University of California, San Diego in 2021.
+The file `OURS-Poster.pdf` is the poster for the [Online Undergraduate Research Symposium](https://ugresearch.ucsd.edu/conferences/ours/OURS%202021.html) (OURS) held at University of California, San Diego in 2021.
 The poster does not include all the results of the model since the autoencoder model is not fully trained yet on the full `hls4ml` LHC jet dataset.
 
 ## Equivariance Tests
