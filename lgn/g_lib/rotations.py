@@ -124,8 +124,7 @@ def complex_tensor_prod(d1, d2):
     d2_re, d2_im = d2.unbind(0)
     s1 = d1.shape[1:]
     s2 = d2.shape[1:]
-    assert len(s1) == 2 and len(
-        s2) == 2, "Both tensors must be of rank 2 (and complex)!"
+    assert len(s1) == 2 and len(s2) == 2, "Both tensors must be of rank 2 (and complex)!"
     d_re = d1_re.view(s1[0], 1, s1[1], 1) * d2_re.view(1, s2[0], 1, s2[1]) - \
         d1_im.view(s1[0], 1, s1[1], 1) * d2_im.view(1, s2[0], 1, s2[1])
     d_im = d1_re.view(s1[0], 1, s1[1], 1) * d2_im.view(1, s2[0], 1, s2[1]) + \
