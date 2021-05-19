@@ -3,6 +3,11 @@ import matplotlib.pyplot as plt
 import torch
 import os
 import os.path as osp
+import logging
+
+def print_and_log(info):
+	print(info)
+	logging.info(info)
 
 def get_output(encoder, decoder, data, covariance_test=False):
 	"""
