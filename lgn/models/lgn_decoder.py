@@ -71,6 +71,7 @@ class LGNDecoder(CGModule):
         Optional, default: None
         Clebsch-gordan dictionary for taking the CG decomposition.
     """
+
     def __init__(self, tau_latent_scalars, tau_latent_vectors,
                  num_output_particles, tau_output_scalars, tau_output_vectors,
                  maxdim, num_basis_fn, num_channels, max_zf, weight_init, level_gain,
@@ -97,7 +98,7 @@ class LGNDecoder(CGModule):
         self.input_basis = 'canonical'  # Will convert it from Cartesian
         self.tau_latent_scalars = tau_latent_scalars
         self.tau_latent_vectors = tau_latent_vectors
-        self.tau_dict = {'input': GTau({(0,0): tau_latent_scalars, (1,1): tau_latent_vectors})}
+        self.tau_dict = {'input': GTau({(0, 0): tau_latent_scalars, (1, 1): tau_latent_vectors})}
 
         self.num_output_particles = num_output_particles
 
@@ -111,12 +112,13 @@ class LGNDecoder(CGModule):
         self.mlp_width = mlp_width
         self.activation = activation
 
-        tau_mix_to_graph = GTau({weight: self.num_output_particles for weight in [(0,0), (1,1)]})
-        self.latent_to_graph = MixReps(self.tau_dict['input'], tau_mix_to_graph, device=self.device, dtype=self.dtype)
+        tau_mix_to_graph = GTau({weight: self.num_output_particles for weight in [(0, 0), (1, 1)]})
+        self.latent_to_graph = MixReps(
+            self.tau_dict['input'], tau_mix_to_graph, device=self.device, dtype=self.dtype)
 
-        tau_mix_to_cg = GTau({weight: num_channels[0] for weight in [(0,0), (1,1)]})
-        self.input_func_node = MixReps(GTau({weight: 1 for weight in [(0,0), (1,1)]}), tau_mix_to_cg, device=self.device, dtype=self.dtype)
-
+        tau_mix_to_cg = GTau({weight: num_channels[0] for weight in [(0, 0), (1, 1)]})
+        self.input_func_node = MixReps(
+            GTau({weight: 1 for weight in [(0, 0), (1, 1)]}), tau_mix_to_cg, device=self.device, dtype=self.dtype)
 
         self.zonal_fns_in = ZonalFunctions(max(self.max_zf), basis=self.input_basis,
                                            dtype=dtype, device=device, cg_dict=cg_dict)
@@ -137,10 +139,10 @@ class LGNDecoder(CGModule):
         self.tau_cg_levels_node = self.lgn_cg.tau_levels_node
         self.tau_dict['cg_layers'] = self.tau_cg_levels_node.copy()
 
-        self.tau_output = GTau({(0,0): tau_output_scalars, (1,1): tau_output_vectors})
+        self.tau_output = GTau({(0, 0): tau_output_scalars, (1, 1): tau_output_vectors})
         self.tau_dict['output'] = self.tau_output
-        self.mix_to_output = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
-
+        self.mix_to_output = MixReps(
+            self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
 
     def forward(self, latent_features, covariance_test=False, nodes_all=None):
         '''
@@ -168,7 +170,8 @@ class LGNDecoder(CGModule):
                 The full node features in both encoder and decoder.
         '''
         if covariance_test and (nodes_all is None):
-            raise ValueError('covariance_test is set to True, but the full node features from the encoder is not passed in!')
+            raise ValueError(
+                'covariance_test is set to True, but the full node features from the encoder is not passed in!')
         # Get data
         node_ps, node_scalars, node_mask, edge_mask = self._prepare_input(latent_features)
 
@@ -195,9 +198,10 @@ class LGNDecoder(CGModule):
         node_features = decoder_cg_nodes[-1]
 
         # Mix to output
-        generated_features = self.mix_to_output(node_features) # node_all[-1] is the updated feature in the last layer
+        # node_all[-1] is the updated feature in the last layer
+        generated_features = self.mix_to_output(node_features)
         decoder_nodes_all.append(generated_features)
-        generated_ps = generated_features[(1,1)].clone()
+        generated_ps = generated_features[(1, 1)].clone()
         generated_ps = rep_to_p(generated_ps)  # Convert to Cartesian coordinates
         # Remove the dimension of multiplicity (i.e. each particle is represented by a single 4-vector), like in input jet
         generated_ps = generated_ps.squeeze(-2)
@@ -229,15 +233,16 @@ class LGNDecoder(CGModule):
     edge_mask: `torch.Tensor`
         Edge mask used for batching data.
     """
+
     def _prepare_input(self, latent_features):
         node_features = self.latent_to_graph(latent_features)
         node_features = {weight: value.squeeze(-3) for weight, value in node_features.items()}
-        node_ps = node_features[(1,1)]
-        node_scalars = node_features[(0,0)]
+        node_ps = node_features[(1, 1)]
+        node_scalars = node_features[(0, 0)]
 
         batch_size = node_ps.shape[1]
         node_mask = torch.zeros(2, batch_size, self.num_output_particles)
         edge_mask = torch.zeros(2, batch_size, self.num_output_particles, self.num_output_particles)
 
-        node_ps = p_cplx_to_rep(node_ps)[(1,1)] # Convert to canonical basis
+        node_ps = p_cplx_to_rep(node_ps)[(1, 1)]  # Convert to canonical basis
         return node_ps, node_scalars, node_mask, edge_mask

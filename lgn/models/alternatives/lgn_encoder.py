@@ -1,12 +1,11 @@
+from lgn.models.lgn_graphnet import LGNGraphNet
+from lgn.g_lib import GTau
+from lgn.cg_lib import CGModule, normsq4
 import torch
 import logging
 import sys
 sys.path.insert(1, '../..')
 
-from lgn.cg_lib import CGModule, normsq4
-from lgn.g_lib import GTau
-
-from lgn.models.lgn_graphnet import LGNGraphNet
 
 class LGNEncoder(CGModule):
     """
@@ -72,6 +71,7 @@ class LGNEncoder(CGModule):
         Optional, default: None
         Clebsch-gordan dictionary for taking the CG decomposition.
     """
+
     def __init__(self, num_input_particles, tau_particle_scalar, tau_particle_vector, tau_latent_scalars, tau_latent_vectors,
                  maxdim, num_basis_fn, max_zf, num_cg_levels, num_channels, weight_init, level_gain, num_latent_particles=1,
                  activation='leakyrelu', scale=1., mlp=True, mlp_depth=None, mlp_width=None,
@@ -134,16 +134,19 @@ class LGNEncoder(CGModule):
     edge_mask : `torch.Tensor`
         The mask of edge features. (Unchanged)
     '''
+
     def forward(self, data, covariance_test=False):
         # Get data
         node_scalars, node_ps, node_mask, edge_mask = self.prepare_input(data)
 
         # Can be simplied as self.graph_net(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
         if not covariance_test:
-            latent_features, node_mask, edge_mask = self.graph_net(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
+            latent_features, node_mask, edge_mask = self.graph_net(
+                node_scalars, node_ps, node_mask, edge_mask, covariance_test)
             return latent_features, edge_mask, edge_mask
         else:
-            latent_features, node_mask, edge_mask, nodes_all = self.graph_net(node_scalars, node_ps, node_mask, edge_mask, covariance_test)
+            latent_features, node_mask, edge_mask, nodes_all = self.graph_net(
+                node_scalars, node_ps, node_mask, edge_mask, covariance_test)
             return latent_features, edge_mask, edge_mask, nodes_all
     """
     Extract input from data.
@@ -164,6 +167,7 @@ class LGNEncoder(CGModule):
     edge_mask: `torch.Tensor`
         Edge mask used for batching data.
     """
+
     def prepare_input(self, data):
 
         node_ps = data['p4'].to(device=self.device, dtype=self.dtype) * self.scale
@@ -173,13 +177,15 @@ class LGNEncoder(CGModule):
         node_mask = data['node_mask'].to(device=self.device, dtype=torch.uint8)
         edge_mask = data['edge_mask'].to(device=self.device, dtype=torch.uint8)
 
-        scalars = torch.ones_like(node_ps[:,:, 0]).unsqueeze(-1)
+        scalars = torch.ones_like(node_ps[:, :, 0]).unsqueeze(-1)
         scalars = normsq4(node_ps).abs().sqrt().unsqueeze(-1)
 
         if 'scalars' in data.keys():
-            scalars = torch.cat([scalars, data['scalars'].to(device=self.device, dtype=self.dtype)], dim=-1)
+            scalars = torch.cat([scalars, data['scalars'].to(
+                device=self.device, dtype=self.dtype)], dim=-1)
 
         return scalars, node_ps, node_mask, edge_mask
+
 
 ############################## Helpers ##############################
 """
@@ -197,12 +203,14 @@ Return
 var_list : `list`
     The list of variables. The length will be num_cg_levels.
 """
+
+
 def expand_var_list(var, num_cg_levels):
     if type(var) == list:
         var_list = var + (num_cg_levels - len(var)) * [var[-1]]
     elif type(var) in [float, int]:
         var_list = [var] * num_cg_levels
     else:
-        raise ValueError(f'Incorrect type of variables: {type(var)}. ' \
+        raise ValueError(f'Incorrect type of variables: {type(var)}. '
                          'The allowed data types are list, float, or int')
     return var_list

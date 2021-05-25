@@ -3,9 +3,11 @@ import os.path as osp
 import torch
 import matplotlib.pyplot as plt
 
+
 def create_model_folder(args):
     make_dir(args.save_dir)
     return make_dir(osp.join(args.save_dir, get_model_fname(args)))
+
 
 def get_model_fname(args):
     encoder_cg = ''
@@ -17,10 +19,12 @@ def get_model_fname(args):
     model_fname = f"LGNAutoencoder_{args.jet_type}Jet_{args.map_to_latent}_tauLS{args.tau_latent_scalars}_tauLV{args.tau_latent_vectors}_encoder{encoder_cg}_decoder{decoder_cg}"
     return model_fname
 
+
 def make_dir(path):
     if not osp.isdir(path):
         os.makedirs(path)
     return path
+
 
 def save_data(data, data_name, is_train, outpath, epoch=-1):
     '''

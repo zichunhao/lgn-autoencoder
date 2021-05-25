@@ -11,6 +11,7 @@ from lgn.nn import MixReps
 
 from lgn.models.utils import adapt_var_list
 
+
 class LGNEncoder(CGModule):
     """
     The encoder of the LGN autoencoder.
@@ -69,6 +70,7 @@ class LGNEncoder(CGModule):
         Optional, default: None
         Clebsch-gordan dictionary for taking the CG decomposition.
     """
+
     def __init__(self, num_input_particles, tau_input_scalars, tau_input_vectors,
                  tau_latent_scalars, tau_latent_vectors, maxdim, num_basis_fn,
                  num_channels, max_zf, weight_init, level_gain,
@@ -121,9 +123,10 @@ class LGNEncoder(CGModule):
         tau_pos = self.rad_funcs.tau
 
         # Input linear layer: Prepare input to the CG layers
-        tau_in = GTau({(0,0): tau_input_scalars, (1,1): tau_input_vectors})
-        self.tau_dict = {'input': tau_in}  # A dictionary of multiplicities in the model (updated as the model is built)
-        tau_out = GTau({weight: num_channels[0] for weight in [(0,0), (1,1)]})
+        tau_in = GTau({(0, 0): tau_input_scalars, (1, 1): tau_input_vectors})
+        # A dictionary of multiplicities in the model (updated as the model is built)
+        self.tau_dict = {'input': tau_in}
+        tau_out = GTau({weight: num_channels[0] for weight in [(0, 0), (1, 1)]})
         self.input_func_node = MixReps(tau_in, tau_out, device=device, dtype=dtype)
 
         tau_input_node = self.input_func_node.tau
@@ -142,9 +145,10 @@ class LGNEncoder(CGModule):
             self.tau_cg_levels_node[-1] = GTau({weight: int(value * num_input_particles)
                                                 for weight, value in self.tau_cg_levels_node[-1]})
 
-        self.tau_output = GTau({(0,0): tau_latent_scalars, (1,1): tau_latent_vectors})
+        self.tau_output = GTau({(0, 0): tau_latent_scalars, (1, 1): tau_latent_vectors})
         self.tau_dict['latent'] = self.tau_output
-        self.mix_reps = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
+        self.mix_reps = MixReps(
+            self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
 
         self.scale = scale
         self.tau_latent = self.tau_output
@@ -208,13 +212,17 @@ class LGNEncoder(CGModule):
             node_features = GVec({weight: reps.view(2, reps.shape[1], 1, -1, reps.shape[-1])
                                   for weight, reps in node_features.items()})
         # Mix
-        latent_features = self.mix_reps(node_features) # node_all[-1] is the updated feature in the last layer
+        # node_all[-1] is the updated feature in the last layer
+        latent_features = self.mix_reps(node_features)
 
         if self.map_to_latent.lower() == 'sum':
-            latent_features = GVec({weight: torch.sum(value, dim=-3).unsqueeze(dim=-3) for weight, value in latent_features.items()})
+            latent_features = GVec({weight: torch.sum(value, dim=-3).unsqueeze(dim=-3)
+                                    for weight, value in latent_features.items()})
 
-        latent_features_canonical = GVec({weight: val.clone() for weight, val in latent_features.items()})
-        latent_features[(1,1)] = rep_to_p(latent_features[(1,1)])  # Convert to Cartesian coordinates
+        latent_features_canonical = GVec({weight: val.clone()
+                                          for weight, val in latent_features.items()})
+        latent_features[(1, 1)] = rep_to_p(latent_features[(1, 1)]
+                                           )  # Convert to Cartesian coordinates
 
         if not covariance_test:
             return latent_features
@@ -222,7 +230,6 @@ class LGNEncoder(CGModule):
             nodes_all.append(GVec(node_features))
             nodes_all.append(GVec(latent_features_canonical))
             return latent_features, nodes_all
-
 
     def _prepare_input(self, data):
         """
@@ -254,14 +261,15 @@ class LGNEncoder(CGModule):
             node_mask = data['labels']
             node_mask = node_mask.to(torch.uint8)
         else:
-            node_mask = data['p4'][...,0] != 0
+            node_mask = data['p4'][..., 0] != 0
             node_mask = node_mask.to(torch.uint8)
         edge_mask = node_mask.unsqueeze(1) * node_mask.unsqueeze(2)
 
-        scalars = torch.ones_like(node_ps[:,:, 0]).unsqueeze(-1)
+        scalars = torch.ones_like(node_ps[:, :, 0]).unsqueeze(-1)
         scalars = normsq4(node_ps).abs().sqrt().unsqueeze(-1)
 
         if 'scalars' in data.keys():
-            scalars = torch.cat([scalars, data['scalars'].to(device=self.device, dtype=self.dtype)], dim=-1)
+            scalars = torch.cat([scalars, data['scalars'].to(
+                device=self.device, dtype=self.dtype)], dim=-1)
 
         return scalars, node_ps, node_mask, edge_mask

@@ -35,6 +35,7 @@ class MixReps(CGModule):
         Optional, default: torch.float64
         The data type to which the module is initialized.
     """
+
     def __init__(self, tau_in, tau_out, real=False, weight_init='randn', gain=1, device=None, dtype=torch.float64):
         if device is None:
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -62,10 +63,11 @@ class MixReps(CGModule):
         elif self.weight_init == 'rand':
             weights = GWeight.rand(self.tau_in, self.tau_out, device=self.device, dtype=self.dtype)
         else:
-            raise NotImplementedError("weight_init can only be 'randn' or 'rand'; other choices are not implemented yet!")
+            raise NotImplementedError(
+                f"weight_init can only be 'randn' or 'rand'; other choices are not implemented yet ({self.weight_init})!")
 
         gain = {key: torch.tensor([gain / max(shape) / (10 ** key[0] if key[0] == key[1] else 1), 0],
-                                  device = self.device, dtype=self.dtype).view(2,1,1)
+                                  device=self.device, dtype=self.dtype).view(2, 1, 1)
                 for key, shape in weights.shapes.items()}
         gain = GScalar(gain)
 
@@ -85,6 +87,7 @@ class MixReps(CGModule):
     rep : list of `torch.Tensor`
         Mixed representation.
     """
+
     def forward(self, reps):
 
         if not GTau.from_rep(reps) == self.tau_in:
@@ -110,13 +113,14 @@ class CatReps(Module):
         Optional, None, in which case it will be set to the max_weight + 1
         Maximum weight to include in the concatenation.
     """
+
     def __init__(self, taus_in, maxdim=None):
         super().__init__()
 
         self.taus_in = taus_in = [GTau(tau) for tau in taus_in if tau]
 
         if maxdim is None:
-            maxdim = max(sum(dict(i for tau in taus_in for i in tau.items()), ())) + 1 # max(j) + 1
+            maxdim = max(sum(dict(i for tau in taus_in for i in tau.items()), ())) + 1  # max(j) + 1
         self.maxdim = maxdim
 
         self.taus_in = taus_in
@@ -131,27 +135,28 @@ class CatReps(Module):
 
         self.all_keys = list(self.tau_out.keys())
 
-    """
-    The forward that concatenates a list of reps.
-
-    Parameters
-    ----------
-    reps : list of GTensor subclasses
-        List of representations to concatenate.
-
-    Return
-    -------
-    reps_cat : list of torch.Tensor
-        List of concateated reps
-    """
     def forward(self, reps):
+        """
+        The forward that concatenates a list of reps.
+
+        Parameters
+        ----------
+        reps : list of GTensor subclasses
+            List of representations to concatenate.
+
+        Return
+        -------
+        reps_cat : list of torch.Tensor
+            List of concateated reps
+        """
         # Drops None
         reps = [rep for rep in reps if rep is not None]
 
         # Error checking
         reps_taus_in = [rep.tau for rep in reps]
         if reps_taus_in != self.taus_in:
-            raise ValueError(f'Taus of input reps {reps_taus_in} do not match the predefined taus_in {self.taus_in}!')
+            raise ValueError(
+                f'Taus of input reps {reps_taus_in} do not match the predefined taus_in {self.taus_in}!')
 
         # Keep reps up to maxdim
         if self.maxdim is not None:
@@ -197,6 +202,7 @@ class CatMixReps(CGModule):
         The data type to which the module is initialized.
 
     """
+
     def __init__(self, taus_in, tau_out, maxdim=None,
                  real=False, weight_init='randn', gain=1, device=None, dtype=torch.float64):
 
@@ -227,6 +233,7 @@ class CatMixReps(CGModule):
     reps_out : list of torch.Tensor
         Representation as a result of combining and mixing input reps.
     """
+
     def forward(self, reps_in):
         reps_cat = self.cat_reps(reps_in)
         reps_out = self.mix_reps(reps_cat)

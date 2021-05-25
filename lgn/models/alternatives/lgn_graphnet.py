@@ -9,6 +9,7 @@ from lgn.nn import RadialFilters
 from lgn.nn import MixReps
 from lgn.g_lib.g_vec import GVec
 
+
 class LGNGraphNet(CGModule):
     """
     The LGN Graph Neural Network architecture. Encoder and decoders are variations of this.
@@ -72,6 +73,7 @@ class LGNGraphNet(CGModule):
         Optional, default: None
         Clebsch-gordan dictionary for taking the CG decomposition.
     """
+
     def __init__(self, num_input_particles, input_basis, tau_input_scalars, tau_input_vectors,
                  num_output_particles, tau_output_scalars, tau_output_vectors, num_basis_fn,
                  maxdim, num_channels, max_zf, weight_init, level_gain,
@@ -87,9 +89,9 @@ class LGNGraphNet(CGModule):
 
         # We parition the output so that there are num_input_particles particles
         assert (num_input_particles * tau_output_scalars % num_output_particles == 0), \
-        f'num_output_particles {num_output_particles} has to be a factor of num_input_particles * tau_output_scalars {num_input_particles * tau_output_scalars}!'
+            f'num_output_particles {num_output_particles} has to be a factor of num_input_particles * tau_output_scalars {num_input_particles * tau_output_scalars}!'
         assert (num_input_particles * tau_output_vectors % num_output_particles == 0), \
-        f'num_output_particles {num_output_particles} has to be a factor of num_input_particles * tau_output_vectors {num_input_particles * tau_output_vectors}!'
+            f'num_output_particles {num_output_particles} has to be a factor of num_input_particles * tau_output_vectors {num_input_particles * tau_output_vectors}!'
 
         level_gain = adapt_var_list(level_gain, num_cg_levels)
         maxdim = adapt_var_list(maxdim, num_cg_levels)
@@ -122,9 +124,10 @@ class LGNGraphNet(CGModule):
         tau_pos = self.rad_funcs.tau
 
         # Input linear layer: Prepare input to the CG layers
-        tau_in = GTau({(0,0): tau_input_scalars, (1,1): tau_input_vectors})
-        self.tau_dict = {'input': tau_in}  # A dictionary of multiplicities in the model (updated as the model is built)
-        tau_out = GTau({(l,l): num_channels[0] for l in range(max_zf[0] + 1)})
+        tau_in = GTau({(0, 0): tau_input_scalars, (1, 1): tau_input_vectors})
+        # A dictionary of multiplicities in the model (updated as the model is built)
+        self.tau_dict = {'input': tau_in}
+        tau_out = GTau({(l, l): num_channels[0] for l in range(max_zf[0] + 1)})
         self.input_func_node = MixReps(tau_in, tau_out, device=device, dtype=dtype)
 
         tau_input_node = self.input_func_node.tau
@@ -138,34 +141,36 @@ class LGNGraphNet(CGModule):
         self.tau_dict['cg_layers'] = self.tau_cg_levels_node.copy()
 
         # Output layers
-        self.tau_cg_levels_node[-1] = GTau({weight: int(value * num_input_particles / num_output_particles) for weight, value in self.tau_cg_levels_node[-1]})
+        self.tau_cg_levels_node[-1] = GTau({weight: int(value * num_input_particles / num_output_particles)
+                                            for weight, value in self.tau_cg_levels_node[-1]})
         self.tau_dict['reshape'] = self.tau_cg_levels_node[-1]
-        self.tau_output = GTau({(0,0): tau_output_scalars, (1,1): tau_output_vectors})
+        self.tau_output = GTau({(0, 0): tau_output_scalars, (1, 1): tau_output_vectors})
         self.tau_dict['output'] = self.tau_output
-        self.mix_reps = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
+        self.mix_reps = MixReps(
+            self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
 
-    '''
-    The forward pass of the LGN GNN.
-
-    Parameters
-    ----------
-    node_scalars : `GTensor` or `torch.Tensor`
-        The node scalar features.
-        Shape: (2, batch_size, num_input_particles, tau_input_scalars, 1).
-    node_ps : `GTensor` or `torch.Tensor`
-        The node 4-vector features.
-        Shape: (2, batch_size, num_input_particles, tau_input_scalars, 4).
-    node_mask : `torch.Tensor`
-        The mask of node features.
-    edge_mask : `torch.Tensor`
-        The mask of edge features.
-
-    Returns
-    -------
-    node_features : `dict`
-        The dictionary that stores all relevant irreps.
-    '''
     def forward(self, node_scalars, node_ps, node_mask, edge_mask, covariance_test=False):
+        '''
+        The forward pass of the LGN GNN.
+
+        Parameters
+        ----------
+        node_scalars : `GTensor` or `torch.Tensor`
+            The node scalar features.
+            Shape: (2, batch_size, num_input_particles, tau_input_scalars, 1).
+        node_ps : `GTensor` or `torch.Tensor`
+            The node 4-vector features.
+            Shape: (2, batch_size, num_input_particles, tau_input_scalars, 4).
+        node_mask : `torch.Tensor`
+            The mask of node features.
+        edge_mask : `torch.Tensor`
+            The mask of edge features.
+
+        Returns
+        -------
+        node_features : `dict`
+            The dictionary that stores all relevant irreps.
+        '''
         # Calculate Zonal functions (edge features)
         zonal_functions_in, _, _ = self.zonal_fns_in(node_ps)
         # Cartesian basis is used for the input data
@@ -195,12 +200,14 @@ class LGNGraphNet(CGModule):
         node_features = GVec({weight: reps.view(2, reps.shape[1], self.num_output_particles, -1, reps.shape[-1])
                               for weight, reps in node_features.items()})
         # Mix
-        node_features = self.mix_reps(node_features) # node_all[-1] is the updated feature in the last layer
+        # node_all[-1] is the updated feature in the last layer
+        node_features = self.mix_reps(node_features)
         if not covariance_test:
             return node_features
         else:
             nodes_all.append(GVec(node_features))
             return node_features, nodes_all
+
 
 ############################## Helpers ##############################
 """
@@ -220,6 +227,8 @@ Return
 var_list : `list`
     The list of variables. The length will be num_cg_levels.
 """
+
+
 def adapt_var_list(var, num_cg_levels):
     if type(var) == list:
         if len(var) < num_cg_levels:
@@ -233,6 +242,6 @@ def adapt_var_list(var, num_cg_levels):
     elif type(var) in [float, int]:
         var_list = [var] * num_cg_levels
     else:
-        raise ValueError(f'Incorrect type of variables: {type(var)}. ' \
+        raise ValueError(f'Incorrect type of variables: {type(var)}. '
                          'The allowed data types are list, float, or int')
     return var_list

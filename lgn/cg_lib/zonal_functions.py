@@ -6,6 +6,7 @@ from lgn.cg_lib import CGModule
 from lgn.cg_lib import cg_product
 from lgn.g_lib import GVec, GTensor
 
+
 class ZonalFunctions(CGModule):
     def __init__(self, maxdim, normalize=False, basis='cartesian',
                  cg_dict=None, dtype=torch.float64, device=torch.device('cpu')):
@@ -27,7 +28,8 @@ class ZonalFunctionsRel(CGModule):
     def __init__(self, maxdim, normalize=False, basis='cartesian', cg_dict=None,
                  dtype=torch.float64, device=torch.device('cpu')):
 
-        super(ZonalFunctionsRel, self).__init__(cg_dict=cg_dict, maxdim=maxdim, device=device, dtype=dtype)
+        super(ZonalFunctionsRel, self).__init__(
+            cg_dict=cg_dict, maxdim=maxdim, device=device, dtype=dtype)
 
         self.normalize = normalize
         self.basis = basis
@@ -74,7 +76,8 @@ def zonal_functions(cg_dict, p, max_zf, normalize=False, basis='cartesian'):
         p = torch.where(mask, p / (norm), p)
 
     p = {(1, 1): p}
-    zf = {(0, 0): torch.ones(p[(1, 1)].shape[:-1] + (1,), device = p[(1, 1)].device, dtype=p[(1, 1)].dtype)}
+    zf = {(0, 0): torch.ones(p[(1, 1)].shape[:-1] + (1,),
+                             device=p[(1, 1)].device, dtype=p[(1, 1)].dtype)}
     zf.update(p)
     new_zf = zf
 
@@ -85,6 +88,7 @@ def zonal_functions(cg_dict, p, max_zf, normalize=False, basis='cartesian'):
         new_zf *= sqrt(2 * l / (l + 1))
         zf[(l, l)] = new_zf
     return GVec(zf)
+
 
 def zonal_functions4(cg_dict, p, max_zf, normalize=False):
     """
@@ -100,7 +104,8 @@ def zonal_functions4(cg_dict, p, max_zf, normalize=False):
         The higher ones are the values of the zonal functions.
     """
 
-    assert type(p) == torch.Tensor and p.shape[-1] == 4, 'p must be a tensor consisting of 4-vectors!'
+    assert type(
+        p) == torch.Tensor and p.shape[-1] == 4, 'p must be a tensor consisting of 4-vectors!'
     # Normalize the inputs to make the non-null 4-vectors have unit normself.
     # If the 4-vector is complex in Cartesian coordinates, this normalizes only the REAL part of the norm-squared
     norm_sq = normsq4(p).unsqueeze(-1) + eps(p)
@@ -111,17 +116,20 @@ def zonal_functions4(cg_dict, p, max_zf, normalize=False):
 
     p_rep = p_to_rep(p)
     # print(f"real p_rep.shape = {p_rep[(1,1)].shape}")
-    zf = {(0, 0): torch.ones(p_rep[(1, 1)].shape[:-1] + (1,), device=p_rep.device, dtype=p_rep.dtype)}
+    zf = {(0, 0): torch.ones(p_rep[(1, 1)].shape[:-1] +
+                             (1,), device=p_rep.device, dtype=p_rep.dtype)}
     zf.update(p_rep)
 
     # Iteratively construct zonal functions and store them as entires in the outpit dict
     for l in range(2, max_zf + 1):
-        new_zf = cg_product(cg_dict, {(l - 1, l - 1): zf[(l - 1, l - 1)]}, p_rep, maxdim=l + 1)[(l, l)]
+        new_zf = cg_product(
+            cg_dict, {(l - 1, l - 1): zf[(l - 1, l - 1)]}, p_rep, maxdim=l + 1)[(l, l)]
         # This ensures that projecting onto the (l,l) component doesn't change the norm
         new_zf *= sqrt(2 * l / (l + 1))
         zf[(l, l)] = new_zf
     # print(f"real zf: {zf[(1,1)].shape}")
     return GVec(zf), norm.squeeze(-1), norm_sq.squeeze(-1)
+
 
 def zonal_functions_canonical(cg_dict, p, max_zf, normalize=False):
     if type(p) is dict or isinstance(p, GVec):
@@ -129,24 +137,27 @@ def zonal_functions_canonical(cg_dict, p, max_zf, normalize=False):
     else:
         p = {(1, 1): p}
 
-    norm_sq = repdot(p, p)[(1,1)]
+    norm_sq = repdot(p, p)[(1, 1)]
     norm_sq = norm_sq + eps(norm_sq)
     norm = norm_sq / (norm_sq.abs().sqrt())
 
     if normalize:
-        p[(1,1)] = p[(1,1)] / norm
+        p[(1, 1)] = p[(1, 1)] / norm
     p_rep = GVec(p)
-    zf = {(0, 0): torch.ones(p_rep[(1, 1)].shape[:-1] + (1,), device=p_rep.device, dtype=p_rep.dtype)}
+    zf = {(0, 0): torch.ones(p_rep[(1, 1)].shape[:-1] +
+                             (1,), device=p_rep.device, dtype=p_rep.dtype)}
     zf.update(p_rep)
 
     # Iteratively construct zonal functions and store them as entires in the outpit dict
     for l in range(2, max_zf + 1):
-        new_zf = cg_product(cg_dict, {(l - 1, l - 1): zf[(l - 1, l - 1)]}, p_rep, maxdim=l + 1)[(l, l)]
+        new_zf = cg_product(
+            cg_dict, {(l - 1, l - 1): zf[(l - 1, l - 1)]}, p_rep, maxdim=l + 1)[(l, l)]
         # This ensures that projecting onto the (l,l) component doesn't change the norm
         new_zf *= sqrt(2 * l / (l + 1))
         zf[(l, l)] = new_zf
     zf = {weight: value.unsqueeze(-2) for weight, value in zf.items()}
     return GVec(zf), norm.squeeze(-1), norm_sq.squeeze(-1)
+
 
 def normsq4(p):
     """
@@ -187,11 +198,14 @@ def zonal_functions_rel(cg_dict, p1, p2, maxdim, normalize=False, basis='cartesi
     rel_p = p1.unsqueeze(-2) - p2.unsqueeze(-3)
 
     if basis == 'cartesian':
-        zf_rel, rel_norms, rel_norms_sq = zonal_functions4(cg_dict, rel_p, maxdim, normalize=normalize)
+        zf_rel, rel_norms, rel_norms_sq = zonal_functions4(
+            cg_dict, rel_p, maxdim, normalize=normalize)
     else:
-        zf_rel, rel_norms, rel_norms_sq = zonal_functions_canonical(cg_dict, rel_p, maxdim, normalize=normalize)
+        zf_rel, rel_norms, rel_norms_sq = zonal_functions_canonical(
+            cg_dict, rel_p, maxdim, normalize=normalize)
 
     return zf_rel, rel_norms, rel_norms_sq
+
 
 def p_to_rep(p):
     """
@@ -214,6 +228,7 @@ def p_to_rep(p):
     rep = torch.stack([torch.matmul(cartesian4[0], p), torch.matmul(cartesian4[1], p)], 0)
     rep = {(1, 1): torch.squeeze(rep, -1).unsqueeze(-2)}
     return GVec(rep)
+
 
 def p_cplx_to_rep(p):
     """
@@ -243,6 +258,7 @@ def p_cplx_to_rep(p):
     rep = {(1, 1): torch.squeeze(rep, -1)}
     return GVec(rep)
 
+
 def rep_to_p(rep):
     """
     Same unitary transformation in the opposite direction
@@ -257,8 +273,10 @@ def rep_to_p(rep):
     cartesian4H = torch.tensor([[[1, 0, 0, 0], [0, 1 / sqrt(2.), 0, 0], [0, 0, 0, 1], [0, -1 / sqrt(2.), 0, 0]],
                                 [[0, 0, 0, 0], [0, 0, 1 / sqrt(2.), 0], [0, 0, 0, 0], [0, 0, 1 / sqrt(2.), 0]]], device=device, dtype=dtype).permute(0, 2, 1)
     rep = torch.unsqueeze(rep, -1)
-    p = torch.stack((torch.matmul(cartesian4H[0], rep[0]) - torch.matmul(cartesian4H[1], rep[1]), torch.matmul(cartesian4H[0], rep[1]) + torch.matmul(cartesian4H[1], rep[0])), 0)
+    p = torch.stack((torch.matmul(cartesian4H[0], rep[0]) - torch.matmul(cartesian4H[1], rep[1]),
+                     torch.matmul(cartesian4H[0], rep[1]) + torch.matmul(cartesian4H[1], rep[0])), 0)
     return torch.squeeze(p, -1)
+
 
 def normsq(p):
     """
@@ -271,6 +289,7 @@ def normsq(p):
         p = {(1, 1): p}
     return repdot(p, p)
 
+
 def metric(key):
     k, n = key
     met = [(1 if l == ll and m + mm == 0 else 0) * (-1)**(int(l + m))
@@ -280,6 +299,7 @@ def metric(key):
            for mm in np.arange(-ll, ll + 1, 1)]
     return torch.tensor(met, dtype=torch.float64).view([(k + 1) * (n + 1), (k + 1) * (n + 1)])
 
+
 def repdot(rep1, rep2):
     """
     Lorentzian dot product of any two GVec's of the same representation type written in the canonical basis.
@@ -288,12 +308,14 @@ def repdot(rep1, rep2):
     device = list(rep1.values())[0].device
     dtype = list(rep1.values())[0].dtype
     n = {}
-    assert {key: part.shape for key, part in rep1.items()} == {key: part.shape for key, part in rep2.items()}, 'rep1 and rep2 must have all the same irreps of the same shapes!'
+    assert {key: part.shape for key, part in rep1.items()} == {key: part.shape for key,
+                                                               part in rep2.items()}, 'rep1 and rep2 must have all the same irreps of the same shapes!'
     for key in rep1.keys():
         met = metric(key).to(device=device, dtype=dtype)
         n.setdefault(key, torch.tensor([], device=device, dtype=dtype))
         n[key] = torch.stack((
-            torch.einsum('...a,ab,...b->...', rep1[key][0], met, rep2[key][0]) - torch.einsum('...a,ab,...b->...', rep1[key][1], met, rep2[key][1]),
+            torch.einsum('...a,ab,...b->...', rep1[key][0], met, rep2[key][0]) -
+            torch.einsum('...a,ab,...b->...', rep1[key][1], met, rep2[key][1]),
             torch.einsum('...a,ab,...b->...', rep1[key][0], met, rep2[key][1]) + torch.einsum('...a,ab,...b->...', rep1[key][1], met, rep2[key][0])), 0).unsqueeze(-1)
     #
     # if len(rep1.keys())==1:
@@ -301,6 +323,7 @@ def repdot(rep1, rep2):
     #     n=n[key]
 
     return n
+
 
 def eps(data):
     if isinstance(data, torch.Tensor):

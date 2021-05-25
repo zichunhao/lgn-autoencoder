@@ -30,6 +30,7 @@ class InputLinear(nn.Module):
         Optional, default: torch.float64
         The data type to which the module is initialized.
     """
+
     def __init__(self, channels_in, channels_out, bias=True,
                  device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
                  dtype=torch.float64):
@@ -44,28 +45,29 @@ class InputLinear(nn.Module):
 
         self.zero = torch.tensor(0, dtype=dtype, device=device)
 
-    """
-    Forward pass for InputLinear.
-
-    Parameters
-    ----------
-    input_scalars : torch.Tensor
-        Input scalar features.
-    node_mask : torch.Tensor
-        Mask used to account for padded nodes for unequal batch sizes.
-
-    Return
-    -------
-    A GVec that represents the processed node features
-    to be used as input to Clebsch-Gordan layers as part of LGN.
-    """
     def forward(self, input_scalars, node_mask, *ignore):
+        """
+        Forward pass for InputLinear.
+
+        Parameters
+        ----------
+        input_scalars : torch.Tensor
+            Input scalar features.
+        node_mask : torch.Tensor
+            Mask used to account for padded nodes for unequal batch sizes.
+
+        Return
+        -------
+        A GVec that represents the processed node features
+        to be used as input to Clebsch-Gordan layers as part of LGN.
+        """
 
         node_mask = node_mask.unsqueeze(-1)
         # masking
         out = torch.where(node_mask, self.lin(input_scalars), self.zero)
         # Put zdim at axis 0
-        out = out.view(input_scalars.shape[0:2] + (self.channels_out, 1, 2)).permute(4, 0, 1, 2, 3)  # The 2 is the complex dimension
+        # The 2 is the complex dimension
+        out = out.view(input_scalars.shape[0:2] + (self.channels_out, 1, 2)).permute(4, 0, 1, 2, 3)
         return GVec({(0, 0): out})
 
     @property
@@ -127,6 +129,7 @@ class InputMPNN(nn.Module):
         Optional, default: torch.float64
         The data type to which the module is initialized.
     """
+
     def __init__(self, channels_in, channels_out, num_layers=1,
                  soft_cut_rad=None, soft_cut_width=None, hard_cut_rad=None, cutoff_type=None,
                  channels_mlp=-1, num_hidden=1, layer_width=256,
@@ -171,15 +174,14 @@ class InputMPNN(nn.Module):
             self.rad_filts.append(rad_filt)
 
             # mask
-            mask = MaskLevel(1, hard_cut_rad, soft_cut_rad, soft_cut_width, ['soft', 'hard'], device=device, dtype=dtype)
+            mask = MaskLevel(1, hard_cut_rad, soft_cut_rad, soft_cut_width,
+                             ['soft', 'hard'], device=device, dtype=dtype)
             self.masks.append(mask)
 
             # MLP
-            mlp = BasicMLP(2*chan_in, chan_out, activation=activation, num_hidden=num_hidden, layer_width=layer_width, device=device, dtype=dtype)
+            mlp = BasicMLP(2*chan_in, chan_out, activation=activation,
+                           num_hidden=num_hidden, layer_width=layer_width, device=device, dtype=dtype)
             self.mlps.append(mlp)
-
-        
-        
 
     def forward(self, features, node_mask, edge_features, edge_mask, norms, sq_norms):
         """
@@ -238,8 +240,8 @@ class InputMPNN(nn.Module):
         # The output are the MLP features reshaped into a set of complex numbers.
         out = features.view((2,)+s[0:2] + (self.channels_out, 1))
 
-        return GVec({(0,0): out})
+        return GVec({(0, 0): out})
 
     @property
     def tau(self):
-        return GTau({(0,0): self.channels_out})
+        return GTau({(0, 0): self.channels_out})

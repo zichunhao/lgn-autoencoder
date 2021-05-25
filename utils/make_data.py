@@ -6,10 +6,12 @@ from torch.utils.data import Dataset, DataLoader
 import logging
 from lgn.cg_lib import normsq4
 
+
 class JetDataset(Dataset):
     """
     PyTorch dataset.
     """
+
     def __init__(self, data, num_pts=-1, shuffle=True):
 
         self.data = data
@@ -18,7 +20,8 @@ class JetDataset(Dataset):
             self.num_pts = len(data['Nobj'])
         else:
             if num_pts > len(data['Nobj']):
-                logging.warn(f'Desired number of points ({num_pts}) is greater than the number of data points ({len(data)}) available in the dataset!')
+                logging.warn(
+                    f'Desired number of points ({num_pts}) is greater than the number of data points ({len(data)}) available in the dataset!')
                 self.num_pts = len(data['Nobj'])
             else:
                 self.num_pts = num_pts
@@ -28,7 +31,6 @@ class JetDataset(Dataset):
         else:
             self.perm = None
 
-
     def __len__(self):
         return self.num_pts
 
@@ -37,31 +39,35 @@ class JetDataset(Dataset):
             idx = self.perm[idx]
         return {key: val[idx] for key, val in self.data.items()}
 
+
 def initialize_data(path, batch_size, num_train, num_test=-1, num_val=-1):
     data = torch.load(path)
 
-    jet_data = JetDataset(data, shuffle=True) # The original data is not shuffled yet
+    jet_data = JetDataset(data, shuffle=True)  # The original data is not shuffled yet
 
-    if not (num_test < 0 or num_val < 0): # Specified num_test and num_val
+    if not (num_test < 0 or num_val < 0):  # Specified num_test and num_val
         assert num_train + num_test + num_val <= len(jet_data), f"num_train + num_test + num_val = {num_train + num_test + num_val} \
                                                                 is larger than the data size {len(jet_data)}!"
 
         # split into training, testing, and valid set
-        jet_data = JetDataset(jet_data[0: num_train + num_test + num_val], shuffle = True)
-        train_set, test_set, valid_set = torch.utils.data.random_split(jet_data, [num_train, num_test, num_val])
+        jet_data = JetDataset(jet_data[0: num_train + num_test + num_val], shuffle=True)
+        train_set, test_set, valid_set = torch.utils.data.random_split(
+            jet_data, [num_train, num_test, num_val])
         train_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=True)
         test_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=False)
         valid_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=False)
 
     # Unspecified num_test and num_val -> Choose training data and then divide the rest in half into testing and validation datasets
     else:
-        assert num_train <= len(jet_data), f"num_train = {num_train} is larger than the data size {len(jet_data)}!"
+        assert num_train <= len(
+            jet_data), f"num_train = {num_train} is larger than the data size {len(jet_data)}!"
 
         # split into training, testing, and valid sets
         # split the rest in half
         num_test = int((len(jet_data) - num_train) / 2)
         num_val = len(jet_data) - num_train - num_test
-        train_set, test_set, valid_set = torch.utils.data.random_split(jet_data, [num_train, num_test, num_val])
+        train_set, test_set, valid_set = torch.utils.data.random_split(
+            jet_data, [num_train, num_test, num_val])
         train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
         test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
         valid_loader = DataLoader(valid_set, batch_size=batch_size, shuffle=False)
@@ -69,6 +75,7 @@ def initialize_data(path, batch_size, num_train, num_test=-1, num_val=-1):
     print('Data loaded')
 
     return train_loader, valid_loader, test_loader
+
 
 def prepare_input(data, scale, cg_levels=True, device=None, dtype=None):
     """
@@ -98,14 +105,15 @@ def prepare_input(data, scale, cg_levels=True, device=None, dtype=None):
     node_mask = data['node_mask'].to(device=device, dtype=torch.uint8)
     edge_mask = data['edge_mask'].to(device=device, dtype=torch.uint8)
 
-    scalars = torch.ones_like(node_ps[:,:, 0]).unsqueeze(-1)
+    scalars = torch.ones_like(node_ps[:, :, 0]).unsqueeze(-1)
     scalars = normsq4(node_ps).abs().sqrt().unsqueeze(-1)
 
     if 'scalars' in data.keys():
         scalars = torch.cat([scalars, data['scalars'].to(device=device, dtype=dtype)], dim=-1)
 
     if not cg_levels:
-        scalars = torch.stack(tuple(scalars for _ in range(scalars.shape[-1])), -2).to(device=device, dtype=dtype)
+        scalars = torch.stack(tuple(scalars for _ in range(
+            scalars.shape[-1])), -2).to(device=device, dtype=dtype)
 
     return scalars, node_ps, node_mask, edge_mask
 
@@ -118,25 +126,28 @@ def load_pt_file(filename, path='./hls4ml/150p/'):
     return data
 
 # [eta, phi, pt, tag] -> [E, px, py, pz, p, tag]
+
+
 def cartesian(p_list):
     eta, phi, pt, tag = p_list
-    if tag > 0: # real data
+    if tag > 0:  # real data
         tag = 1
         px = pt * np.cos(phi)
         py = pt * np.sin(phi)
         pz = pt * np.sinh(eta)
         E = np.sqrt(2) * pt * np.cosh(eta)
-    else: # padded data
+    else:  # padded data
         tag = 0
         px = py = pz = E = 0
     return [E, px, py, pz, tag]
+
 
 def convert_to_cartesian(jet_data, name_str, save=False):
     print(f"preprocessing {name_str}...")
 
     shape = list(jet_data.shape)
-    shape[-1] += 1 # [eta, phi, pt, tag] -> [E, px, py, pz, tag]
-    shape = tuple(shape) # (_,_,4)
+    shape[-1] += 1  # [eta, phi, pt, tag] -> [E, px, py, pz, tag]
+    shape = tuple(shape)  # (_,_,4)
 
     p_cartesian_tag = np.zeros(shape)
 
@@ -145,8 +156,8 @@ def convert_to_cartesian(jet_data, name_str, save=False):
         for particle in range(len(jet_data[jet])):
             p_cartesian_tag[jet][particle] = cartesian(jet_data[jet][particle])
 
-    p_cartesian = torch.from_numpy(p_cartesian_tag[:,:,:4])
-    labels = torch.from_numpy(p_cartesian_tag[:,:,-1])
+    p_cartesian = torch.from_numpy(p_cartesian_tag[:, :, :4])
+    labels = torch.from_numpy(p_cartesian_tag[:, :, -1])
     Nobj = labels.sum(dim=-1)
     jet_data_cartesian = {'p4': p_cartesian, 'labels': labels, 'Nobj': Nobj}
 
@@ -161,6 +172,7 @@ def convert_to_cartesian(jet_data, name_str, save=False):
         print(f"{name_str} saved as {path}")
 
     return jet_data_cartesian
+
 
 if __name__ == "__main__":
     # data loading

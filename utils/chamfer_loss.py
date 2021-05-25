@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from lgn.cg_lib.zonal_functions import p_cplx_to_rep, repdot
 
+
 class ChamferLoss(nn.Module):
     """
     Parameters
@@ -31,13 +32,16 @@ class ChamferLoss(nn.Module):
             2. The norm squared is computed.
             3. The result is converted to real.
     """
+
     def __init__(self, loss_norm_choice='p3', device=None):
         super(ChamferLoss, self).__init__()
         if loss_norm_choice.lower() not in ['real', 'cplx', 'complex', 'canonical', 'p3']:
-            raise ValueError(f"loss_norm_choice can only be one of 'real', 'cplx', or 'canonical': {loss_norm_choice}")
+            raise ValueError(
+                f"loss_norm_choice can only be one of 'real', 'cplx', or 'canonical': {loss_norm_choice}")
 
         self.loss_norm_choice = loss_norm_choice
-        self.device = device if (device is not None) else torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = device if (device is not None) else torch.device(
+            'cuda' if torch.cuda.is_available() else 'cpu')
 
     def forward(self, p, q):
         """
@@ -54,13 +58,15 @@ class ChamferLoss(nn.Module):
         """
 
         if (len(p.shape) != 4) or (p.shape[0] != 2):
-            raise ValueError(f'Invalid dimension: {p.shape}. The first argument should be complex generated momenta.')
+            raise ValueError(
+                f'Invalid dimension: {p.shape}. The first argument should be complex generated momenta.')
         if len(q.shape) == 3:
             q = convert_to_complex(q)
         elif len(q.shape) == 4:
             pass
         else:
-            raise ValueError(f'Invalid dimension: {q.shape}. The second argument should be the jet target momenta.')
+            raise ValueError(
+                f'Invalid dimension: {q.shape}. The second argument should be the jet target momenta.')
 
         dist = self._pairwise_distance(p, q)
 
@@ -89,11 +95,12 @@ class ChamferLoss(nn.Module):
             Shape : `(batch_size, num_particles, num_particles)`
         """
         if (p.shape[1] != q.shape[1]):
-            raise ValueError(f"The batch size of p and q are not equal! p.shape[0] is {p.shape[1]}, whereas q.shape[0] is {q.shape[0]}!")
+            raise ValueError(
+                f"The batch size of p and q are not equal! p.shape[0] is {p.shape[1]}, whereas q.shape[0] is {q.shape[0]}!")
         if (p.shape[-1] != 4):
-            raise ValueError( f"p should consist of 4-vectors, but p.shape[-1] is {p.shape[-1]}.")
+            raise ValueError(f"p should consist of 4-vectors, but p.shape[-1] is {p.shape[-1]}.")
         if (q.shape[-1] != 4):
-            raise ValueError( f"q should consist of 4-vectors, but q.shape[-1] is {q.shape[-1]}.")
+            raise ValueError(f"q should consist of 4-vectors, but q.shape[-1] is {q.shape[-1]}.")
 
         batch_size = p.shape[1]
         num_row = p.shape[-2]
@@ -113,6 +120,7 @@ class ChamferLoss(nn.Module):
             dist = normsq_p3(p1 - q1)
         return dist
 
+
 def convert_to_complex(real_ps):
     """
     Convert real jet 4-momenta from the dataset to complex number (with imaginary dimension begin 0 tensors)
@@ -129,6 +137,7 @@ def convert_to_complex(real_ps):
     The shape is `(2, batch_size, num_particles, 4)`
     """
     return torch.stack((real_ps, torch.zeros_like(real_ps)), dim=0)
+
 
 def normsq_cplx(p4):
     """
@@ -157,6 +166,7 @@ def normsq_cplx(p4):
     m_im = 2 * (2 * pq[..., 0] - pq.sum(dim=-1))
     return torch.sqrt(torch.pow(m_real, 2) + torch.pow(m_im, 2))
 
+
 def normsq_canonical(p4):
     """
     1. p is expressed in the basis of spherical harmonics, which is naturally defined in the field of complex numbers.
@@ -164,8 +174,9 @@ def normsq_canonical(p4):
     3. The result is converted to real.
     """
     p4 = p_cplx_to_rep(p4)
-    p_sq = repdot(p4, p4)[(1,1)]
+    p_sq = repdot(p4, p4)[(1, 1)]
     return torch.pow(p_sq[0], 2) + torch.pow(p_sq[1], 2)
+
 
 def normsq_real(p4):
     """
@@ -191,6 +202,7 @@ def normsq_real(p4):
     p4_norm = torch.sqrt(torch.pow(p4[0], 2) + torch.pow(p4[1], 2))
     return 2 * p4_norm[..., 0] - p4_norm.sum(dim=-1)
 
+
 def normsq_p3(p4):
     """
     Calculate the norm square of the 3-momentum. This is useful when particle mass is neglible.
@@ -206,8 +218,10 @@ def normsq_p3(p4):
     return p_real + p_im
 
 ######################################## Unused ########################################
+
+
 def reshape_generated_ps(generated_ps):
     """
     Reshape the generated 4-momenta to `(batch_size, num_particles, 2, 4)`, the second last axis is the complex dimension.
     """
-    return generated_ps.permute(1,2,0,3)  # (batch_size, num_particles, 2, 4)
+    return generated_ps.permute(1, 2, 0, 3)  # (batch_size, num_particles, 2, 4)

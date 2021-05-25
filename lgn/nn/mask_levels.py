@@ -39,8 +39,9 @@ class MaskLevel(nn.Module):
         Optional, default: torch.float64
         The data type to which the module is initialized.
     """
+
     def __init__(self, num_channels, hard_cut_rad, soft_cut_rad, soft_cut_width, cutoff_type,
-                 gaussian_mask=False, eps=1e-3,
+                 gaussian_mask=False, eps=1e-16,
                  device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
                  dtype=torch.float64):
         if device is None:
@@ -49,10 +50,10 @@ class MaskLevel(nn.Module):
 
         self.gaussian_mask = gaussian_mask
         self.num_channels = num_channels
-        
-        
+
         self.zero = torch.tensor(0, device=device, dtype=dtype)
-        self.eps = torch.tensor(eps, device=device, dtype=dtype)  # Numerical minimum for learnable cutoff
+        # Numerical minimum for learnable cutoff
+        self.eps = torch.tensor(eps, device=device, dtype=dtype)
 
         # Initialize hard/soft cutoff to None as default.
         self.hard_cut_rad = None
@@ -64,8 +65,8 @@ class MaskLevel(nn.Module):
 
         if ('soft' in cutoff_type) or ('learn' in cutoff_type) or ('learn_rad' in cutoff_type) or ('learn_width' in cutoff_type):
 
-            self.soft_cut_rad = soft_cut_rad*torch.ones(num_channels, device=device, dtype=dtype).view((1, 1, 1, -1))
-            self.soft_cut_width = soft_cut_width*torch.ones(num_channels, device=device, dtype=dtype).view((1, 1, 1, -1))
+            self.soft_cut_rad = soft_cut_rad * torch.ones(num_channels, device=device, dtype=dtype).view((1, 1, 1, -1))
+            self.soft_cut_width = soft_cut_width * torch.ones(num_channels, device=device, dtype=dtype).view((1, 1, 1, -1))
 
             if ('learn' in cutoff_type) or ('learn_rad' in cutoff_type):
                 self.soft_cut_rad = nn.Parameter(self.soft_cut_rad)
@@ -73,26 +74,25 @@ class MaskLevel(nn.Module):
             if ('learn' in cutoff_type) or ('learn_width' in cutoff_type):
                 self.soft_cut_width = nn.Parameter(self.soft_cut_width)
 
-
-    """
-    Forward pass to mask the input.
-
-    Parameters
-    ----------
-    edge_net : torch.Tensor or GVec
-        Edge scalars or edge GVec to apply mask to.
-    edge_mask : torch.Tensor
-        Mask to account for padded batches.
-    norms : torch.Tensor
-        Pairwise distance matrices.
-    sq_norms : torch.Tensor
-        Pairwise distance norm squared matrices.
-    Returns
-    -------
-    edge_net : torch.Tensor
-        Input edge_net with mask applied.
-    """
     def forward(self, edge_net, edge_mask, norms, sq_norms):
+        """
+        Forward pass to mask the input.
+
+        Parameters
+        ----------
+        edge_net : torch.Tensor or GVec
+            Edge scalars or edge GVec to apply mask to.
+        edge_mask : torch.Tensor
+            Mask to account for padded batches.
+        norms : torch.Tensor
+            Pairwise distance matrices.
+        sq_norms : torch.Tensor
+            Pairwise distance norm squared matrices.
+        Returns
+        -------
+        edge_net : torch.Tensor
+            Input edge_net with mask applied.
+        """
 
         # Use hard cut
         if self.hard_cut_rad is not None:

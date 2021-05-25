@@ -8,12 +8,16 @@ from utils.utils import make_dir
 def plot_p(args, real_data, gen_data, save_dir, polar_max=[0.15, np.pi/4, np.pi/4], cartesian_max=(0.02, 0.02, 0.02),
            num_bins=201, cutoff=1e-6, epoch=None, show=False):
 
-    plot_p_polar(args, real_data, gen_data, save_dir, max_val=polar_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=False, show=show)
-    plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=cartesian_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=False, show=show)
+    plot_p_polar(args, real_data, gen_data, save_dir, max_val=polar_max, num_bins=num_bins,
+                 cutoff=cutoff, epoch=epoch, density=False, fill=False, show=show)
+    plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=cartesian_max,
+                     num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=False, show=show)
 
     if args.fill:
-        plot_p_polar(args, real_data, gen_data, save_dir, max_val=polar_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=True, show=show)
-        plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=cartesian_max, num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=True, show=show)
+        plot_p_polar(args, real_data, gen_data, save_dir, max_val=polar_max, num_bins=num_bins,
+                     cutoff=cutoff, epoch=epoch, density=False, fill=True, show=show)
+        plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=cartesian_max,
+                         num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=True, show=show)
 
 
 def plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=[0.02, 0.02, 0.02], num_bins=201, cutoff=1e-6, epoch=None, density=False, fill=False, show=False):
@@ -71,19 +75,22 @@ def plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=[0.02, 0.02, 0
 
     p_reals = [px_real, py_real, pz_real]
     p_gens = [px_gen, py_gen, pz_gen]
-    ranges = [np.linspace(-px_max,px_max,num_bins), np.linspace(-py_max,py_max,num_bins), np.linspace(-pz_max,pz_max,num_bins)]
+    ranges = [np.linspace(-px_max, px_max, num_bins), np.linspace(-py_max,
+                                                                  py_max, num_bins), np.linspace(-pz_max, pz_max, num_bins)]
     names = [r'$p_x$', r'$p_y$', r'$p_z$']
     for ax, p_real, p_gen, range, name in zip(axs, p_reals, p_gens, ranges, names):
         if not fill:
-            ax.hist(p_gen.flatten(), bins=range, histtype='step', stacked=True, fill=False, label='generated', density=density)
-            ax.hist(p_real.flatten(), bins=range, histtype='step', stacked=True, fill=False, label='target', density=density)
+            ax.hist(p_gen.flatten(), bins=range, histtype='step', stacked=True,
+                    fill=False, label='generated', density=density)
+            ax.hist(p_real.flatten(), bins=range, histtype='step',
+                    stacked=True, fill=False, label='target', density=density)
         else:
             ax.hist(p_gen.flatten(), bins=range, alpha=0.6, label='generated', density=density)
             ax.hist(p_real.flatten(), bins=range, alpha=0.6, label='target', density=density)
         ax.set_xlabel(f'Particle {name}')
         ax.set_ylabel('Number of particles')
         ax.legend()
-        ax.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+        ax.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
         ax.yaxis.major.formatter._useMathText = True
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
@@ -91,17 +98,19 @@ def plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=[0.02, 0.02, 0
     fig.tight_layout()
 
     jet_name = get_jet_name(args)
-    fig.suptitle(fr'Distribution of target and generated particle $p_x$, $p_y$, and $p_z$ of {jet_name} jets', y=1.03)
+    fig.suptitle(
+        fr'Distribution of target and generated particle $p_x$, $p_y$, and $p_z$ of {jet_name} jets', y=1.03)
 
     filename = f'p_cartesian_{args.jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
     if density:
         filename = f'{filename}_density'
-    plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches = "tight", transparent=True)
+    plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight", transparent=True)
     if show:
         plt.show()
     plt.close()
+
 
 def plot_p_polar(args, real_data, gen_data, save_dir, max_val=[0.15, np.pi, np.pi], num_bins=201, cutoff=1e-6, epoch=None, density=False, fill=True, show=False):
     """
@@ -159,19 +168,22 @@ def plot_p_polar(args, real_data, gen_data, save_dir, max_val=[0.15, np.pi, np.p
 
     p_reals = [pt_real, eta_real, phi_real]
     p_gens = [pt_gen, eta_gen, phi_gen]
-    ranges = [np.linspace(0,pt_max,num_bins), np.linspace(-eta_max,eta_max,num_bins), np.linspace(-phi_max,phi_max,num_bins)]
+    ranges = [np.linspace(0, pt_max, num_bins), np.linspace(-eta_max, eta_max,
+                                                            num_bins), np.linspace(-phi_max, phi_max, num_bins)]
     names = [r'$p_\mathrm{T}$', r'$\eta$', r'$\phi$']
     for ax, p_real, p_gen, bins, name in zip(axs, p_reals, p_gens, ranges, names):
         if not fill:
-            ax.hist(p_gen.flatten(), bins=bins, histtype='step', stacked=True, fill=False, label='generated', density=density)
-            ax.hist(p_real.flatten(), bins=bins, histtype='step', stacked=True, fill=False, label='target', density=density)
+            ax.hist(p_gen.flatten(), bins=bins, histtype='step', stacked=True,
+                    fill=False, label='generated', density=density)
+            ax.hist(p_real.flatten(), bins=bins, histtype='step',
+                    stacked=True, fill=False, label='target', density=density)
         else:
             ax.hist(p_gen.flatten(), bins=bins, alpha=0.6, label='generated', density=density)
             ax.hist(p_real.flatten(), bins=bins, alpha=0.6, label='target', density=density)
         ax.set_xlabel(f'Particle {name}')
         ax.set_ylabel('Number of particles')
         ax.legend()
-        ax.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+        ax.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
         ax.yaxis.major.formatter._useMathText = True
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
@@ -179,17 +191,19 @@ def plot_p_polar(args, real_data, gen_data, save_dir, max_val=[0.15, np.pi, np.p
     fig.tight_layout()
 
     jet_name = get_jet_name(args)
-    fig.suptitle(r'Distribution of target and generated particle $p_\mathrm{T}$, $\eta$, and $\phi$ ' + f'of {jet_name} jets', y=1.03)
+    fig.suptitle(
+        r'Distribution of target and generated particle $p_\mathrm{T}$, $\eta$, and $\phi$ ' + f'of {jet_name} jets', y=1.03)
 
     filename = f'p_polar_{args.jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
     if density:
         filename = f'{filename}_density'
-    plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches = "tight", transparent=True)
+    plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight", transparent=True)
     if show:
         plt.show()
     plt.close()
+
 
 def get_p_cartesian(jet_data, cutoff=1e-6):
     """
@@ -204,7 +218,7 @@ def get_p_cartesian(jet_data, cutoff=1e-6):
     """
     px = jet_data[:, 1].copy()
     py = jet_data[:, 2].copy()
-    pz= jet_data[:, 3].copy()
+    pz = jet_data[:, 3].copy()
 
     p = get_magnitude(jet_data)  # |p| of 3-momenta
     px[p < cutoff] = np.nan
@@ -213,8 +227,10 @@ def get_p_cartesian(jet_data, cutoff=1e-6):
 
     return px, py, pz
 
+
 def get_magnitude(data):
     return np.sqrt(data[:, 1] ** 2 + data[:, 2] ** 2 + data[:, 3] ** 3)
+
 
 def get_p_polar(jet_data, cutoff=1e-6):
     """
@@ -232,6 +248,7 @@ def get_p_polar(jet_data, cutoff=1e-6):
     phi = np.arctan2(py, px)
 
     return pt, eta, phi
+
 
 def get_jet_name(args):
     if args.jet_type == 'g':

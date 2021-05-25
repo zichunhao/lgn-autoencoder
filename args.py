@@ -2,6 +2,7 @@ import argparse
 import torch
 import numpy as np
 
+
 def setup_argparse():
     parser = argparse.ArgumentParser(description='LGN Autoencoder Options')
 
@@ -21,7 +22,6 @@ def setup_argparse():
     parser.add_argument('--scale', type=float, default=1., metavar='',
                         help='The rescaling factor of the input 4-momenta. Default: 1.')
 
-
     ######################################## Model options ########################################
     parser.add_argument('--num-jet-particles', type=int, default=30, metavar='',
                         help='Number of particles per jet (batch) in the input. Default: 150 for the hls4ml 150p data.')
@@ -37,14 +37,14 @@ def setup_argparse():
     parser.add_argument('--tau-latent-vectors', type=int, default=2, metavar='',
                         help='Multiplicity of 4-vectors per particle the latent space.')
 
-    parser.add_argument('--encoder-num-channels', nargs="+", type=int, default=[2,3,2,1], metavar='',
+    parser.add_argument('--encoder-num-channels', nargs="+", type=int, default=[2, 3, 2, 1], metavar='',
                         help='Number of channels (or multiplicity or all irreps) in each CG layer in the encoder.')
-    parser.add_argument('--decoder-num-channels', nargs="+", type=int, default=[2,3,2,1], metavar='',
+    parser.add_argument('--decoder-num-channels', nargs="+", type=int, default=[2, 3, 2, 1], metavar='',
                         help='Number of channels (or multiplicity or all irreps) in each CG layer in the decoder.')
 
     parser.add_argument('--maxdim', nargs="+", type=int, default=[2], metavar='',
-                        help='Maximum weights in the model. Each element in maxdim will be capped to 2 because then tensor product' \
-						'of two (1/2, 1/2) irreps can be CG decomposed up to (1,1). Weights are multiplied by 2 to so that keys have integer values.')
+                        help='Maximum weights in the model. Each element in maxdim will be capped to 2 because then tensor product'
+                        'of two (1/2, 1/2) irreps can be CG decomposed up to (1,1). Weights are multiplied by 2 to so that keys have integer values.')
     parser.add_argument('--num-basis-fn', type=int, default=10, metavar='',
                         help='Number of basis function to express edge features. Default: [2].')
 
@@ -61,10 +61,9 @@ def setup_argparse():
     parser.add_argument('--mlp-width', type=int, default=2, metavar='N',
                         help='Width of hidden layers in each MLP layer in units of the number of inputs. Default: 2')
 
-
     ####################################### Training options #######################################
     parser.add_argument('--device', type=get_device, default=torch.device('cuda' if torch.cuda.is_available() else 'cpu'), metavar='',
-                        help="Device to which the model is initialized. Options: ('gpu', 'cpu', 'cuda', '-1')." \
+                        help="Device to which the model is initialized. Options: ('gpu', 'cpu', 'cuda', '-1')."
                         "Default: -1, which means deciding device based on whether gpu is available.")
     parser.add_argument('--dtype', type=get_dtype, default=torch.float64, metavar='',
                         help="Data type to which the model is initialized. Options: ('float', 'float64', 'double'). Default: float64")
@@ -75,12 +74,12 @@ def setup_argparse():
     parser.add_argument('-e', '--num-epochs', type=int, default=64, metavar='',
                         help='Number of epochs for training.')
     parser.add_argument('--loss-norm-choice', type=str, default='p3', metavar='',
-                        help="Choice of calculating the norms of 4-vectors when calculating the loss. " \
-                        "Options: ('canonical', 'real', 'cplx'). " \
-                        "'canonical': Write p in the basis of zonal functions, take the dot product, and find the norm out of the complex scalar. " \
-                        "'real': Find the norm of each component and then take the dot product. " \
-                        "'cplx': Take the dot product and then find the norm out the the complex scalar. " \
-                        "'p3': Find the norm of each component and find the norm square of the 3-momenta part of p4" \
+                        help="Choice of calculating the norms of 4-vectors when calculating the loss. "
+                        "Options: ('canonical', 'real', 'cplx'). "
+                        "'canonical': Write p in the basis of zonal functions, take the dot product, and find the norm out of the complex scalar. "
+                        "'real': Find the norm of each component and then take the dot product. "
+                        "'cplx': Take the dot product and then find the norm out the the complex scalar. "
+                        "'p3': Find the norm of each component and find the norm square of the 3-momenta part of p4"
                         "Default: 'p3.'")
 
     parser.add_argument('--save-dir', type=str, default='autoencoder_trained_models', metavar='',
@@ -110,15 +109,14 @@ def setup_argparse():
 
     ################################## Equivariance test options ##################################
     parser.add_argument('--equivariance-test', default=False, action='store_true',
-                        help='Whether to take the equivariance test after all trainings on the last model. True only when it is called.' \
+                        help='Whether to take the equivariance test after all trainings on the last model. True only when it is called.'
                         'Default: False.')
     parser.add_argument('--alpha-max', type=float, default=10., metavar='',
-                        help='The maximum alpha value of equivariance test, where gamma = cosh(alpha).' \
-						'Default: 10., at which gamma = 11013.2.')
+                        help='The maximum alpha value of equivariance test, where gamma = cosh(alpha).'
+                        'Default: 10., at which gamma = 11013.2.')
     parser.add_argument('--theta-max', type=float, default=2*np.pi, metavar='',
-                        help='The maximum theta value of equivariance test.' \
-						'Default: 2 pi.')
-
+                        help='The maximum theta value of equivariance test.'
+                        'Default: 2 pi.')
 
     args = parser.parse_args()
 
@@ -132,15 +130,15 @@ def setup_argparse():
 # Adapted from https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
 def get_bool(arg):
     if isinstance(arg, bool):
-       return arg
+        return arg
     if arg.lower() in ('true', 't', '1'):
         return True
     elif arg.lower() in ('false', 'f', '0'):
         return False
     else:
-        raise argparse.ArgumentTypeError("Boolean value expected. "\
-                                         "Options: For True, anything in ('true', 't', '1') can be used. "\
-                                         "For False, anything in ('false', 'f', '0') can be used. "\
+        raise argparse.ArgumentTypeError("Boolean value expected. "
+                                         "Options: For True, anything in ('true', 't', '1') can be used. "
+                                         "For False, anything in ('false', 'f', '0') can be used. "
                                          "Cases are ignored.")
 
 

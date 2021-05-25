@@ -40,7 +40,6 @@ class GWignerD(GTensor):
         Input of a G vector.
     """
 
-
     @property
     def zdim(self):
         return 0
@@ -104,7 +103,8 @@ class GWignerD(GTensor):
             alpha, beta, gamma = torch.rand(3) * 2 * pi + 1j * torch.rand(3) * 2 * pi
             beta = beta / 2
 
-        wigner_d = {(k,n): rot.LorentzD((k,n), alpha, beta, gamma, device=device, dtype=dtype) for k in range(maxdim) for n in range(maxdim)}
+        wigner_d = {(k, n): rot.LorentzD((k, n), alpha, beta, gamma, device=device, dtype=dtype)
+                    for k in range(maxdim) for n in range(maxdim)}
 
         return GWignerD(wigner_d)
 

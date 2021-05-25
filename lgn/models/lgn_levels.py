@@ -6,6 +6,8 @@ from lgn.nn.generic_levels import get_activation_fn
 from lgn.nn import CatMixReps
 
 ################################ Message Passing ################################
+
+
 class LGNNodeLevel(nn.Module):
 
     """
@@ -36,6 +38,7 @@ class LGNNodeLevel(nn.Module):
         Optional, default: None
         The CG dictionary as a reference for taking CG decompositions.
     """
+
     def __init__(self, tau_in, tau_pos, maxdim, num_channels, level_gain, weight_init,
                  device=None, dtype=torch.float64, cg_dict=None):
 
@@ -51,10 +54,12 @@ class LGNNodeLevel(nn.Module):
 
         # Operations linear in input reps
         # Self-interactions
-        self.cg_power = CGProduct(tau_in, tau_in, maxdim=self.maxdim, device=device, dtype=dtype, cg_dict=cg_dict)
+        self.cg_power = CGProduct(tau_in, tau_in, maxdim=self.maxdim,
+                                  device=device, dtype=dtype, cg_dict=cg_dict)
         tau_sq = self.cg_power.tau_out
         # Mutual interactions
-        self.cg_aggregate = CGProduct(tau_in, tau_pos, maxdim=self.maxdim, aggregate=True, device=device, dtype=dtype, cg_dict=cg_dict)
+        self.cg_aggregate = CGProduct(tau_in, tau_pos, maxdim=self.maxdim,
+                                      aggregate=True, device=device, dtype=dtype, cg_dict=cg_dict)
         tau_ag = self.cg_aggregate.tau_out
         # Message aggregation
         self.cat_mix = CatMixReps([tau_ag, tau_in, tau_sq], num_channels, maxdim=self.maxdim,
@@ -78,6 +83,7 @@ class LGNNodeLevel(nn.Module):
     node_feature_out: GVec
         The updated node features.
     """
+
     def forward(self, node_feature, edge_feature, mask):
         # Mutual interactions
         reps_ag = self.cg_aggregate(node_feature, edge_feature)
@@ -90,7 +96,6 @@ class LGNNodeLevel(nn.Module):
 
 ####################### Standard MLP on scalar features #######################
 class CGMLP(nn.Module):
-
     """
     The multilayer perceptron layers for LGNCG, which operates on the last axis of the data only.
 
@@ -116,6 +121,7 @@ class CGMLP(nn.Module):
         Optional, default: torch.float64
         The data type to which the module is initialized.
     """
+
     def __init__(self, tau, num_hidden=3, layer_width_mul=2, activation='sigmoid',
                  device=None, dtype=torch.float64):
 
@@ -150,28 +156,28 @@ class CGMLP(nn.Module):
 
         self.to(device=device, dtype=dtype)
 
-    """
-    The forward function for the standard MLP.
-
-    Parameters
-    ----------
-    node_feature_in : `GVec`
-        Node features.
-    mask : `torch.Tensor` with data type `torch.byte`
-        Batch mask for node representations. Shape is (N_batch, N_node).
-
-    Return
-    ----------
-    node_feature_out : `GVec`
-        Output node features.
-    """
     def forward(self, node_feature_in, mask=None):
+        """
+        The forward function for the standard MLP.
+
+        Parameters
+        ----------
+        node_feature_in : `GVec`
+            Node features.
+        mask : `torch.Tensor` with data type `torch.byte`
+            Batch mask for node representations. Shape is (N_batch, N_node).
+
+        Return
+        ----------
+        node_feature_out : `GVec`
+            Output node features.
+        """
 
         node_feature_out = node_feature_in
         # Extract the scalar features
         x = node_feature_out.pop((0, 0)).squeeze(-1)
         s = x.shape
-        x = x.permute(1,2,3,0).contiguous().view(s[1:3] + (self.num_scalars,))
+        x = x.permute(1, 2, 3, 0).contiguous().view(s[1:3] + (self.num_scalars,))
 
         # Loop over a linear layer followed by a non-linear activation.
         for (lin, activation) in zip(self.linear, self.activations):
@@ -183,7 +189,7 @@ class CGMLP(nn.Module):
         if mask is not None:
             x = torch.where(mask, x, self.zero)
 
-        node_feature_out[(0, 0)] = x.view(s[1:]+(2,)).permute(3,0,1,2).unsqueeze(-1)
+        node_feature_out[(0, 0)] = x.view(s[1:]+(2,)).permute(3, 0, 1, 2).unsqueeze(-1)
         return node_feature_out
 
     """
@@ -194,6 +200,7 @@ class CGMLP(nn.Module):
     scale : `float`
         Scaling parameter
     """
+
     def scale_weights(self, scale):
         self.linear[-1].weight *= scale
         if self.linear[-1].bias is not None:

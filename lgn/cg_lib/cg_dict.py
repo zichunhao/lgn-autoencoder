@@ -105,7 +105,8 @@ class CGDict():
             cg_dict_new = {key: {irrep: cg_mat.permute(1, 0) for irrep, cg_mat in val.items()} for key, val in cg_dict_new.items()}
 
         # Ensure elements of new CG dict are on correct device.
-        cg_dict_new = {key: {irrep: cg_mat.to(dtype=self.dtype, device=self.device) for irrep, cg_mat in val.items()} for key, val in cg_dict_new.items()}
+        cg_dict_new = {key: {irrep: cg_mat.to(dtype=self.dtype, device=self.device)
+                             for irrep, cg_mat in val.items()} for key, val in cg_dict_new.items()}
 
         # Now update the CG dict, and also update maxdim
         self._cg_dict.update(cg_dict_new)
@@ -128,13 +129,15 @@ class CGDict():
         if dtype is None and device is None:
             pass
         elif dtype is None and device is not None:
-            self._cg_dict = {key: {irrep: cg_mat.to(device=device) for irrep, cg_mat in val.items()} for key, val in self._cg_dict.items()}
+            self._cg_dict = {key: {irrep: cg_mat.to(
+                device=device) for irrep, cg_mat in val.items()} for key, val in self._cg_dict.items()}
             self.device = device
         elif dtype is not None and device is None:
             self._cg_dict = {key: val.to(dtype=dtype) for key, val in self._cg_dict.items()}
             self.dtype = dtype
         elif dtype is not None and device is not None:
-            self._cg_dict = {key: {irrep: cg_mat.to(device=device, dtype=dtype) for irrep, cg_mat in val.items()} for key, val in self._cg_dict.items()}
+            self._cg_dict = {key: {irrep: cg_mat.to(
+                device=device, dtype=dtype) for irrep, cg_mat in val.items()} for key, val in self._cg_dict.items()}
             self.device, self.dtype = device, dtype
         return self
 
@@ -188,11 +191,13 @@ def _gen_cg_dict(maxdim, existing_keys=None):
         nmin, nmax = abs(n1 - n2), n1 + n2
         dim1, dim2 = (k1 + 1) * (n1 + 1), (k2 + 1) * (n2 + 1)
         for k, n in itertools.product(range(kmin, kmax + 1, 2), range(nmin, nmax + 1, 2)):
-            cg_dict[((k1, n1), (k2, n2))][(k, n)] = torch.tensor(clebschmat((k1, n1), (k2, n2), (k, n), fastcgmat=fastcgmat))
+            cg_dict[((k1, n1), (k2, n2))][(k, n)] = torch.tensor(
+                clebschmat((k1, n1), (k2, n2), (k, n), fastcgmat=fastcgmat))
 
     return cg_dict
 
-def memoize(func):  #create a cached version of any function for fast repeated use
+
+def memoize(func):  # create a cached version of any function for fast repeated use
     cache = dict()
 
     def memoized_func(*args):
@@ -205,15 +210,15 @@ def memoize(func):  #create a cached version of any function for fast repeated u
     return memoized_func
 
 
-
 def clebschSU2mat(j1, j2, j3):
 
-    mat=np.zeros((int(2 * j1 + 1), int(2 * j2 + 1), int(2 * j3 + 1)))
+    mat = np.zeros((int(2 * j1 + 1), int(2 * j2 + 1), int(2 * j3 + 1)))
     if int(2 * j3) in range(int(2 * abs(j1 - j2)), int(2 * (j1 + j2)) + 1, 2):
         for m1 in (x / 2 for x in range(-int(2 * j1), int(2 * j1) + 1, 2)):
             for m2 in (x / 2 for x in range(-int(2 * j2), int(2 * j2) + 1, 2)):
                 if abs(m1 + m2) <= j3:
-                    mat[int(j1 + m1), int(j2 + m2), int(j3 + m1 + m2)] = clebschSU2((j1, m1), (j2, m2), (j3, m1 + m2))
+                    mat[int(j1 + m1), int(j2 + m2), int(j3 + m1 + m2)
+                        ] = clebschSU2((j1, m1), (j2, m2), (j3, m1 + m2))
     return np.array(mat)
 
 
@@ -224,11 +229,14 @@ def clebschmat(rep1, rep2, rep, fastcgmat=memoize(clebschSU2mat)):
     k1, n1 = rep1
     k2, n2 = rep2
     k, n = rep
-    B1 = np.concatenate([fastcgmat(k / 2, n / 2, i / 2) for i in range(abs(k - n), k + n + 1, 2)], axis=-1)
+    B1 = np.concatenate([fastcgmat(k / 2, n / 2, i / 2)
+                         for i in range(abs(k - n), k + n + 1, 2)], axis=-1)
     B2a = fastcgmat(k1 / 2, k2 / 2, k / 2)
     B2b = fastcgmat(n1 / 2, n2 / 2, n / 2)
-    B3a = np.concatenate([fastcgmat(k1 / 2, n1 / 2, i1 / 2) for i1 in range(abs(k1 - n1), k1 + n1 + 1, 2)], axis=-1)
-    B3b = np.concatenate([fastcgmat(k2 / 2, n2 / 2, i2 / 2) for i2 in range(abs(k2 - n2), k2 + n2 + 1, 2)], axis=-1)
+    B3a = np.concatenate([fastcgmat(k1 / 2, n1 / 2, i1 / 2)
+                          for i1 in range(abs(k1 - n1), k1 + n1 + 1, 2)], axis=-1)
+    B3b = np.concatenate([fastcgmat(k2 / 2, n2 / 2, i2 / 2)
+                          for i2 in range(abs(k2 - n2), k2 + n2 + 1, 2)], axis=-1)
     H = np.einsum('cab', np.einsum('abc,dea,ghb,dgk,ehn', B1, B2a, B2b, B3a, B3b))
     return H
 
@@ -346,8 +354,8 @@ def clebschSU2(idx1, idx2, idx3):
                 factorial(j3 - j1 + j2) * factorial(j1 + j2 - j3) *
                 factorial(j3 + m3) * factorial(j3 - m3) /
                 (factorial(j1 + j2 + j3 + 1) *
-                factorial(j1 - m1) * factorial(j1 + m1) *
-                factorial(j2 - m2) * factorial(j2 + m2)))
+                 factorial(j1 - m1) * factorial(j1 + m1) *
+                 factorial(j2 - m2) * factorial(j2 + m2)))
     S = 0
     for v in range(vmin, vmax + 1):
         S += (-1.0) ** (v + j2 + m2) / factorial(v) * \

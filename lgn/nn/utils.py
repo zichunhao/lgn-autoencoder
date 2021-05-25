@@ -11,6 +11,7 @@ class NoLayer(nn.Module):
     This exists just to demonstrate the structure one would want if edge
     features were desired at the input/output.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__()
         pass
@@ -25,6 +26,7 @@ class NoLayer(nn.Module):
     @property
     def num_scalars(self):
         return 0
+
 
 def save_grads(reps):
     for part in reps.values():
@@ -53,6 +55,7 @@ def save_reps(reps_dict, to_save, retain_grad=False):
         reps_dict.update({key + '_grad': save_grads(val) for key, val in reps_dict.items()})
 
     return reps_dict
+
 
 def broadcastable(tau1, tau2):
     for t1, t2 in zip(tau1[::-1], tau2[::-1]):

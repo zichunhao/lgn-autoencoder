@@ -6,6 +6,7 @@ GTau = g_tau.GTau
 GTensor = g_tensor.GTensor
 ParameterDictNew = parameter_dict_new.ParameterDictNew
 
+
 class GWeight(GTensor):
     """
     Core class for creating and tracking G Weights that
@@ -63,7 +64,8 @@ class GWeight(GTensor):
         shape = shapes.pop()
 
         if not shape[self.zdim] == 2:
-            raise ValueError('Complex dimension (dim={}) of each tensor should have length 2! Found: {}'.format(self.zdim, shape[self.zdim]))
+            raise ValueError('Complex dimension (dim={}) of each tensor should have length 2! Found: {}'.format(
+                self.zdim, shape[self.zdim]))
 
     def as_parameter(self):
         """
@@ -87,7 +89,8 @@ class GWeight(GTensor):
         Factory method to create a new random-normal `GWeight`.
         """
 
-        assert tau_out.keys() <= tau_in.keys(), f"Tau ({tau_out.keys()}) after mixing can't include more irreps than before ({tau_in.keys()})!"
+        assert tau_out.keys() <= tau_in.keys(
+        ), f"Tau ({tau_out.keys()}) after mixing can't include more irreps than before ({tau_in.keys()})!"
 
         return GWeight({key: torch.randn((2, tau_out[key], tau_in[key]), device=device, dtype=dtype,
                                          requires_grad=requires_grad) for key in tau_out.keys()})

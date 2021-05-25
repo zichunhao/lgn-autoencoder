@@ -34,6 +34,7 @@ class CGModule(nn.Module):
     dtype : `torch.torch.dtype`, optional
         Data type to initialize the module and Clebsch-Gordan dictionary to.
     """
+
     def __init__(self, cg_dict=None, maxdim=None, device=None, dtype=None, *args, **kwargs):
         self._init_device_dtype(device, dtype)
         self._init_cg_dict(cg_dict, maxdim)
@@ -79,10 +80,10 @@ class CGModule(nn.Module):
         # If cg_dict is defined, check it has the right properties
         if cg_dict is not None:
             if cg_dict.dtype != self.dtype:
-                raise ValueError('CGDict dtype ({}) not match CGModule() dtype ({})'.format(cg_dict.dtype, self.dtype))
+                raise ValueError(f'CGDict dtype ({cg_dict.dtype}) not match CGModule() dtype ({self.dtype)})')
 
             if cg_dict.device != self.device:
-                raise ValueError('CGDict device ({}) not match CGModule() device ({})'.format(cg_dict.device, self.device))
+                raise ValueError(f'CGDict device ({cg_dict.device}) not match CGModule() device ({self.device})')
 
             if maxdim is None:
                 Warning('maxdim is not defined, setting maxdim based upon CGDict maxdim ({}!'.format(cg_dict.maxdim))

@@ -47,9 +47,9 @@ class CGProduct(CGModule):
         Data type to initialize the module and Clebsch-Gordan dictionary to.
 
     """
+
     def __init__(self, tau1=None, tau2=None,
-                 aggregate=False,
-                maxdim=inf, cg_dict=None, dtype=None, device=None):
+                 aggregate=False, maxdim=inf, cg_dict=None, dtype=None, device=None):
 
         self.aggregate = aggregate
 
@@ -63,7 +63,6 @@ class CGProduct(CGModule):
         super().__init__(cg_dict=cg_dict, maxdim=maxdim, device=device, dtype=dtype)
 
         self.set_taus(tau1, tau2)
-
 
     def forward(self, rep1, rep2):
         """
@@ -90,7 +89,8 @@ class CGProduct(CGModule):
             raise ValueError('Module not intialized with input type!')
         tau1 = {key: 1 if val > 0 else 0 for key, val in self.tau1.items()}
         tau2 = {key: 1 if val > 0 else 0 for key, val in self.tau2.items()}
-        nchan = set([t for t in self.tau1.values() if t > 0] + [t for t in self.tau2.values() if t > 0]).pop()
+        nchan = set([t for t in self.tau1.values() if t > 0] +
+                    [t for t in self.tau2.values() if t > 0]).pop()
         tau_out = cg_product_tau(tau1, tau2, maxdim=self.maxdim)
         tau_out = {key: nchan * t for key, t in tau_out.items()}
         return tau_out
@@ -139,7 +139,8 @@ def cg_product(cg_dict, rep1, rep2, maxdim=inf, aggregate=False, ignore_check=Fa
     tau1 = GTau.from_rep(rep1)
     tau2 = GTau.from_rep(rep2)
 
-    assert tau1.channels and (tau1.channels == tau2.channels), 'The number of fragments must be same for each part! {} {}'.format(tau1, tau2)
+    assert tau1.channels and (
+        tau1.channels == tau2.channels), 'The number of fragments must be same for each part! {} {}'.format(tau1, tau2)
 
     maxk1 = max({key[0] for key in rep1.keys()})
     maxn1 = max({key[1] for key in rep1.keys()})
@@ -148,9 +149,9 @@ def cg_product(cg_dict, rep1, rep2, maxdim=inf, aggregate=False, ignore_check=Fa
     maxDim = min(max(maxk1 + maxk2, maxn1 + maxn2) + 1, maxdim)
 
     if (cg_dict.maxdim < maxDim) or (cg_dict.maxdim < max(maxk1, maxn1, maxk2, maxn2)):
-        raise ValueError('CG Dictionary maxdim ({}) not sufficiently large for (maxdim, L1, L2) = ({} {} {})'.format(cg_dict.maxdim, maxdim, maxk1, maxk2))
+        raise ValueError('CG Dictionary maxdim ({}) not sufficiently large for (maxdim, L1, L2) = ({} {} {})'.format(
+            cg_dict.maxdim, maxdim, maxk1, maxk2))
     assert(cg_dict.transpose), 'This operation uses transposed CG coefficients!'
-
 
     new_rep = {}
 
@@ -161,7 +162,8 @@ def cg_product(cg_dict, rep1, rep2, maxdim=inf, aggregate=False, ignore_check=Fa
             # cg_mat, aka H, is initially a dictionary {(k,n):rectangular matrix},
             # which when flattened/stacked over keys becomes an orthogonal square matrix
             # we create a sorted list of keys first and then stack the rectangular matrices over keys
-            cg_mat_keys = [(k, n) for k in range(abs(k1 - k2), min(maxdim, k1 + k2 + 1), 2) for n in range(abs(n1 - n2), min(maxdim, n1 + n2 + 1), 2)]
+            cg_mat_keys = [(k, n) for k in range(abs(k1 - k2), min(maxdim, k1 + k2 + 1), 2)
+                           for n in range(abs(n1 - n2), min(maxdim, n1 + n2 + 1), 2)]
             cg_mat = torch.cat([cg_dict[((k1, n1), (k2, n2))][key] for key in cg_mat_keys], -2)
             # Pairwise tensor multiply parts, loop over atom parts accumulating each.
             irrep_prod = complex_kron_product(irrep1, irrep2, aggregate=aggregate)
@@ -208,7 +210,8 @@ def complex_kron_product(z1, z2, aggregate=False):
     assert(len(s1) >= 3), 'Must have batch dimension!'
     assert(len(s2) >= 3), 'Must have batch dimension!'
 
-    b1, b2 = s1[1:-2], s2[1:-2]  # b can contantain batch and atom dimensions, not channel/multiplicity
+    # b can contantain batch and atom dimensions, not channel/multiplicity
+    b1, b2 = s1[1:-2], s2[1:-2]
     s1, s2 = s1[-2:], s2[-2:]  # s contains the channel dimension and the actual vector dimension
     if not aggregate:
         assert(b1 == b2), 'Batch sizes must be equal! {} {}'.format(b1, b2)
@@ -258,8 +261,6 @@ def complex_kron_product(z1, z2, aggregate=False):
     return z
 
 
-
-
 ############## UNUSED #################
 
 def cg_product_tau(tau1, tau2, maxdim=inf):
@@ -304,6 +305,8 @@ def cg_power_sym_tau(tau, maxdim=inf):
         for k in range(0, 2 * k1 + 1, 2):
             for n in range(0, 2 * n1 + 1, 2):
                 tausq.setdefault((k, n), 0)
-                tausq[(k, n)] += tau[(k1, n1)] * (tau[(k1, n1)] + (-1)**((((k1 - k // 2) % 2) + ((n1 - n // 2) % 2)) % 2)) // 2
+                tausq[(k, n)] += tau[(k1, n1)] * (tau[(k1, n1)]
+                                                  + (-1) ** ((((k1 - k // 2) % 2)
+                                                              + ((n1 - n // 2) % 2)) % 2)) // 2
 
     return tausq

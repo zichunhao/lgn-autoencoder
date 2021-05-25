@@ -131,7 +131,8 @@ def _dispatch_mul(val1, val2):
     # Multiply val1 with a list/tuple
     elif not isinstance(val2, GTensor) and type(val2) in [list, tuple]:
         _check_keys(val1, val2)
-        applied_op = [{key: torch.mul(scalar, part) for key, part in val1.items()} for scalar in val2]
+        applied_op = [{key: torch.mul(scalar, part)
+                       for key, part in val1.items()} for scalar in val2]
         output_class = type(val1)
     # Multiply val1 with something else
     elif isinstance(val1, GTensor) and not isinstance(val2, GTensor):
@@ -140,7 +141,8 @@ def _dispatch_mul(val1, val2):
     # Multiply val2 with a list/tuple
     elif not isinstance(val1, GTensor) and type(val1) in [list, tuple]:
         _check_keys(val1, val2)
-        applied_op = [{key: torch.mul(scalar, part) for key, part in val2.items()} for scalar in val1]
+        applied_op = [{key: torch.mul(scalar, part)
+                       for key, part in val2.items()} for scalar in val1]
         output_class = type(val1)
     # Multiply val2 with something else
     elif not isinstance(val1, GTensor) and isinstance(val2, GTensor):

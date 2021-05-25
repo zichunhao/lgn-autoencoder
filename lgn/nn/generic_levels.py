@@ -35,6 +35,7 @@ class BasicMLP(nn.Module):
         Optional, default: torch.float64
         The data type to which the module is initialized.
     """
+
     def __init__(self, num_in, num_out, num_hidden=1, layer_width=256, activation='leakyrelu',
                  device=None, dtype=torch.float64):
 
@@ -64,22 +65,22 @@ class BasicMLP(nn.Module):
 
         self.to(device=device, dtype=dtype)
 
-    """
-    The forward pass for standard MLP
-
-    Parameters
-    ----------
-    x : GVec or torch.Tensor
-        Input features.
-    mask : torch.Tensor
-        Mask for features.
-
-    Return
-    ----------
-    x : GVec or torch.Tensor
-        Updated features
-    """
     def forward(self, x, mask=None):
+        """
+        The forward pass for standard MLP
+
+        Parameters
+        ----------
+        x : GVec or torch.Tensor
+            Input features.
+        mask : torch.Tensor
+            Mask for features.
+
+        Return
+        ----------
+        x : GVec or torch.Tensor
+            Updated features
+        """
 
         for (lin, activation) in zip(self.linear, self.activations):
             x = lin(x)
@@ -101,6 +102,7 @@ class BasicMLP(nn.Module):
     scale : float or int
         Scaling parameter.
     """
+
     def scale_weights(self, scale):
         self.linear[-1].weight *= scale
         if self.linear[-1].bias is not None:

@@ -1,24 +1,24 @@
+from utils.jet_analysis import plot_p
+from utils.utils import make_dir, save_data, plot_eval_results
+from utils.chamfer_loss import ChamferLoss
+import time
+import os.path as osp
+import warnings
 import torch
 import numpy as np
 import sys
 sys.path.insert(1, 'utils/')
 sys.path.insert(1, 'lgn/')
-import warnings
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
-import os.path as osp
-import time
-
-from utils.chamfer_loss import ChamferLoss
-from utils.utils import make_dir, save_data, plot_eval_results
-from utils.jet_analysis import plot_p
 
 def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
           epoch, outpath, is_train=True, device=None):
 
     if is_train:
-        assert (optimizer_encoder is not None) and (optimizer_decoder is not None), "Please specify the optimizers."
+        assert (optimizer_encoder is not None) and (
+            optimizer_decoder is not None), "Please specify the optimizers."
         encoder.train()
         decoder.train()
     else:
@@ -53,21 +53,25 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             optimizer_encoder.step()
             optimizer_decoder.step()
 
-    generated_data = np.concatenate(generated_data, axis=0).reshape(-1,4)
-    target_data = np.concatenate(target_data, axis=0).reshape(-1,4)
+    generated_data = np.concatenate(generated_data, axis=0).reshape(-1, 4)
+    target_data = np.concatenate(target_data, axis=0).reshape(-1, 4)
 
     epoch_avg_loss = epoch_total_loss / len(loader)
-    save_data(data=epoch_avg_loss, data_name='loss', is_train=is_train, outpath=outpath, epoch=epoch)
+    save_data(data=epoch_avg_loss, data_name='loss',
+              is_train=is_train, outpath=outpath, epoch=epoch)
 
     # Save weights
     if is_train:
         encoder_weight_path = make_dir(osp.join(outpath, "weights_encoder"))
-        torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
+        torch.save(encoder.state_dict(), osp.join(
+            encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
 
         decoder_weight_path = make_dir(osp.join(outpath, "weights_decoder"))
-        torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
+        torch.save(decoder.state_dict(), osp.join(
+            decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
 
     return epoch_avg_loss, generated_data, target_data
+
 
 @torch.no_grad()
 def validate(args, loader, encoder, decoder, epoch, outpath, device):
@@ -76,6 +80,7 @@ def validate(args, loader, encoder, decoder, epoch, outpath, device):
                                                             optimizer_encoder=None, optimizer_decoder=None,
                                                             epoch=epoch, outpath=outpath, is_train=False, device=device)
     return epoch_avg_loss, generated_data, target_data
+
 
 def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_encoder, optimizer_decoder, outpath, device=None):
 
@@ -98,7 +103,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
         # Training
         start = time.time()
         train_avg_loss, train_gen, train_target = train(args, train_loader, encoder, decoder,
-                                                        optimizer_encoder, optimizer_decoder,epoch,
+                                                        optimizer_encoder, optimizer_decoder, epoch,
                                                         outpath, is_train=True, device=device)
         # Validation
         valid_avg_loss, valid_gen, valid_target = validate(args, valid_loader, encoder, decoder,
@@ -121,7 +126,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
         train_avg_losses.append(train_avg_loss)
         valid_avg_losses.append(train_avg_loss)
 
-        print(f'epoch={epoch+1}/{args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch}, ' \
+        print(f'epoch={epoch+1}/{args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch}, '
               f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, dt={dt}')
 
         if (epoch > 0) and ((epoch + 1) % 10 == 0):
@@ -133,7 +138,8 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
     save_data(data=valid_avg_losses, data_name='losses', is_train=False, outpath=outpath, epoch=-1)
     save_data(data=dts, data_name='dts', is_train=None, outpath=outpath, epoch=-1)
 
-    plot_eval_results(args, data=(train_avg_losses, valid_avg_losses), data_name='Losses', outpath=outpath, global_data=True)
+    plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
+                      data_name='Losses', outpath=outpath, global_data=True)
     plot_eval_results(args, data=dts, data_name='Time durations', outpath=outpath, global_data=True)
 
     return train_avg_losses, valid_avg_losses, dts
