@@ -3,10 +3,12 @@ import numpy as np
 import time
 import numpy.matlib
 from math import sqrt, cosh
+import logging
 
 from lgn.g_lib import rotations as rot
-from lgn.models.autotest.utils import get_output, get_dev, print_and_log
+from lgn.models.autotest.utils import get_output, get_dev
 
+logging.basicConfig(level=logging.INFO)
 
 def _gen_rot(angles, maxdim, device=torch.device('cpu'), dtype=torch.float64, cg_dict=None):
 
@@ -23,7 +25,6 @@ def _gen_rot(angles, maxdim, device=torch.device('cpu'), dtype=torch.float64, cg
 	return D, R
 
 def covariance_test(encoder, decoder, data, test_type, alpha_max=None, cg_dict=None):
-	print_and_log('Beginning covariance test...')
 
 	if cg_dict is None:
 		cg_dict = encoder.cg_dict
@@ -113,26 +114,26 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_m
 
 	t0 = time.time()
 
-	print_and_log("Testing equivariance...")
+	logging.info("Testing equivariance...")
 	encoder.eval()
 	decoder.eval()
 
 	lgn_test_results = dict()
 
 	data = next(iter(dataloader))
-	print_and_log("Boost equivariance test begins...")
+	logging.info("Boost equivariance test begins...")
 	boost_results = covariance_test(encoder, decoder, data, test_type='boost', cg_dict=cg_dict, alpha_max=alpha_max)
-	print_and_log("Boost equivariance test completed!")
+	logging.info("Boost equivariance test completed!")
 	lgn_test_results.update(boost_results)
 
-	print_and_log('Rotation equivariance test begins...')
+	logging.info('Rotation equivariance test begins...')
 	rotation_results = covariance_test(encoder, decoder, data, test_type='rotation', cg_dict=cg_dict, alpha_max=theta_max)
-	print_and_log('Rotation equivariance test completed!')
+	logging.info('Rotation equivariance test completed!')
 	lgn_test_results.update(rotation_results)
 
 
-	print_and_log('Test complete!')
+	logging.info('Test complete!')
 	dt = time.time() - t0
-	print_and_log(f"Time it took testing equivariance of epoch {epoch+1} is {round(dt/60, 2)} min")
+	logging.info(f"Time it took testing equivariance of epoch {epoch+1} is {round(dt/60, 2)} min")
 
 	return lgn_test_results
