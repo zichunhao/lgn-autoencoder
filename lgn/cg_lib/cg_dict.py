@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class CGDict():
-    r"""
+    """
     A dictionary of Clebsch-Gordan (CG) coefficients to be used in CG operations.
 
     The CG coefficients
@@ -350,17 +350,15 @@ def clebschSU2(idx1, idx2, idx3):
     vmin = int(np.max([-j1 + j2 + m3, -j1 + m1, 0]))
     vmax = int(np.min([j2 + j3 + m1, j3 - j1 + j2, j3 + m3]))
 
-    C = np.sqrt((2.0 * j3 + 1.0) * factorial(j3 + j1 - j2) *
-                factorial(j3 - j1 + j2) * factorial(j1 + j2 - j3) *
-                factorial(j3 + m3) * factorial(j3 - m3) /
+    C = np.sqrt((2.0 * j3 + 1.0) * factorial(j3 + j1 - j2) * factorial(j3 - j1 + j2) * factorial(j1 + j2 - j3) * factorial(j3 + m3) * factorial(j3 - m3) /
                 (factorial(j1 + j2 + j3 + 1) *
                  factorial(j1 - m1) * factorial(j1 + m1) *
                  factorial(j2 - m2) * factorial(j2 + m2)))
     S = 0
     for v in range(vmin, vmax + 1):
-        S += (-1.0) ** (v + j2 + m2) / factorial(v) * \
-            factorial(j2 + j3 + m1 - v) * factorial(j1 - m1 + v) / \
-            factorial(j3 - j1 + j2 - v) / factorial(j3 + m3 - v) / \
+        S += (-1.0) ** (v + j2 + m2) / factorial(v) * actorial(j2 + j3 + m1 - v) * factorial(j1 - m1 + v) / \
+            factorial(j3 - j1 + j2 - v) / \
+            factorial(j3 + m3 - v) / \
             factorial(v + j1 - j2 - m3)
     C = C * S
     return C

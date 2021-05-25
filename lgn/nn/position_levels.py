@@ -78,7 +78,7 @@ class RadPolyTrig(nn.Module):
             self.linear = nn.ModuleList(
                 [nn.Linear(2 * self.num_basis_fn, self.num_channels).to(device=device, dtype=dtype)
                  for _ in range(max_zf + 1)]
-                )
+            )
             self.radial_types = (num_channels,) * (max_zf)
         elif (mix == 'none') or (mix is False):
             self.linear = None
@@ -105,7 +105,7 @@ class RadPolyTrig(nn.Module):
         A GScalar object that stores a dict of radial functions as values
         and weights (l,l) as keys.
         """
-        
+
         # Shape to resize to at the end
         s = norms.shape
 

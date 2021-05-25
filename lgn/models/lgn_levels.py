@@ -5,8 +5,6 @@ from lgn.cg_lib import CGProduct
 from lgn.nn.generic_levels import get_activation_fn
 from lgn.nn import CatMixReps
 
-################################ Message Passing ################################
-
 
 class LGNNodeLevel(nn.Module):
 
@@ -94,10 +92,9 @@ class LGNNodeLevel(nn.Module):
         return node_feature_out
 
 
-####################### Standard MLP on scalar features #######################
 class CGMLP(nn.Module):
     """
-    The multilayer perceptron layers for LGNCG, which operates on the last axis of the data only.
+    The multilayer perceptron layers for LGNCG, for scalars only.
 
     Parameters
     ----------

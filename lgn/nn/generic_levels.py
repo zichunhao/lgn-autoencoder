@@ -108,7 +108,7 @@ class BasicMLP(nn.Module):
         if self.linear[-1].bias is not None:
             self.linear[-1].bias *= scale
 
-############# Helper function and class #############
+
 def get_activation_fn(activation):
     activation = activation.lower()
     if activation == 'leakyrelu':
