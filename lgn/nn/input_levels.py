@@ -175,7 +175,7 @@ class InputMPNN(nn.Module):
 
             # mask
             mask = MaskLevel(1, hard_cut_rad, soft_cut_rad, soft_cut_width,
-                             ['soft', 'hard'], device=device, dtype=dtype)
+                             ['soft', 'hard'], eps=get_eps(dtype), device=device, dtype=dtype)
             self.masks.append(mask)
 
             # MLP
@@ -245,3 +245,9 @@ class InputMPNN(nn.Module):
     @property
     def tau(self):
         return GTau({(0, 0): self.channels_out})
+
+def get_eps(dtype):
+    if dtype in [torch.float64, torch.double]:
+        return 1e-16
+    else:
+        return 1e-12
