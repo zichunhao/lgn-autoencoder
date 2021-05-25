@@ -30,7 +30,7 @@ class MaskLevel(nn.Module):
         Optional, default: False
         Whether to mask using gaussians instead of sigmoids.
     eps : float
-        Optional, default: 1e-3
+        Optional, default: 1e-16
         Numerical minimum to use in case learnable cutoff parameters are driven towards zero.
     device : torch.device
         Optional, default: torch.device('cuda' if torch.cuda.is_available() else 'cpu')
