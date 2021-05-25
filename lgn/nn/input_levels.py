@@ -246,6 +246,7 @@ class InputMPNN(nn.Module):
     def tau(self):
         return GTau({(0, 0): self.channels_out})
 
+
 def get_eps(dtype):
     if dtype in [torch.float64, torch.double]:
         return 1e-16
