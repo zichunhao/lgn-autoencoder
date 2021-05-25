@@ -8,9 +8,9 @@ def setup_argparse():
     ######################################### Data options #########################################
     parser.add_argument('-j', '--jet-type', type=str, required=True, metavar='',
                         help="The jet type to train. Options: ('g', 'q', 't', 'w', 'z').")
-    parser.add_argument('--file-path', type=str, default='hls4ml/cartesian', metavar='',
+    parser.add_argument('--file-path', type=str, default='hls4ml/', metavar='',
                         help='The path of the data.')
-    parser.add_argument('--file-suffix', type=str, default='jets_150p_cartesian.pt', metavar='',
+    parser.add_argument('--file-suffix', type=str, default='jets_30p_p4.pt', metavar='',
                         help="The suffix of the file. Default: 'jets_150p_cartesian.pt'")
     parser.add_argument('--num-train', type=int, default=2, metavar='',
                         help='Number of samples to train on. Default: 528000')
@@ -23,7 +23,7 @@ def setup_argparse():
 
 
     ######################################## Model options ########################################
-    parser.add_argument('--num-jet-particles', type=int, default=150, metavar='',
+    parser.add_argument('--num-jet-particles', type=int, default=30, metavar='',
                         help='Number of particles per jet (batch) in the input. Default: 150 for the hls4ml 150p data.')
     parser.add_argument('--tau-jet-scalars', type=int, default=1, metavar='',
                         help='Multiplicity of scalars per particle in a jet. Default: 1 for the hls4ml 150p data.')
@@ -74,13 +74,14 @@ def setup_argparse():
                         help='Batch size.')
     parser.add_argument('-e', '--num-epochs', type=int, default=64, metavar='',
                         help='Number of epochs for training.')
-    parser.add_argument('--loss-norm-choice', type=str, default='real', metavar='',
+    parser.add_argument('--loss-norm-choice', type=str, default='p3', metavar='',
                         help="Choice of calculating the norms of 4-vectors when calculating the loss. " \
                         "Options: ('canonical', 'real', 'cplx'). " \
                         "'canonical': Write p in the basis of zonal functions, take the dot product, and find the norm out of the complex scalar. " \
                         "'real': Find the norm of each component and then take the dot product. " \
                         "'cplx': Take the dot product and then find the norm out the the complex scalar. " \
-                        "Default: 'canonical.'")
+                        "'p3': Find the norm of each component and find the norm square of the 3-momenta part of p4" \
+                        "Default: 'p3.'")
 
     parser.add_argument('--save-dir', type=str, default='autoencoder_trained_models', metavar='',
                         help='The directory to save trained models and figures.')

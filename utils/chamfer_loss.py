@@ -8,8 +8,13 @@ class ChamferLoss(nn.Module):
     ----------
     loss_norm_choice : `str`
         The choice to compute the norm squared of the complex 4-vector.
-        Optional, default: `'cplx'`
+        Optional, default: `'p3'`
         Options:
+        - `'p3'`
+            1. Norm of p4 is taken so that it only contains real components.
+            Shape: `(OTHER_DIMENSIONS,4)`
+            2. The norm of the 3-momenta is computed (in Cartesian metric)
+            Shape: `(OTHER_DIMENSIONS)`
         - `'real'`
             1. Norm of p4 is taken so that it only contains real components.
             Shape: `(batch_size, num_particles, 4)`
@@ -26,9 +31,9 @@ class ChamferLoss(nn.Module):
             2. The norm squared is computed.
             3. The result is converted to real.
     """
-    def __init__(self, loss_norm_choice='canonical', device=None):
+    def __init__(self, loss_norm_choice='p3', device=None):
         super(ChamferLoss, self).__init__()
-        if loss_norm_choice.lower() not in ['real', 'cplx', 'complex', 'canonical']:
+        if loss_norm_choice.lower() not in ['real', 'cplx', 'complex', 'canonical', 'p3']:
             raise ValueError(f"loss_norm_choice can only be one of 'real', 'cplx', or 'canonical': {loss_norm_choice}")
 
         self.loss_norm_choice = loss_norm_choice
@@ -102,8 +107,10 @@ class ChamferLoss(nn.Module):
             dist = normsq_real(p1 - q1)
         elif self.loss_norm_choice.lower() == 'canonical':
             dist = normsq_canonical(p1 - q1)
-        else:
+        elif self.loss_norm_choice.lower() in ['cplx', 'complex']:
             dist = normsq_cplx(p1 - q1)
+        else:
+            dist = normsq_p3(p1 - q1)
         return dist
 
 def convert_to_complex(real_ps):
@@ -183,6 +190,20 @@ def normsq_real(p4):
     """
     p4_norm = torch.sqrt(torch.pow(p4[0], 2) + torch.pow(p4[1], 2))
     return 2 * p4_norm[..., 0] - p4_norm.sum(dim=-1)
+
+def normsq_p3(p4):
+    """
+    Calculate the norm square of the 3-momentum. This is useful when particle mass is neglible.
+    1. Norm of p4 is taken so that it only contains real components.
+    Shape: `(OTHER_DIMENSIONS,4)`
+    2. The norm of the 3-momenta is computed (in Cartesian metric)
+    Shape: `(OTHER_DIMENSIONS)`
+    """
+    p4_real = p4[0]
+    p4_im = p4[1]
+    p_real = torch.sum(torch.pow(p4_real, 2)[..., 1:], dim=-1)
+    p_im = torch.sum(torch.pow(p4_im, 2)[..., 1:], dim=-1)
+    return p_real + p_im
 
 ######################################## Unused ########################################
 def reshape_generated_ps(generated_ps):
