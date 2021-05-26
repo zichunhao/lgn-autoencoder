@@ -80,7 +80,7 @@ class CGModule(nn.Module):
         # If cg_dict is defined, check it has the right properties
         if cg_dict is not None:
             if cg_dict.dtype != self.dtype:
-                raise ValueError(f'CGDict dtype ({cg_dict.dtype}) not match CGModule() dtype ({self.dtype)})')
+                raise ValueError(f'CGDict dtype ({cg_dict.dtype}) not match CGModule() device ({self.dtype})')
 
             if cg_dict.device != self.device:
                 raise ValueError(f'CGDict device ({cg_dict.device}) not match CGModule() device ({self.device})')
