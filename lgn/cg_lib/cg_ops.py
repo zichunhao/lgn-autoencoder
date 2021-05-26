@@ -1,5 +1,6 @@
 import torch
 from math import inf
+import itertools
 
 from lgn.cg_lib import CGModule, cg_product_tau
 from lgn.g_lib import GTau, GVec
