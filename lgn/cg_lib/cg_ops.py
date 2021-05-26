@@ -90,8 +90,7 @@ class CGProduct(CGModule):
             raise ValueError('Module not intialized with input type!')
         tau1 = {key: 1 if val > 0 else 0 for key, val in self.tau1.items()}
         tau2 = {key: 1 if val > 0 else 0 for key, val in self.tau2.items()}
-        nchan = set([t for t in self.tau1.values() if t > 0] +
-                    [t for t in self.tau2.values() if t > 0]).pop()
+        nchan = set([t for t in self.tau1.values() if t > 0] + [t for t in self.tau2.values() if t > 0]).pop()
         tau_out = cg_product_tau(tau1, tau2, maxdim=self.maxdim)
         tau_out = {key: nchan * t for key, t in tau_out.items()}
         return tau_out
