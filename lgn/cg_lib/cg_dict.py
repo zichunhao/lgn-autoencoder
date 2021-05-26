@@ -189,7 +189,7 @@ def _gen_cg_dict(maxdim, existing_keys=None):
         cg_dict.setdefault(((k1, n1), (k2, n2)), {})
         kmin, kmax = abs(k1 - k2), k1 + k2
         nmin, nmax = abs(n1 - n2), n1 + n2
-        dim1, dim2 = (k1 + 1) * (n1 + 1), (k2 + 1) * (n2 + 1)
+        # dim1, dim2 = (k1 + 1) * (n1 + 1), (k2 + 1) * (n2 + 1)
         for k, n in itertools.product(range(kmin, kmax + 1, 2), range(nmin, nmax + 1, 2)):
             cg_dict[((k1, n1), (k2, n2))][(k, n)] = torch.tensor(
                 clebschmat((k1, n1), (k2, n2), (k, n), fastcgmat=fastcgmat))
