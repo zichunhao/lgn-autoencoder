@@ -1,6 +1,6 @@
 import torch
 from math import inf
-import itertools
+# import itertools
 
 from lgn.cg_lib import CGModule, cg_product_tau
 from lgn.g_lib import GTau, GVec
@@ -210,7 +210,7 @@ def complex_kron_product(z1, z2, aggregate=False):
     assert(len(s1) >= 3), 'Must have batch dimension!'
     assert(len(s2) >= 3), 'Must have batch dimension!'
 
-    # b can contantain batch and atom dimensions, not channel/multiplicity
+    # b can contain batch and node dimensions, not channel/multiplicity
     b1, b2 = s1[1:-2], s2[1:-2]
     s1, s2 = s1[-2:], s2[-2:]  # s contains the channel dimension and the actual vector dimension
     if not aggregate:
@@ -218,8 +218,8 @@ def complex_kron_product(z1, z2, aggregate=False):
         b = b1
     else:
         if (len(b1) == 3) and (len(b2) == 2):
-            assert(b1[0] == b2[0]), 'Batch sizes must be equal! {} {}'.format(b1, b2)
-            assert(b1[2] == b2[1]), 'Neighborhood sizes must be equal! {} {}'.format(b1, b2)
+            assert(b1[0] == b2[0]), f'Batch sizes must be equal! {b1} {b2}'
+            assert(b1[2] == b2[1]), f'Neighborhood sizes must be equal! {b1} {b2}'
 
             z2 = z2.unsqueeze(2)
             b2 = z2.shape[1:-2]
@@ -228,8 +228,8 @@ def complex_kron_product(z1, z2, aggregate=False):
             agg_sum_dim = 3
 
         elif (len(b1) == 2) and (len(b2) == 3):
-            assert(b2[0] == b1[0]), 'Batch sizes must be equal! {} {}'.format(b1, b2)
-            assert(b2[2] == b1[1]), 'Neighborhood sizes must be equal! {} {}'.format(b1, b2)
+            assert(b2[0] == b1[0]), f'Batch sizes must be equal! {b1} {b2}'
+            assert(b2[2] == b1[1]), f'Neighborhood sizes must be equal! {b1} {b2}'
 
             z1 = z1.unsqueeze(2)
             b1 = z1.shape[1:-2]
@@ -241,7 +241,7 @@ def complex_kron_product(z1, z2, aggregate=False):
             raise ValueError('Batch size error! {} {}'.format(b1, b2))
 
     # Treat the channel index like a "batch index".
-    assert(s1[0] == s2[0]), 'Number of channels must match! {} {}'.format(s1[0], s2[0])
+    assert(s1[0] == s2[0]), f'Number of channels must match! {s1[0]} {s2[0]}'
 
     s12 = (4,) + b + (s1[0], s1[1] * s2[1])
 
@@ -263,50 +263,50 @@ def complex_kron_product(z1, z2, aggregate=False):
 
 ############## UNUSED #################
 
-def cg_product_tau(tau1, tau2, maxdim=inf):
-    tau = {}
-
-    for (k1, n1) in tau1.keys():
-        for (k2, n2) in tau2.keys():
-            if max(k1, n1, k2, n2) >= maxdim:
-                continue
-            kmin, kmax = abs(k1 - k2), min(k1 + k2, maxdim - 1)
-            nmin, nmax = abs(n1 - n2), min(n1 + n2, maxdim - 1)
-            for k in range(kmin, kmax + 1, 2):
-                for n in range(nmin, nmax + 1, 2):
-                    tau.setdefault((k, n), 0)
-                    tau[(k, n)] += tau1[(k1, n1)] * tau2[(k2, n2)]
-
-    return tau
-
-
-def cg_power_tau(tau, maxdim=inf, cg_sym=True):
-    if cg_sym:
-        return cg_power_sym_tau(tau, maxdim=maxdim)
-    else:
-        return cg_product_tau(tau, tau, maxdim=maxdim)
-
-
-def cg_power_sym_tau(tau, maxdim=inf):
-    # Easier than rewriting
-    tausq = {}
-
-    for ((k1, n1), (k2, n2)) in itertools.combinations(tau.keys(), 2):
-        kmin, kmax = abs(k1 - k2), min(k1 + k2, 2 * maxdim)
-        nmin, nmax = abs(n1 - n2), min(n1 + n2, 2 * maxdim)
-        for k in range(kmin, kmax + 1, 2):
-            for n in range(nmin, nmax + 1, 2):
-                tausq.setdefault((k, n), 0)
-                tausq[(k, n)] += tau[(k1, n1)] * tau[(k2, n2)]
-
-    # Take upper tiangular part of "tau square".
-    # By symmetry of the CG coefficients, the diagonal vanishes for odd-l
-    for (k1, n1) in tau:
-        for k in range(0, 2 * k1 + 1, 2):
-            for n in range(0, 2 * n1 + 1, 2):
-                tausq.setdefault((k, n), 0)
-                tausq[(k, n)] += tau[(k1, n1)] * (tau[(k1, n1)]
-                                                  + (-1) ** ((((k1 - k // 2) % 2)
-                                                              + ((n1 - n // 2) % 2)) % 2)) // 2
-
-    return tausq
+# def cg_product_tau(tau1, tau2, maxdim=inf):
+#     tau = {}
+#
+#     for (k1, n1) in tau1.keys():
+#         for (k2, n2) in tau2.keys():
+#             if max(k1, n1, k2, n2) >= maxdim:
+#                 continue
+#             kmin, kmax = abs(k1 - k2), min(k1 + k2, maxdim - 1)
+#             nmin, nmax = abs(n1 - n2), min(n1 + n2, maxdim - 1)
+#             for k in range(kmin, kmax + 1, 2):
+#                 for n in range(nmin, nmax + 1, 2):
+#                     tau.setdefault((k, n), 0)
+#                     tau[(k, n)] += tau1[(k1, n1)] * tau2[(k2, n2)]
+#
+#     return tau
+#
+#
+# def cg_power_tau(tau, maxdim=inf, cg_sym=True):
+#     if cg_sym:
+#         return cg_power_sym_tau(tau, maxdim=maxdim)
+#     else:
+#         return cg_product_tau(tau, tau, maxdim=maxdim)
+#
+#
+# def cg_power_sym_tau(tau, maxdim=inf):
+#     # Easier than rewriting
+#     tausq = {}
+#
+#     for ((k1, n1), (k2, n2)) in itertools.combinations(tau.keys(), 2):
+#         kmin, kmax = abs(k1 - k2), min(k1 + k2, 2 * maxdim)
+#         nmin, nmax = abs(n1 - n2), min(n1 + n2, 2 * maxdim)
+#         for k in range(kmin, kmax + 1, 2):
+#             for n in range(nmin, nmax + 1, 2):
+#                 tausq.setdefault((k, n), 0)
+#                 tausq[(k, n)] += tau[(k1, n1)] * tau[(k2, n2)]
+#
+#     # Take upper tiangular part of "tau square".
+#     # By symmetry of the CG coefficients, the diagonal vanishes for odd-l
+#     for (k1, n1) in tau:
+#         for k in range(0, 2 * k1 + 1, 2):
+#             for n in range(0, 2 * n1 + 1, 2):
+#                 tausq.setdefault((k, n), 0)
+#                 tausq[(k, n)] += tau[(k1, n1)] * (tau[(k1, n1)]
+#                                                   + (-1) ** ((((k1 - k // 2) % 2)
+#                                                               + ((n1 - n // 2) % 2)) % 2)) // 2
+#
+#     return tausq
