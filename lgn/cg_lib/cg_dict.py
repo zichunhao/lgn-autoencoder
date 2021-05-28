@@ -14,7 +14,7 @@ class CGDict():
     The CG coefficients
 
     .. math::
-        \langle \ell_1, m_1, l_2, m_2 | l, m \rangle
+        \langle \ell_1, m_1, \ell_2, m_2 | l, m \rangle
 
     are used to decompose the tensor product of two
     irreps of maximum weights :math:`\ell_1` and :math:`\ell_2` into a direct
@@ -166,15 +166,15 @@ def _gen_cg_dict(maxdim, existing_keys=None):
     '''
     Outputs a dictionary of tables of CG coefficients for the Lorentz group
     up to the given dimension maxdim of the G irrep subcomponents
-    (every irrep of Lorentz is V1 x V2, where V1 and V2 are irreps of G).
+    (every irrep of Lorentz group is V1 x V2, where V1 and V2 are irreps of G).
     Keys are tuples of labels (irrep T1, irrep T2) for irreps (which are themselves tuples of integers),
-    and the values are again dictionaries of the form (irrep T):matrix,
+    and the values are again dictionaries of the form (irrep T): matrix,
     where the matrix is rectangular and maps irrep T into T1 x T2.
     This matrix is in fact more naturally stored as a torch.tensor of rank 3.
-    Elements of an irrep of Lorentz whose label is (k,n) are stored as vectors of size (k+1)*(n+1)
+    Elements of an irrep of Lorentz group whose label is (k,n) are stored as vectors of size (k+1)*(n+1)
     which are concatenations of a set of vectors, exactly one for each l going from abs(k-n)/2 to (k+n)/2,
     and the size of the vector corresponding to l is 2*l+1. These sub-vectors belong to irreps of G.
-    Therefore the dictionary values are tensors of size (k1+1)*(n1+1) x (k2+1)*(n2+1) x (k+1)*(n+1).
+    Therefore the dictionary values are tensors of shape ( (k1+1)*(n1+1), (k2+1)*(n2+1), (k+1)*(n+1) ).
     If we concatenate all such tensors for given (k1,n1,k2,n2), we get an orthogonal
     transformation from sum(T) to T1xT2, which is the CG operation done in cg_product().
     '''
@@ -217,8 +217,7 @@ def clebschSU2mat(j1, j2, j3):
         for m1 in (x / 2 for x in range(-int(2 * j1), int(2 * j1) + 1, 2)):
             for m2 in (x / 2 for x in range(-int(2 * j2), int(2 * j2) + 1, 2)):
                 if abs(m1 + m2) <= j3:
-                    mat[int(j1 + m1), int(j2 + m2), int(j3 + m1 + m2)
-                        ] = clebschSU2((j1, m1), (j2, m2), (j3, m1 + m2))
+                    mat[int(j1 + m1), int(j2 + m2), int(j3 + m1 + m2)] = clebschSU2((j1, m1), (j2, m2), (j3, m1 + m2))
     return np.array(mat)
 
 
