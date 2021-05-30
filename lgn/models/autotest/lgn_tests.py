@@ -6,7 +6,7 @@ from math import sqrt, cosh
 import logging
 
 from lgn.g_lib import rotations as rot
-from lgn.models.autotest.utils import get_output, get_dev
+from lgn.models.autotest.utils import get_output, get_dev, get_avg_output_dev, get_avg_internal_dev
 
 logging.basicConfig(level=logging.INFO)
 
@@ -107,13 +107,13 @@ def rot_equivariance(encoder, decoder, data, theta_range, device, dtype, cg_dict
         Di, Ri = _gen_rot((0, theta, 0), encoder.maxdim,
                           device=device, dtype=dtype, cg_dict=cg_dict)
         data_boost = data.copy()
-        data_boost['p4'] = torch.einsum("...b, ba->...a", data['p4'], Ri)  # Boost input
+        data_boost['p4'] = torch.einsum("...b, ba->...a", data['p4'], Ri)  # Rotate input
         res_rot_input, internal_rot_input = get_output(
             encoder, decoder, data_boost, covariance_test=True)
         rot_input.append((res_rot_input))
         rot_input_nodes_all.append((internal_rot_input))
 
-        # input -> rotate output
+        # Input -> rotate output
         res, internal = get_output(encoder, decoder, data, covariance_test=True)
         rot_res = rot.rotate_rep(res, 0, theta, 0, cg_dict=cg_dict)
         rot_internal = [rot.rotate_rep(internal[i], 0, theta, 0, cg_dict=cg_dict)
@@ -131,27 +131,33 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_m
 
     t0 = time.time()
 
-    logging.info("Testing equivariance...")
+    logging.info("Equivariance test begins...")
     encoder.eval()
     decoder.eval()
 
+    boost_test_all_epochs = []
+    rot_test_all_epochs = []
+
+    for data in dataloader:
+        boost_results = covariance_test(
+            encoder, decoder, data, test_type='boost', cg_dict=cg_dict, alpha_max=alpha_max)
+        boost_test_all_epochs.append(boost_results)
+
+        rot_results = covariance_test(
+            encoder, decoder, data, test_type='rotation', cg_dict=cg_dict, alpha_max=theta_max)
+        rot_test_all_epochs.append(rot_results)
+
+    dt = time.time() - t0
+    logging.info(f"Equivariance test completed! Time it took testing equivariance of epoch {epoch+1} is {round(dt/60, 2)} min")
+
     lgn_test_results = dict()
 
-    data = next(iter(dataloader))
-    logging.info("Boost equivariance test begins...")
-    boost_results = covariance_test(
-        encoder, decoder, data, test_type='boost', cg_dict=cg_dict, alpha_max=alpha_max)
-    logging.info("Boost equivariance test completed!")
-    lgn_test_results.update(boost_results)
+    lgn_test_results['gammas'] = boost_test_all_epochs[0]['gammas']
+    lgn_test_results['boost_dev_output'] = get_avg_output_dev(boost_test_all_epochs, 'boost')
+    lgn_test_results['boost_dev_internal'] = get_avg_internal_dev(boost_test_all_epochs, 'boost')
 
-    logging.info('Rotation equivariance test begins...')
-    rotation_results = covariance_test(
-        encoder, decoder, data, test_type='rotation', cg_dict=cg_dict, alpha_max=theta_max)
-    logging.info('Rotation equivariance test completed!')
-    lgn_test_results.update(rotation_results)
-
-    logging.info('Test complete!')
-    dt = time.time() - t0
-    logging.info(f"Time it took testing equivariance of epoch {epoch+1} is {round(dt/60, 2)} min")
+    lgn_test_results['thetas'] = rot_test_all_epochs[0]['thetas']
+    lgn_test_results['rot_dev_output'] = get_avg_output_dev(rot_test_all_epochs, 'rotation')
+    lgn_test_results['rot_dev_internal'] = get_avg_internal_dev(rot_test_all_epochs, 'rotation')
 
     return lgn_test_results

@@ -30,6 +30,79 @@ def get_dev(transform_input, transform_output, transform_input_nodes_all, transf
     return dev_output, dev_internal
 
 
+def get_avg_output_dev(covariance_results, test_name):
+    """
+    Get average relative deviation of output features for each alpha in tests of all epochs.
+
+    Parameter
+    ---------
+    covariance_results : `list` of `dict`
+        The covariance test results for each epoch. Depending on the test name, the keys of results can be
+            - ['gammas', 'boost_dev_output', 'boost_dev_internal']
+            - ['thetas', 'rot_dev_output', 'rot_dev_internal']
+        We are interested in dicts with the key 'boost_dev_output' or 'rot_dev_output',
+        which stores the output relative deviation by epoch by a 2d-list of `dict` with "shape" (num_epochs, num_gammas).
+    test_name : `str`
+        The name of the covariance test. Choices are 'rot' and 'boost'
+
+    Return
+    ------
+    avg_output_dev_by_alpha : `list` of `dict`
+        The average output relative deviation of all epochs for all irreps for each alpha (gamma for boost and theta for rotation).
+    """
+
+    if test_name.lower() in ['rotation', 'rotations']:
+        test_name = 'rot'
+
+    output_devs = [covariance_results[i][f'{test_name.lower()}_dev_output'] for i in range(len(covariance_results))]
+    output_devs_by_alpha = np.array(output_devs).transpose().tolist()
+
+    # Adapted from https://stackoverflow.com/a/50782438
+    avg_output_dev_by_alpha = [{key: sum(dev[key] for dev in output_devs_by_alpha[i]) / len(output_devs_by_alpha[i])
+                                for key in output_devs_by_alpha[i][0].keys()}
+                               for i in range(len(output_devs_by_alpha))]
+
+    return avg_output_dev_by_alpha
+
+
+def get_avg_internal_dev(covariance_results, test_name):
+    """
+    Get average relative deviation of internal features for each alpha in tests of all epochs.
+
+    Parameter
+    ---------
+    covariance_results : `list` of `dict`
+        The covariance test results for each epoch. Depending on the test name, the keys of results can be
+            - ['gammas', 'boost_dev_output', 'boost_dev_internal']
+            - ['thetas', 'rot_dev_output', 'rot_dev_internal']
+        We are interested in dicts with the key 'boost_dev_internal' or 'rot_dev_internal',
+        which stores the output relative deviation by epoch by a 3d-list of `dict` with "shape" (num_epochs, num_gammas, num_model_layers).
+    test_name : `str`
+        The name of the covariance test. Choices are 'rot' and 'boost'
+
+    Return
+    ------
+    avg_output_dev_by_alpha : `list` of `dict`
+        The average internal features relative deviation of all epochs for all irreps
+        for each alpha (gamma for boost and theta for rotation) in each layer.
+    """
+
+    if test_name.lower() in ['rotation', 'rotations']:
+        test_name = 'rot'
+
+    internal_devs = [covariance_results[i][f'{test_name.lower()}_dev_internal'] for i in range(len(covariance_results))]
+    internal_devs_by_alpha = np.array(internal_devs).transpose(1, 2, 0).tolist()
+
+    # Adapted from https://stackoverflow.com/a/50782438
+    # Get average
+    avg_internal_dev_by_alpha = [[{key: sum(e[key] for e in internal_devs_by_alpha[i][j]) / len(internal_devs_by_alpha[i][j])
+                                   for key in internal_devs_by_alpha[i][j][0].keys()}
+                                  for j in range(len(internal_devs_by_alpha[i]))]
+                                 for i in range(len(internal_devs_by_alpha))]
+
+    return avg_internal_dev_by_alpha
+
+
 def get_internal_dev_stats(dev_internal):
     """
     Get mean and max of relative deviation of all layers
