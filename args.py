@@ -13,8 +13,8 @@ def setup_argparse():
                         help='The path of the data.')
     parser.add_argument('--file-suffix', type=str, default='jets_30p_p4.pt', metavar='',
                         help="The suffix of the file. Default: 'jets_150p_cartesian.pt'")
-    parser.add_argument('--num-train', type=int, default=-1, metavar='',
-                        help='Number of samples to train on. Default: 528000')
+    parser.add_argument('--num-train', type=int, default=177332, metavar='',
+                        help='Number of samples to train on. Default: 106400')
     parser.add_argument('--num-val', type=int, default=-1, metavar='',
                         help='Number of samples to validate on. Default: -1.')
     parser.add_argument('--num-test', type=int, default=-1, metavar='',
