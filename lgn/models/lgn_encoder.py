@@ -251,7 +251,6 @@ class LGNEncoder(CGModule):
         edge_mask: `torch.Tensor`
             Edge mask used for batching data.
         """
-        data.to(self.device)
 
         node_ps = data['p4'].to(device=self.device, dtype=self.dtype) * self.scale
 
@@ -259,11 +258,11 @@ class LGNEncoder(CGModule):
 
         # Calculate node masks and edge masks
         if 'labels' in data:
-            node_mask = data['labels']
+            node_mask = data['labels'].to(device=self.device)
             node_mask = node_mask.to(torch.uint8)
         else:
             node_mask = data['p4'][..., 0] != 0
-            node_mask = node_mask.to(torch.uint8)
+            node_mask = node_mask.to(device=self.device, dtyle=torch.uint8)
         edge_mask = node_mask.unsqueeze(1) * node_mask.unsqueeze(2)
 
         scalars = torch.ones_like(node_ps[:, :, 0]).unsqueeze(-1)
