@@ -13,11 +13,11 @@ def setup_argparse():
                         help='The path of the data.')
     parser.add_argument('--file-suffix', type=str, default='jets_30p_p4.pt', metavar='',
                         help="The suffix of the file. Default: 'jets_150p_cartesian.pt'")
-    parser.add_argument('--num-train', type=int, default=2, metavar='',
+    parser.add_argument('--num-train', type=int, default=-1, metavar='',
                         help='Number of samples to train on. Default: 528000')
-    parser.add_argument('--num-val', type=int, default=2, metavar='',
+    parser.add_argument('--num-val', type=int, default=-1, metavar='',
                         help='Number of samples to validate on. Default: -1.')
-    parser.add_argument('--num-test', type=int, default=2, metavar='',
+    parser.add_argument('--num-test', type=int, default=-1, metavar='',
                         help='Number of samples to test eqvuivariance on. Default: -1.')
     parser.add_argument('--scale', type=float, default=1., metavar='',
                         help='The rescaling factor of the input 4-momenta. Default: 1.')
@@ -82,7 +82,7 @@ def setup_argparse():
                         "'p3': Find the norm of each component and find the norm square of the 3-momenta part of p4"
                         "Default: 'p3.'")
 
-    parser.add_argument('--save-dir', type=str, default='autoencoder_trained_models', metavar='',
+    parser.add_argument('--save-dir', type=str, default='autoencoder-trained-models', metavar='',
                         help='The directory to save trained models and figures.')
     parser.add_argument('--custom-suffix', type=str, default=None, metavar='',
                         help='Custom suffix of the saving directory.')
