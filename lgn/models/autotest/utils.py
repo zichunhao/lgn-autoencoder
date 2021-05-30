@@ -25,8 +25,9 @@ def get_dev(transform_input, transform_output, transform_input_nodes_all, transf
     dev_output = [get_node_dev(transform_input[i], transform_output[i])
                   for i in range(len(transform_output))]
     # Equivariance of all internal features
-    dev_internal = [[get_node_dev(transform_input_nodes_all[i][j], transform_output_nodes_all[i][j]) for j in range(
-        len(transform_output_nodes_all[i]))] for i in range(len(transform_output_nodes_all))]
+    dev_internal = [[get_node_dev(transform_input_nodes_all[i][j], transform_output_nodes_all[i][j])
+                     for j in range(len(transform_output_nodes_all[i]))]
+                    for i in range(len(transform_output_nodes_all))]
     return dev_output, dev_internal
 
 
@@ -238,6 +239,10 @@ def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
 
 
 def plot_all_dev(dev, save_path):
+    make_dir(save_path)
+    pkl_path = make_dir(osp.join(save_path, "pkl"))
+    torch.save(dev['perm_dev_output'], osp.join(pkl_path, "perm_dev_output.pkl"))
+
     for weight in [(0, 0), (1, 1)]:
         plot_output_dev(dev_output=dev['boost_dev_output'], alphas=dev['gammas'],
                         transform_type='boost', weight=weight, save_path=save_path)

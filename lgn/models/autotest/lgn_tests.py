@@ -6,7 +6,7 @@ from math import sqrt, cosh
 import logging
 
 from lgn.g_lib import rotations as rot
-from lgn.models.autotest.utils import get_output, get_dev, get_avg_output_dev, get_avg_internal_dev
+from lgn.models.autotest.utils import get_output, get_dev, get_avg_output_dev, get_avg_internal_dev, get_node_dev
 
 logging.basicConfig(level=logging.INFO)
 
@@ -64,6 +64,31 @@ def covariance_test(encoder, decoder, data, test_type, alpha_max=None, cg_dict=N
         raise ValueError(f"test_type must be one of 'boost' or 'rotation': {test_type}")
 
     return covariance_test_result
+
+
+def permutation_invariance_test(encoder, decoder, data, *ignore):
+    mask = data['labels']
+    batch_size, node_size = mask.shape
+    perm = 1*torch.arange(node_size).expand(batch_size, -1)
+
+    for idx in range(batch_size):
+        num_nodes = (mask[idx, :].long()).sum()
+        perm[idx, :num_nodes] = torch.randperm(num_nodes)
+
+    def apply_perm(mat):
+        return torch.stack([mat[idx, p] for (idx, p) in enumerate(perm)])
+
+    assert((mask == apply_perm(mask)).all())
+
+    data_noperm = data.copy()
+    data_perm = {key: apply_perm(val) if key in ['p4', 'scalars'] else val for key, val in data.items()}
+
+    outputs_perm, internal_perm = get_output(encoder, decoder, data_perm, covariance_test=True)
+    outputs_noperm, internal = get_output(encoder, decoder, data_noperm, covariance_test=True)
+
+    output_dev = get_node_dev(outputs_perm, outputs_noperm)
+
+    return output_dev
 
 
 def boost_equivariance(encoder, decoder, data, alpha_range, device, dtype, cg_dict):
@@ -131,12 +156,13 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_m
 
     t0 = time.time()
 
-    logging.info("Equivariance test begins...")
+    logging.info("Covariance test begins...")
     encoder.eval()
     decoder.eval()
 
     boost_test_all_epochs = []
     rot_test_all_epochs = []
+    perm_test_all_epochs = []
 
     for data in dataloader:
         boost_results = covariance_test(
@@ -147,8 +173,11 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_m
             encoder, decoder, data, test_type='rotation', cg_dict=cg_dict, alpha_max=theta_max)
         rot_test_all_epochs.append(rot_results)
 
+        perm_result = permutation_invariance_test(encoder, decoder, data)
+        perm_test_all_epochs.append(perm_result)
+
     dt = time.time() - t0
-    logging.info(f"Equivariance test completed! Time it took testing equivariance of epoch {epoch+1} is {round(dt/60, 2)} min")
+    logging.info(f"Covariance test completed! Time it took testing equivariance of epoch {epoch+1} is {round(dt/60, 2)} min")
 
     lgn_test_results = dict()
 
@@ -159,5 +188,11 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_m
     lgn_test_results['thetas'] = rot_test_all_epochs[0]['thetas']
     lgn_test_results['rot_dev_output'] = get_avg_output_dev(rot_test_all_epochs, 'rotation')
     lgn_test_results['rot_dev_internal'] = get_avg_internal_dev(rot_test_all_epochs, 'rotation')
+
+    perm_test_avg = {key: sum(dev[key] for dev in perm_test_all_epochs) / len(perm_test_all_epochs)
+                     for key in perm_test_all_epochs[0].keys()}
+    lgn_test_results['perm_dev_output'] = perm_test_avg
+
+    logging.info(f"Permutation invaraince test result: {lgn_test_results['perm_dev_output']}")
 
     return lgn_test_results
