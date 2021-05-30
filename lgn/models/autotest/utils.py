@@ -6,7 +6,7 @@ import os.path as osp
 import logging
 
 
-def get_output(encoder, decoder, data, covariance_test=False):
+def get_output(encoder, decoder, data, covariance_test=True):
     """
     Get output and all internal features from the autoencoder.
     """
