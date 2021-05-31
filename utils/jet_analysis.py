@@ -227,7 +227,7 @@ def get_p_cartesian(jet_data, cutoff=1e-6):
 
 
 def get_magnitude(data):
-    return np.sqrt(data[:, 1] ** 2 + data[:, 2] ** 2 + data[:, 3] ** 3)
+    return np.sqrt(data[:, 1] ** 2 + data[:, 2] ** 2 + data[:, 3] ** 2)
 
 
 def get_p_polar(jet_data, cutoff=1e-6):
