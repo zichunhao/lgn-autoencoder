@@ -96,10 +96,10 @@ def setup_argparse():
                         help='Epoch number of the trained model to load.')
 
     ################################### Model evaluation options ###################################
-    parser.add_argument('--polar-max', nargs="+", type=float, default=[0.15, np.pi/4, np.pi/4], metavar='',
-                        help='List of maximum values of (pt, eta, phi) in the histogram. Default: [0.15, np.pi/4, np.pi/4].')
-    parser.add_argument('--cartesian-max', nargs="+", type=float, default=[0.02, 0.02, 0.02], metavar='',
-                        help='List of maximum values of (px, py, pz) in the histogram. Default: [0.02, 0.02, 0.02].')
+    parser.add_argument('--polar-max', nargs="+", type=float, default=[200, np.pi, np.pi], metavar='',
+                        help='List of maximum values of (pt, eta, phi) in the histogram. Default: [200, np.pi, np.pi].')
+    parser.add_argument('--cartesian-max', nargs="+", type=float, default=[100, 100, 100], metavar='',
+                        help='List of maximum values of (px, py, pz) in the histogram. Default: [100, 100, 100].')
     parser.add_argument('--num_bins', type=int, default=201, metavar='',
                         help='Number of bins in the histogram.')
     parser.add_argument('--cutoff', type=float, default=1e-7, metavar='',
