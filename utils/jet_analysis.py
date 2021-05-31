@@ -94,6 +94,10 @@ def plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=[0.02, 0.02, 0
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
 
+    # Common legend (Adapted from https://stackoverflow.com/a/39170018)
+    fig.subplots_adjust(top=0.9, left=0.1, right=0.9, bottom=0.12)
+    axs.flatten()[-2].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3)
+
     fig.tight_layout()
 
     jet_name = get_jet_name(args)
@@ -185,6 +189,10 @@ def plot_p_polar(args, real_data, gen_data, save_dir, max_val=[0.15, np.pi, np.p
         plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
+
+    # Common legend (Adapted from https://stackoverflow.com/a/39170018)
+    fig.subplots_adjust(top=0.9, left=0.1, right=0.9, bottom=0.12)
+    axs.flatten()[-2].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3)
 
     fig.tight_layout()
 
