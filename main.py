@@ -1,22 +1,19 @@
+from lgn.models.autotest.utils import plot_all_dev
+from lgn.models.autotest.lgn_tests import lgn_tests
+from lgn.models.lgn_decoder import LGNDecoder
+from lgn.models.lgn_encoder import LGNEncoder
+from utils.train import train_loop
+from utils.utils import create_model_folder
+from utils.make_data import initialize_data
+from args import setup_argparse
+import torch
+import warnings
 import os.path as osp
 import sys
 sys.path.insert(1, 'lgn/')
-import warnings
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
-import torch
-
-from args import setup_argparse
-from utils.make_data import initialize_data
-from utils.utils import create_model_folder
-from utils.train import train_loop
-
-from lgn.models.lgn_encoder import LGNEncoder
-from lgn.models.lgn_decoder import LGNDecoder
-
-from lgn.models.autotest.lgn_tests import lgn_tests
-from lgn.models.autotest.utils import plot_all_dev
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -44,7 +41,7 @@ if __name__ == "__main__":
                          weight_init=args.weight_init, level_gain=args.level_gain,
                          num_basis_fn=args.num_basis_fn, activation=args.activation, scale=args.scale,
                          mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
-                         device=args.device, dtype=args.dtype)
+                         device=args.device, dtype=args.dtype).to(args.device)
     decoder = LGNDecoder(tau_latent_scalars=args.tau_latent_scalars,
                          tau_latent_vectors=args.tau_latent_vectors,
                          num_output_particles=args.num_jet_particles,
@@ -55,7 +52,7 @@ if __name__ == "__main__":
                          weight_init=args.weight_init, level_gain=args.level_gain,
                          num_basis_fn=args.num_basis_fn, activation=args.activation,
                          mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
-                         device=args.device, dtype=args.dtype)
+                         device=args.device, dtype=args.dtype).to(args.device)
 
     optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.lr)
     optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.lr)
