@@ -175,7 +175,7 @@ def plot_internal_dev(dev_internal, alphas, transform_type, weight, save_path, s
         plt.plot(alphas, dev_internal_max[weight], label="layers max")
 
     plt.ylabel('relative deviation')
-    plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
+    plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
 
     if show_all:
         plt.legend(bbox_to_anchor=(1.04, 0.85), loc="upper left")
@@ -231,7 +231,7 @@ def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
         plt.xlabel(r'Rotation angle $\theta$ (rad)')
 
     plt.ylabel('Relative deviation')
-    plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
+    plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
 
     plt.savefig(osp.join(
         save_path, f"{transform_type.lower()}_equivariance_test_generated_{irrep_str}.pdf"), bbox_inches='tight', transparent=True)
