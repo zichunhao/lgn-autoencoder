@@ -89,7 +89,7 @@ def plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=[0.02, 0.02, 0
             ax.hist(p_real.flatten(), bins=range, alpha=0.6, label='target', density=density)
         ax.set_xlabel(f'Particle {name}')
         ax.set_ylabel('Number of particles')
-        plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
+        ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
 
@@ -184,7 +184,7 @@ def plot_p_polar(args, real_data, gen_data, save_dir, max_val=[0.15, np.pi, np.p
             ax.hist(p_real.flatten(), bins=bins, alpha=0.6, label='target', density=density)
         ax.set_xlabel(f'Particle {name}')
         ax.set_ylabel('Number of particles')
-        plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
+        ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
 
