@@ -41,7 +41,7 @@ if __name__ == "__main__":
                          weight_init=args.weight_init, level_gain=args.level_gain,
                          num_basis_fn=args.num_basis_fn, activation=args.activation, scale=args.scale,
                          mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
-                         device=args.device, dtype=args.dtype).to(device=args.device)
+                         device=args.device, dtype=args.dtype)
     decoder = LGNDecoder(tau_latent_scalars=args.tau_latent_scalars,
                          tau_latent_vectors=args.tau_latent_vectors,
                          num_output_particles=args.num_jet_particles,
@@ -52,7 +52,7 @@ if __name__ == "__main__":
                          weight_init=args.weight_init, level_gain=args.level_gain,
                          num_basis_fn=args.num_basis_fn, activation=args.activation,
                          mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
-                         device=args.device, dtype=args.dtype).to(device=args.device)
+                         device=args.device, dtype=args.dtype)
 
     optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.lr)
     optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.lr)
