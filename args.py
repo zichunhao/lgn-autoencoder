@@ -96,7 +96,7 @@ def setup_argparse():
                         help='Epoch number of the trained model to load.')
 
     ################################### Model evaluation options ###################################
-    parser.add_argument('--polar-max', nargs="+", type=float, default=[200, np.pi, 2], metavar='',
+    parser.add_argument('--polar-max', nargs="+", type=float, default=[200, 2, np.pi], metavar='',
                         help='List of maximum values of (pt, eta, phi) in the histogram. Default: [200, np.pi, 2].')
     parser.add_argument('--cartesian-max', nargs="+", type=float, default=[100, 100, 100], metavar='',
                         help='List of maximum values of (px, py, pz) in the histogram. Default: [100, 100, 100].')
