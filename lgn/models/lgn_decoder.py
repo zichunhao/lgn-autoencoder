@@ -237,12 +237,12 @@ class LGNDecoder(CGModule):
     def _prepare_input(self, latent_features):
         node_features = self.latent_to_graph(latent_features)
         node_features = {weight: value.squeeze(-3) for weight, value in node_features.items()}
-        node_ps = node_features[(1, 1)]
-        node_scalars = node_features[(0, 0)]
+        node_ps = node_features[(1, 1)].to(device=self.device)
+        node_scalars = node_features[(0, 0)].to(device=self.device)
 
         batch_size = node_ps.shape[1]
-        node_mask = torch.zeros(2, batch_size, self.num_output_particles)
-        edge_mask = torch.zeros(2, batch_size, self.num_output_particles, self.num_output_particles)
+        node_mask = torch.zeros(2, batch_size, self.num_output_particles).to(device=self.device)
+        edge_mask = torch.zeros(2, batch_size, self.num_output_particles, self.num_output_particles).to(device=self.device)
 
-        node_ps = p_cplx_to_rep(node_ps)[(1, 1)]  # Convert to canonical basis
+        node_ps = p_cplx_to_rep(node_ps)[(1, 1)].to(device=self.device)  # Convert to canonical basis
         return node_ps, node_scalars, node_mask, edge_mask
