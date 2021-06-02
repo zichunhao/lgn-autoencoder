@@ -35,8 +35,8 @@ def covariance_test(encoder, decoder, data, test_type, alpha_max=None, cg_dict=N
 
     device = encoder.device
     dtype = encoder.dtype
-    # data['p4'] = data['p4'].to(device, dtype)
-    data['p4'] = torch.rand_like(data['p4'])
+    data['p4'] = data['p4'].to(device, dtype)
+    # data['p4'] = torch.rand_like(data['p4'])
 
     covariance_test_result = dict()
 
@@ -44,8 +44,7 @@ def covariance_test(encoder, decoder, data, test_type, alpha_max=None, cg_dict=N
         if alpha_max is None:
             alpha_max = 10.
         alpha_range = np.arange(0, alpha_max+.01, step=alpha_max/25.)
-        gammas, boost_dev_output, boost_dev_internal = boost_equivariance(
-            encoder, decoder, data, alpha_range, device, dtype, cg_dict)
+        gammas, boost_dev_output, boost_dev_internal = boost_equivariance(encoder, decoder, data, alpha_range, device, dtype, cg_dict)
         covariance_test_result['gammas'] = gammas
         covariance_test_result['boost_dev_output'] = boost_dev_output
         covariance_test_result['boost_dev_internal'] = boost_dev_internal
@@ -54,8 +53,7 @@ def covariance_test(encoder, decoder, data, test_type, alpha_max=None, cg_dict=N
         if alpha_max is None:
             alpha_max = 2 * np.pi
         theta_range = np.arange(0, alpha_max+.01, step=alpha_max/25.)
-        theta_range, rot_dev_output, rot_dev_internal = rot_equivariance(
-            encoder, decoder, data, theta_range, device, dtype, cg_dict)
+        theta_range, rot_dev_output, rot_dev_internal = rot_equivariance(encoder, decoder, data, theta_range, device, dtype, cg_dict)
         covariance_test_result['thetas'] = theta_range
         covariance_test_result['rot_dev_output'] = rot_dev_output
         covariance_test_result['rot_dev_internal'] = rot_dev_internal
