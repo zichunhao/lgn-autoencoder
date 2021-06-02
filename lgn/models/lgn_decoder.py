@@ -144,6 +144,8 @@ class LGNDecoder(CGModule):
         self.mix_to_output = MixReps(
             self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
 
+        logging.info(f'Decoder initialized. Number of parameters: {sum(p.nelement() for p in self.parameters())}')
+
     def forward(self, latent_features, covariance_test=False, nodes_all=None):
         '''
         The forward pass of the LGN GNN.
