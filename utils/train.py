@@ -1,3 +1,4 @@
+import logging
 from utils.jet_analysis import plot_p
 from utils.utils import make_dir, save_data, plot_eval_results
 from utils.chamfer_loss import ChamferLoss
@@ -125,8 +126,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
         train_avg_losses.append(train_avg_loss)
         valid_avg_losses.append(train_avg_loss)
 
-        print(f'epoch={epoch+1}/{args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch}, '
-              f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, dt={dt}')
+        logging.info(f'epoch={epoch+1}/{args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch}, train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, dt={dt}')
 
         if (epoch > 0) and ((epoch + 1) % 10 == 0):
             plot_eval_results(args, data=(train_avg_losses, valid_avg_losses), data_name=f"losses to up to {epoch+1}",
