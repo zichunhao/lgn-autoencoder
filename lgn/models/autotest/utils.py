@@ -109,8 +109,10 @@ def get_internal_dev_stats(dev_internal):
     Get mean and max of relative deviation of all layers
     as well as the deviation in each layer as gamma increases
     """
-    dev_layers = {key: np.array([[dev_internal[i][j][key] for j in range(len(dev_internal[i]))] for i in range(
-        len(dev_internal))]).transpose().tolist() for key in [(0, 0), (1, 1)]}
+    dev_layers = {key: np.array([[dev_internal[i][j][key]
+                                  for j in range(len(dev_internal[i]))]
+                                 for i in range(len(dev_internal))]).transpose().tolist()
+                  for key in [(0, 0), (1, 1)]}
 
     dev_internal_mean = []
     dev_internal_max = []
@@ -191,11 +193,11 @@ def plot_internal_dev(dev_internal, alphas, transform_type, weight, save_path, s
 
     plt.tight_layout()
     if show_all:
-        plt.savefig(osp.join(
-            save_path, f"{transform_type.lower()}_equivariance_test_internal_{irrep_str}_all.pdf"), bbox_inches='tight', transparent=True)
+        plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_internal_{irrep_str}_all.pdf"),
+                    bbox_inches='tight', transparent=True)
     else:
-        plt.savefig(osp.join(
-            save_path, f"{transform_type.lower()}_equivariance_test_internal_{irrep_str}.pdf"), bbox_inches='tight', transparent=True)
+        plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_internal_{irrep_str}.pdf"),
+                    bbox_inches='tight', transparent=True)
     plt.close()
 
 
@@ -233,8 +235,8 @@ def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
     plt.ylabel('Relative deviation')
     plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
 
-    plt.savefig(osp.join(
-        save_path, f"{transform_type.lower()}_equivariance_test_generated_{irrep_str}.pdf"), bbox_inches='tight', transparent=True)
+    plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_generated_{irrep_str}.pdf"),
+                bbox_inches='tight', transparent=True)
     plt.close()
 
 
@@ -249,10 +251,12 @@ def plot_all_dev(dev, save_path):
         plot_output_dev(dev_output=dev['rot_dev_output'], alphas=dev['thetas'],
                         transform_type='rotation', weight=weight, save_path=save_path)
         for show_option in [True, False]:
-            plot_internal_dev(dev_internal=dev['boost_dev_internal'].copy(
-            ), alphas=dev['gammas'], transform_type='boost', weight=weight, save_path=save_path, show_all=show_option)
-            plot_internal_dev(dev_internal=dev['rot_dev_internal'].copy(
-            ), alphas=dev['thetas'], transform_type='rotation', weight=weight, save_path=save_path, show_all=show_option)
+            plot_internal_dev(dev_internal=dev['boost_dev_internal'].copy(),
+                              alphas=dev['gammas'], transform_type='boost', weight=weight,
+                              save_path=save_path, show_all=show_option)
+            plot_internal_dev(dev_internal=dev['rot_dev_internal'].copy(),
+                              alphas=dev['thetas'], transform_type='rotation', weight=weight,
+                              save_path=save_path, show_all=show_option)
 
 
 def make_dir(path):
