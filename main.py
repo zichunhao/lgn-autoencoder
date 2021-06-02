@@ -1,3 +1,4 @@
+import logging
 from lgn.models.autotest.utils import plot_all_dev
 from lgn.models.autotest.lgn_tests import lgn_tests
 from lgn.models.lgn_decoder import LGNDecoder
@@ -18,6 +19,9 @@ if not sys.warnoptions:
 torch.autograd.set_detect_anomaly(True)
 
 if __name__ == "__main__":
+
+    logging.basicConfig(level=logging.INFO)
+
     # torch.autograd.set_detect_anomaly(True)
     args = setup_argparse()
 

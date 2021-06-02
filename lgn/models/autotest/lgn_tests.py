@@ -8,8 +8,6 @@ import logging
 from lgn.g_lib import rotations as rot
 from lgn.models.autotest.utils import get_output, get_dev, get_avg_output_dev, get_avg_internal_dev, get_node_dev
 
-logging.basicConfig(level=logging.INFO)
-
 
 def _gen_rot(angles, maxdim, device=torch.device('cpu'), dtype=torch.float64, cg_dict=None):
 
