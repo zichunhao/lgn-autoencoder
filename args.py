@@ -88,7 +88,7 @@ def setup_argparse():
                         help='Custom suffix of the saving directory.')
 
     # Loading existing models
-    parser.add_argument('--load-to-train', type=get_bool, default=False, metavar='',
+    parser.add_argument('--load-to-train', default=False, action='store_true', metavar='',
                         help='Whether to load existing (trained) model for training.')
     parser.add_argument('--load-path', type=str, default=None, metavar='',
                         help='Path of the trained model to load.')
