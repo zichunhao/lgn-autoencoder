@@ -1,15 +1,17 @@
-import logging
-from lgn.models.autotest.utils import plot_all_dev
-from lgn.models.autotest.lgn_tests import lgn_tests
-from lgn.models.lgn_decoder import LGNDecoder
-from lgn.models.lgn_encoder import LGNEncoder
-from utils.train import train_loop
-from utils.utils import create_model_folder
-from utils.make_data import initialize_data
 from args import setup_argparse
+from utils.make_data import initialize_data
+from utils.utils import create_model_folder
+from utils.train import train_loop
+from lgn.models.lgn_encoder import LGNEncoder
+from lgn.models.lgn_decoder import LGNDecoder
+from lgn.models.autotest.lgn_tests import lgn_tests
+from lgn.models.autotest.utils import plot_all_dev
+
 import torch
 import warnings
 import os.path as osp
+
+import logging
 import sys
 sys.path.insert(1, 'lgn/')
 if not sys.warnoptions:
