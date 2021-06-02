@@ -38,9 +38,9 @@ def setup_argparse():
                         help='Multiplicity of 4-vectors per particle the latent space.')
 
     parser.add_argument('--encoder-num-channels', nargs="+", type=int, default=[2, 3, 2, 1], metavar='',
-                        help='Number of channels (or multiplicity or all irreps) in each CG layer in the encoder.')
+                        help='Number of channels (multiplicity of all irreps) in each CG layer in the encoder.')
     parser.add_argument('--decoder-num-channels', nargs="+", type=int, default=[2, 3, 2, 1], metavar='',
-                        help='Number of channels (or multiplicity or all irreps) in each CG layer in the decoder.')
+                        help='Number of channels (multiplicity of all irreps) in each CG layer in the decoder.')
 
     parser.add_argument('--maxdim', nargs="+", type=int, default=[2], metavar='',
                         help='Maximum weights in the model. Each element in maxdim will be capped to 2 because then tensor product'
