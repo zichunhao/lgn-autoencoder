@@ -63,15 +63,15 @@ if __name__ == "__main__":
 
     # Both on gpu
     if (next(encoder.parameters()).is_cuda and next(encoder.parameters()).is_cuda):
-        print('The models are initialized on GPU...')
+        logging.info('The models are initialized on GPU...')
     # One on cpu and the other on gpu
     elif (next(encoder.parameters()).is_cuda or next(encoder.parameters()).is_cuda):
         raise AssertionError("The encoder and decoder are not trained on the same device!")
     # Both on cpu
     else:
-        print('The models are initialized on CPU...')
+        logging.info('The models are initialized on CPU...')
 
-    print(f'Training over {args.num_epochs} epochs...')
+    logging.info(f'Training over {args.num_epochs} epochs...')
 
     '''Training'''
     # Load existing model
@@ -92,4 +92,4 @@ if __name__ == "__main__":
                         theta_max=args.theta_max, epoch=args.num_epochs, cg_dict=encoder.cg_dict)
         plot_all_dev(dev, osp.join(outpath, 'model_evaluations/equivariance_tests'))
 
-    print("Training completed!")
+    logging.info("Training completed!")
