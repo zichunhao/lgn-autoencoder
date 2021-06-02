@@ -223,8 +223,7 @@ class LGNEncoder(CGModule):
 
         latent_features_canonical = GVec({weight: val.clone()
                                           for weight, val in latent_features.items()})
-        latent_features[(1, 1)] = rep_to_p(latent_features[(1, 1)]
-                                           )  # Convert to Cartesian coordinates
+        latent_features[(1, 1)] = rep_to_p(latent_features[(1, 1)])  # Convert to Cartesian coordinates
 
         if not covariance_test:
             return latent_features
@@ -271,7 +270,6 @@ class LGNEncoder(CGModule):
         scalars = normsq4(node_ps).abs().sqrt().unsqueeze(-1)
 
         if 'scalars' in data.keys():
-            scalars = torch.cat([scalars, data['scalars'].to(
-                device=self.device, dtype=self.dtype)], dim=-1)
+            scalars = torch.cat([scalars, data['scalars'].to(device=self.device, dtype=self.dtype)], dim=-1)
 
         return scalars, node_ps, node_mask, edge_mask
