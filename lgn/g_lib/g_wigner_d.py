@@ -80,10 +80,10 @@ class GWignerD(GTensor):
         rdims = {key: (shape[self.rdim1], shape[self.rdim2]) for key, shape in shapes.items()}
 
         if not all(rdims[key][0] == (key[0]+1)*(key[1]+1) and rdims[key][1] == (key[0]+1)*(key[1]+1) for key in data.keys()):
-            raise ValueError('Irrep dimension (dim={}) of each tensor should have shape 2*l+1! Found: {}'.format(self.rdim, rdims))
+            raise ValueError(f'Irrep dimension (dim={self.rdim}) of each tensor should have shape 2*l+1! Found: {rdims}')
 
         if not all(zdim == 2 for zdim in zdims.values()):
-            raise ValueError('Complex dimension (dim={}) of each tensor should have length 2! Found: {}'.format(self.zdim, zdims))
+            raise ValueError(f'Complex dimension (dim={self.zdim}) of each tensor should have length 2! Found: {zdims}')
 
     @staticmethod
     def _bin_op_type_check(type1, type2):

@@ -58,8 +58,7 @@ class GVec(GTensor):
         zdims = {key: shape[self.zdim] for key, shape in shapes.items()}
 
         if not all(rdim == (key[0]+1)*(key[1]+1) for key, rdim in rdims.items()):
-            raise ValueError(
-                'Irrep dimension (dim={}) of each tensor should have shape (k+1)*(n+1)! Found: {}'.format(self.rdim, rdims))
+            raise ValueError(f'Irrep dimension (dim={self.rdim}) of each tensor should have shape (k+1)*(n+1)! Found: {rdims}')
 
         if not all(zdim == 2 for zdim in zdims.values()):
             raise ValueError(f'Complex dimension (dim={self.zdim}) of each tensor should have length 2! Found: {zdims}')

@@ -100,13 +100,18 @@ class CGDict():
 
         # Otherwise, update the CG coefficients.
         cg_dict_new = _gen_cg_dict(new_maxdim, existing_keys=self._cg_dict.keys())
-        cg_dict_new = {key: {irrep: cg_tens.reshape(-1, cg_tens.shape[-1]) for irrep, cg_tens in val.items()} for key, val in cg_dict_new.items()}
+        cg_dict_new = {key: {irrep: cg_tens.reshape(-1, cg_tens.shape[-1])
+                             for irrep, cg_tens in val.items()}
+                       for key, val in cg_dict_new.items()}
         if self.transpose:
-            cg_dict_new = {key: {irrep: cg_mat.permute(1, 0) for irrep, cg_mat in val.items()} for key, val in cg_dict_new.items()}
+            cg_dict_new = {key: {irrep: cg_mat.permute(1, 0)
+                                 for irrep, cg_mat in val.items()}
+                           for key, val in cg_dict_new.items()}
 
         # Ensure elements of new CG dict are on correct device.
         cg_dict_new = {key: {irrep: cg_mat.to(dtype=self.dtype, device=self.device)
-                             for irrep, cg_mat in val.items()} for key, val in cg_dict_new.items()}
+                             for irrep, cg_mat in val.items()}
+                       for key, val in cg_dict_new.items()}
 
         # Now update the CG dict, and also update maxdim
         self._cg_dict.update(cg_dict_new)
@@ -136,8 +141,9 @@ class CGDict():
             self._cg_dict = {key: val.to(dtype=dtype) for key, val in self._cg_dict.items()}
             self.dtype = dtype
         elif dtype is not None and device is not None:
-            self._cg_dict = {key: {irrep: cg_mat.to(
-                device=device, dtype=dtype) for irrep, cg_mat in val.items()} for key, val in self._cg_dict.items()}
+            self._cg_dict = {key: {irrep: cg_mat.to(device=device, dtype=dtype)
+                                   for irrep, cg_mat in val.items()}
+                             for key, val in self._cg_dict.items()}
             self.device, self.dtype = device, dtype
         return self
 
@@ -191,8 +197,7 @@ def _gen_cg_dict(maxdim, existing_keys=None):
         nmin, nmax = abs(n1 - n2), n1 + n2
         # dim1, dim2 = (k1 + 1) * (n1 + 1), (k2 + 1) * (n2 + 1)
         for k, n in itertools.product(range(kmin, kmax + 1, 2), range(nmin, nmax + 1, 2)):
-            cg_dict[((k1, n1), (k2, n2))][(k, n)] = torch.tensor(
-                clebschmat((k1, n1), (k2, n2), (k, n), fastcgmat=fastcgmat))
+            cg_dict[((k1, n1), (k2, n2))][(k, n)] = torch.tensor(clebschmat((k1, n1), (k2, n2), (k, n), fastcgmat=fastcgmat))
 
     return cg_dict
 
@@ -270,7 +275,11 @@ def clebsch(idx1, idx2, idx):
             fastcg((k1 / 2, mm1), (n1 / 2, m1 - mm1), (j1, m1)) *
             fastcg((k2 / 2, mm2), (n2 / 2, m2 - mm2), (j2, m2))
             for mm1 in (x / 2 for x in set(range(-k1, k1 + 1, 2)).intersection(set(range(int(2 * m1 - n1), int(2 * m1 + n1 + 1), 2))))
-            for mm2 in (x / 2 for x in set(range(-k2, k2 + 1, 2)).intersection(set(range(int(2 * m2 - n2), int(2 * m2 + n2 + 1), 2))).intersection(set(range(int(2 * m - n - 2 * mm1), int(2 * m + n - 2 * mm1 + 1), 2))).intersection(set(range(int(- k - 2 * mm1), int(k - 2 * mm1 + 1), 2)))))
+            for mm2 in (x / 2 for x in set(range(-k2, k2 + 1, 2)).intersection(
+                set(range(int(2 * m2 - n2), int(2 * m2 + n2 + 1), 2))).intersection(
+                    set(range(int(2 * m - n - 2 * mm1), int(2 * m + n - 2 * mm1 + 1), 2))).intersection(
+                        set(range(int(- k - 2 * mm1), int(k - 2 * mm1 + 1), 2))))
+            )
     return H
 
 

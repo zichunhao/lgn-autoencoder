@@ -64,25 +64,25 @@ class LGNNodeLevel(nn.Module):
                                   weight_init=weight_init, gain=level_gain, device=device, dtype=dtype)
         self.tau_out = self.cat_mix.taus_out
 
-    """
-    The forward pass for message aggregation.
-
-    Parameters
-    ----------
-    node_feature :  GVec
-        Node features.
-    edge_feature: GVec
-        Edge features.
-    torch.Tensor with data type torch.byte
-        Batch mask for node representations. Shape is (N_batch, N_node).
-
-    Return
-    ----------
-    node_feature_out: GVec
-        The updated node features.
-    """
-
     def forward(self, node_feature, edge_feature, mask):
+        """
+        The forward pass for message aggregation.
+
+        Parameters
+        ----------
+        node_feature :  GVec
+            Node features.
+        edge_feature: GVec
+            Edge features.
+        torch.Tensor with data type torch.byte
+            Batch mask for node representations. Shape is (N_batch, N_node).
+
+        Return
+        ----------
+        node_feature_out: GVec
+            The updated node features.
+        """
+
         # Mutual interactions
         reps_ag = self.cg_aggregate(node_feature, edge_feature)
         # Self-interactions
@@ -189,16 +189,16 @@ class CGMLP(nn.Module):
         node_feature_out[(0, 0)] = x.view(s[1:]+(2,)).permute(3, 0, 1, 2).unsqueeze(-1)
         return node_feature_out
 
-    """
-    The scaling function for weights in the standard MLP.
-
-    Parameter
-    ----------
-    scale : `float`
-        Scaling parameter
-    """
-
     def scale_weights(self, scale):
+        """
+        The scaling function for weights in the standard MLP.
+
+        Parameter
+        ----------
+        scale : `float`
+            Scaling parameter
+        """
+
         self.linear[-1].weight *= scale
         if self.linear[-1].bias is not None:
             self.linear[-1].bias *= scale

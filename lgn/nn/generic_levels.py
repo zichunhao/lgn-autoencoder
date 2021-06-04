@@ -94,16 +94,16 @@ class BasicMLP(nn.Module):
 
         return x
 
-    """
-    The scaling function for weights in the standard MLP.
-
-    Parameter
-    ----------
-    scale : float or int
-        Scaling parameter.
-    """
-
     def scale_weights(self, scale):
+        """
+        The scaling function for weights in the standard MLP.
+
+        Parameter
+        ----------
+        scale : float or int
+            Scaling parameter.
+        """
+
         self.linear[-1].weight *= scale
         if self.linear[-1].bias is not None:
             self.linear[-1].bias *= scale

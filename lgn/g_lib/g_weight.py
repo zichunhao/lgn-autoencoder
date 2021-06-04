@@ -64,8 +64,7 @@ class GWeight(GTensor):
         shape = shapes.pop()
 
         if not shape[self.zdim] == 2:
-            raise ValueError('Complex dimension (dim={}) of each tensor should have length 2! Found: {}'.format(
-                self.zdim, shape[self.zdim]))
+            raise ValueError(f'Complex dimension (dim={self.zdim}) of each tensor should have length 2! Found: {shape[self.zdim]}')
 
     def as_parameter(self):
         """

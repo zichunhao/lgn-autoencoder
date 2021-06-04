@@ -1,5 +1,5 @@
 import torch
-from itertools import zip_longest
+# from itertools import zip_longest
 
 
 class GTau():
@@ -12,12 +12,13 @@ class GTau():
     tau : `list` of `int`, `GTau`, or class with `.tau` property.
         Multiplicity of an G vector.
     """
+
     def __init__(self, tau):
         if type(tau) is dict:
             if not all(type(t) == int for t in tau.values()):
-                raise ValueError('Input must be a dict of int values! {}, values:{}'.format(type(tau), [type(t) for t in tau.values()]))
+                raise ValueError(f'Input must be a dict of int values! {type(tau)}, values:{[type(t) for t in tau.values()]}')
             if not all(type(t) == tuple for t in tau.keys()):
-                raise ValueError('Input must be a dict with tuple keys! {}, keys:{}'.format(type(tau), [type(t) for t in tau.keys()]))
+                raise ValueError(f'Input must be a dict with tuple keys! {type(tau)}, keys:{[type(t) for t in tau.keys()]}')
         else:
             try:
                 tau = tau.tau
@@ -93,7 +94,7 @@ class GTau():
         tau_out = {}
         for tau in tau_list:
             for key, val in tau.items():
-                if val>0:
+                if val > 0:
                     tau_out.setdefault(key, 0)
                     tau_out[key] += val
         return GTau(tau_out)

@@ -238,7 +238,7 @@ class GTensor(ABC):
     __datar__ = __str__
 
     @classmethod
-    def requires_grad(cls):
+    def requires_grad(self, cls):
         return cls([t.requires_grad() for t in self._data.values()])
 
     def requires_grad_(self, requires_grad=True):

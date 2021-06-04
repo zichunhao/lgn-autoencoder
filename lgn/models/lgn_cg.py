@@ -6,7 +6,6 @@ from lgn.cg_lib import CGModule
 
 
 class LGNCG(CGModule):
-
     """
     The initializer of the LGN CG layers.
 

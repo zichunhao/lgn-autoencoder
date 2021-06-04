@@ -20,11 +20,9 @@ GWignerD = g_wigner_d.GWignerD
 def _check_keys(val1, val2):
     if type(val1) in [list, tuple] or type(val2) in [list, tuple]:
         if len(val1) != len(val2):
-            raise ValueError('Need as many scalars as irreps in the GTensor '
-                             '({} {})!'.format(len(val1), len(val2)))
+            raise ValueError(f'Need as many scalars as irreps in the GTensor ({len(val1)} {len(val2)})!')
     elif val1.keys() != val2.keys():
-        raise ValueError('Two GTensor subclasses contain different irreps '
-                         '({} {})!'.format(val1.keys(), val2.keys()))
+        raise ValueError(f'Two GTensor subclasses contain different irreps ({val1.keys()} {val2.keys()})!')
 
 
 def _check_mult_compatible(val1, val2):

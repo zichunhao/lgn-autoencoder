@@ -60,7 +60,8 @@ def mul_zscalar_zirrep(scalar, part, rdim=-1, zdim=0):
     scalar_r, scalar_i = scalar.unsqueeze(rdim).unbind(zdim)
     part_r, part_i = part.unbind(zdim)
 
-    return torch.stack([part_r * scalar_r - part_i * scalar_i, part_r * scalar_i + part_i * scalar_r], dim=zdim)
+    return torch.stack([part_r * scalar_r - part_i * scalar_i,
+                        part_r * scalar_i + part_i * scalar_r], dim=zdim)
 
 
 def mul_zscalar_zscalar(scalar1, scalar2, zdim=0):

@@ -68,11 +68,11 @@ class RadPolyTrig(nn.Module):
         self.mix = mix
         if (mix == 'cplx') or (mix is True):  # default
             if self.input_basis == 'canonical':  # Deal with the case of complex input from the latent space
-                self.linear = nn.ModuleList([nn.Linear(
-                    2 * self.num_basis_fn, self.num_channels).to(device=device, dtype=dtype) for _ in range(max_zf + 1)])
+                self.linear = nn.ModuleList([nn.Linear(2 * self.num_basis_fn, self.num_channels).to(device=device, dtype=dtype)
+                                             for _ in range(max_zf + 1)])
             else:
-                self.linear = nn.ModuleList([nn.Linear(
-                    2 * self.num_basis_fn, 2 * self.num_channels).to(device=device, dtype=dtype) for _ in range(max_zf + 1)])
+                self.linear = nn.ModuleList([nn.Linear(2 * self.num_basis_fn, 2 * self.num_channels).to(device=device, dtype=dtype)
+                                             for _ in range(max_zf + 1)])
             self.radial_types = (num_channels,) * (max_zf)
         elif mix == 'real':
             self.linear = nn.ModuleList(
@@ -114,8 +114,7 @@ class RadPolyTrig(nn.Module):
         norms = norms.unsqueeze(-1)
 
         # Lorentzian-bell radial functions: a + 1 / (b + c^2 p^2) when not masked
-        rad_trig = torch.where(edge_mask, self.b * (torch.ones_like(self.b) +
-                                                    (self.c * norms).pow(2) + 1e-12).pow(-1) + self.a, self.zero).unsqueeze(-1)
+        rad_trig = torch.where(edge_mask, self.b * (torch.ones_like(self.b) + (self.c * norms).pow(2) + 1e-16).pow(-1) + self.a, self.zero).unsqueeze(-1)
 
         if self.input_basis == 'canonical':
             rad_prod = rad_trig.view(s + (-1, 2 * self.num_basis_fn,))

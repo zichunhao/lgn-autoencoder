@@ -74,21 +74,20 @@ class MixReps(CGModule):
         weights = gain * weights
         self.weights = weights.as_parameter()
 
-    """
-    The forward function for linearly mixing a represention.
-
-    Parameters
-    ----------
-    rep : list of `torch.Tensor`
-        Representation to mix.
-
-    Returns
-    -------
-    rep : list of `torch.Tensor`
-        Mixed representation.
-    """
-
     def forward(self, reps):
+        """
+        The forward function for linearly mixing a represention.
+
+        Parameters
+        ----------
+        rep : list of `torch.Tensor`
+            Representation to mix.
+
+        Returns
+        -------
+        rep : list of `torch.Tensor`
+            Mixed representation.
+        """
 
         if not GTau.from_rep(reps) == self.tau_in:
             raise ValueError(f'Tau of input reps, {GTau.from_rep(reps)}, does not match initialized tau, {self.tau_in}!')
@@ -219,22 +218,22 @@ class CatMixReps(CGModule):
         self.taus_in = taus_in
         self.taus_out = GTau(self.mix_reps.tau)
 
-    """
-    The forward function for concatenating and then
-    linearly mixing a list of reps.
-
-    Parameters
-    ----------
-    reps_in : list of torch.Tensor
-        List of input representations.
-
-    Returns
-    -------
-    reps_out : list of torch.Tensor
-        Representation as a result of combining and mixing input reps.
-    """
-
     def forward(self, reps_in):
+        """
+        The forward function for concatenating and then
+        linearly mixing a list of reps.
+
+        Parameters
+        ----------
+        reps_in : list of torch.Tensor
+            List of input representations.
+
+        Returns
+        -------
+        reps_out : list of torch.Tensor
+            Representation as a result of combining and mixing input reps.
+        """
+
         reps_cat = self.cat_reps(reps_in)
         reps_out = self.mix_reps(reps_cat)
         return reps_out
