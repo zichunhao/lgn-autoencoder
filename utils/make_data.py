@@ -46,28 +46,27 @@ def initialize_data(path, batch_size, num_train, num_test=-1, num_val=-1):
     jet_data = JetDataset(data, shuffle=True)  # The original data is not shuffled yet
 
     if not (num_test < 0 or num_val < 0):  # Specified num_test and num_val
-        assert num_train + num_test + num_val <= len(jet_data), f"num_train + num_test + num_val = {num_train + num_test + num_val} \
-                                                                is larger than the data size {len(jet_data)}!"
+        assert num_train + num_test + num_val <= len(jet_data), f"num_train + num_test + num_val = {num_train + num_test + num_val}" \
+                                                                f"is larger than the data size {len(jet_data)}!"
 
         # split into training, testing, and valid set
         jet_data = JetDataset(jet_data[0: num_train + num_test + num_val], shuffle=True)
-        train_set, test_set, valid_set = torch.utils.data.random_split(
-            jet_data, [num_train, num_test, num_val])
+        train_set, test_set, valid_set = torch.utils.data.random_split(jet_data,
+                                                                       [num_train, num_test, num_val])
         train_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=True)
         test_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=False)
         valid_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=False)
 
     # Unspecified num_test and num_val -> Choose training data and then divide the rest in half into testing and validation datasets
     else:
-        assert num_train <= len(
-            jet_data), f"num_train = {num_train} is larger than the data size {len(jet_data)}!"
+        assert num_train <= len(jet_data), f"num_train = {num_train} is larger than the data size {len(jet_data)}!"
 
         # split into training, testing, and valid sets
         # split the rest in half
         num_test = int((len(jet_data) - num_train) / 2)
         num_val = len(jet_data) - num_train - num_test
-        train_set, test_set, valid_set = torch.utils.data.random_split(
-            jet_data, [num_train, num_test, num_val])
+        train_set, test_set, valid_set = torch.utils.data.random_split(jet_data,
+                                                                       [num_train, num_test, num_val])
         train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
         test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
         valid_loader = DataLoader(valid_set, batch_size=batch_size, shuffle=False)
@@ -176,9 +175,10 @@ def convert_to_cartesian(jet_data, name_str, save=False):
 
 if __name__ == "__main__":
     # data loading
-    dir = '../hls4ml/150p/mask/'
-    jet = ['g', 'q', 't', 'w', 'z']
+    dir = '../hls4ml'
+    # jet = ['g', 'q', 't', 'w', 'z']
+    jet = ['g']
 
     for type in jet:
-        polarrel_mask = load_pt_file(f'all_{type}_jets_150p_polarrel_mask.pt', path=dir).numpy()
+        polarrel_mask = load_pt_file(f'all_{type}_jets_30p_cartesian.pt', path=dir).numpy()
         convert_to_cartesian(polarrel_mask, f"{type}_jets_150p", save=True)
