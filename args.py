@@ -111,6 +111,8 @@ def setup_argparse():
     parser.add_argument('--equivariance-test', default=False, action='store_true',
                         help='Whether to take the equivariance test after all trainings on the last model. True only when it is called.'
                         'Default: False.')
+    parser.add_argument('--equivariance-test-only', default=False, action='store_true',
+                        help='Whether to take the equivariance test only (i.e. no training).')
     parser.add_argument('--alpha-max', type=float, default=10., metavar='',
                         help='The maximum alpha value of equivariance test, where gamma = cosh(alpha).'
                         'Default: 10., at which gamma = 11013.2.')
