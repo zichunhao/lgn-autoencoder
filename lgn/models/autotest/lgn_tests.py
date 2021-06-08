@@ -161,12 +161,12 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_m
     perm_test_all_epochs = []
 
     for data in dataloader:
-        boost_results = covariance_test(
-            encoder, decoder, data, test_type='boost', cg_dict=cg_dict, alpha_max=alpha_max)
+        boost_results = covariance_test(encoder, decoder, data, test_type='boost',
+                                        cg_dict=cg_dict, alpha_max=alpha_max)
         boost_test_all_epochs.append(boost_results)
 
-        rot_results = covariance_test(
-            encoder, decoder, data, test_type='rotation', cg_dict=cg_dict, alpha_max=theta_max)
+        rot_results = covariance_test(encoder, decoder, data, test_type='rotation',
+                                      cg_dict=cg_dict, alpha_max=theta_max)
         rot_test_all_epochs.append(rot_results)
 
         perm_result = permutation_invariance_test(encoder, decoder, data)
