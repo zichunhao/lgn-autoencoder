@@ -81,7 +81,7 @@ if __name__ == "__main__":
         if args.load_to_train:
             outpath = args.load_path
             encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'), map_location=args.device))
-            decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_encoder_weights.pth'), map_location=args.device))
+            decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'), map_location=args.device))
         # Create new model
         else:
             outpath = create_model_folder(args)
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         load_epoch = args.load_epoch if args.load_epoch is not None else args.num_epochs
 
         encoder.load_state_dict(torch.load(osp.join(loadpath, f'weights_encoder/epoch_{load_epoch}_encoder_weights.pth'), map_location=torch.device('cpu')))
-        decoder.load_state_dict(torch.load(osp.join(loadpath, f'weights_decoder/epoch_{load_epoch}_encoder_weights.pth'), map_location=torch.device('cpu')))
+        decoder.load_state_dict(torch.load(osp.join(loadpath, f'weights_decoder/epoch_{load_epoch}_decoder_weights.pth'), map_location=torch.device('cpu')))
 
         dev = lgn_tests(encoder, decoder, test_loader, args, alpha_max=args.alpha_max,
                         theta_max=args.theta_max, epoch=args.num_epochs, cg_dict=encoder.cg_dict)
