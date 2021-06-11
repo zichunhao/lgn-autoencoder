@@ -173,7 +173,7 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_m
         perm_test_all_epochs.append(perm_result)
 
     dt = time.time() - t0
-    logging.info(f"Covariance test completed! Time it took testing equivariance of epoch {epoch+1} is {round(dt/60, 2)} min")
+    logging.info(f"Covariance test completed! Time it took testing equivariance of epoch {epoch} is {round(dt/60, 2)} min")
 
     lgn_test_results = dict()
 
