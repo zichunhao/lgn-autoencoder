@@ -112,8 +112,11 @@ def boost_equivariance(encoder, decoder, data, alpha_range, device, dtype, cg_di
         boost_output.append((boost_res))
         boost_output_nodes_all.append((boost_internal))
 
-        dev_output, dev_internal = get_dev(
-            boost_input, boost_output, boost_input_nodes_all, boost_output_nodes_all)
+        dev_output, dev_internal = get_dev(boost_input, boost_output,
+                                           boost_input_nodes_all, boost_output_nodes_all)
+
+        logging.info(f"gammas: {gammas}")
+        logging.info(f"dev_output: {dev_output}")
 
     return gammas, dev_output, dev_internal
 
