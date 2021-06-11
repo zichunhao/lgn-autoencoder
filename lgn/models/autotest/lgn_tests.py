@@ -33,8 +33,9 @@ def covariance_test(encoder, decoder, data, test_type, alpha_max=None, cg_dict=N
 
     device = encoder.device
     dtype = encoder.dtype
-    data['p4'] = data['p4'].to(device, dtype)
-    # data['p4'] = torch.rand_like(data['p4'])
+    # data['p4'] = data['p4'].to(device, dtype)
+    data = data.copy()
+    data['p4'] = torch.rand_like(data['p4']).to(device, dtype)
 
     covariance_test_result = dict()
 
