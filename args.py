@@ -115,6 +115,9 @@ def setup_argparse():
                         help='Whether to take the equivariance test only (i.e. no training).')
     parser.add_argument(-'tbs', '--test-batch-size', type=int, default=4, metavar='',
                         help='The batch size for equivariance test.')
+    parser.add_argument('--test-device', type=get_device, default=torch.device('cuda' if torch.cuda.is_available() else 'cpu'), metavar='',
+                        help="Device to for testing. Options: ('gpu', 'cpu', 'cuda', '-1')."
+                        "Default: -1, which means deciding device based on whether gpu is available.")
     parser.add_argument('--alpha-max', type=float, default=10., metavar='',
                         help='The maximum alpha value of equivariance test, where gamma = cosh(alpha).'
                         'Default: 10., at which gamma = 11013.2.')
