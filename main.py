@@ -33,7 +33,8 @@ if __name__ == "__main__":
                                                               batch_size=args.batch_size,
                                                               num_train=args.num_train,
                                                               num_val=args.num_val,
-                                                              num_test=args.num_test)
+                                                              num_test=args.num_test,
+                                                              test_batch_size=args.test_batch_size)
 
     """Initializations"""
     encoder = LGNEncoder(num_input_particles=args.num_jet_particles,

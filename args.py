@@ -69,7 +69,7 @@ def setup_argparse():
                         help="Data type to which the model is initialized. Options: ('float', 'float64', 'double'). Default: float64")
     parser.add_argument('--lr', type=float, default=1e-5, metavar='',
                         help='Learning rate of the backpropagation.')
-    parser.add_argument('-b', '--batch-size', type=int, default=16, metavar='',
+    parser.add_argument('-bs', '--batch-size', type=int, default=16, metavar='',
                         help='Batch size.')
     parser.add_argument('-e', '--num-epochs', type=int, default=64, metavar='',
                         help='Number of epochs for training.')
@@ -113,6 +113,8 @@ def setup_argparse():
                         'Default: False.')
     parser.add_argument('--equivariance-test-only', default=False, action='store_true',
                         help='Whether to take the equivariance test only (i.e. no training).')
+    parser.add_argument(-'tbs', '--test-batch-size', type=int, default=4, metavar='',
+                        help='The batch size for equivariance test.')
     parser.add_argument('--alpha-max', type=float, default=10., metavar='',
                         help='The maximum alpha value of equivariance test, where gamma = cosh(alpha).'
                         'Default: 10., at which gamma = 11013.2.')

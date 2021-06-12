@@ -40,7 +40,7 @@ class JetDataset(Dataset):
         return {key: val[idx] for key, val in self.data.items()}
 
 
-def initialize_data(path, batch_size, num_train, num_test=-1, num_val=-1):
+def initialize_data(path, batch_size, num_train, num_test=-1, num_val=-1, test_batch_size=None):
     data = torch.load(path)
 
     jet_data = JetDataset(data, shuffle=True)  # The original data is not shuffled yet
@@ -54,8 +54,11 @@ def initialize_data(path, batch_size, num_train, num_test=-1, num_val=-1):
         train_set, test_set, valid_set = torch.utils.data.random_split(jet_data,
                                                                        [num_train, num_test, num_val])
         train_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=True)
-        test_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=False)
-        valid_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=False)
+        valid_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=True)
+        if test_batch_size is None:
+            test_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=False)
+        else:
+            test_loader = DataLoader(jet_data, batch_size=test_batch_size, shuffle=False)
 
     # Unspecified num_test and num_val -> Choose training data and then divide the rest in half into testing and validation datasets
     else:
@@ -68,8 +71,11 @@ def initialize_data(path, batch_size, num_train, num_test=-1, num_val=-1):
         train_set, test_set, valid_set = torch.utils.data.random_split(jet_data,
                                                                        [num_train, num_test, num_val])
         train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
-        test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
-        valid_loader = DataLoader(valid_set, batch_size=batch_size, shuffle=False)
+        valid_loader = DataLoader(valid_set, batch_size=batch_size, shuffle=True)
+        if test_batch_size is None:
+            test_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=False)
+        else:
+            test_loader = DataLoader(jet_data, batch_size=test_batch_size, shuffle=False)
 
     print('Data loaded')
 
