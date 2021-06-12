@@ -46,7 +46,7 @@ def setup_argparse():
                         help='Maximum weights in the model. Each element in maxdim will be capped to 2 because then tensor product'
                         'of two (1/2, 1/2) irreps can be CG decomposed up to (1,1). Weights are multiplied by 2 to so that keys have integer values.')
     parser.add_argument('--num-basis-fn', type=int, default=10, metavar='',
-                        help='Number of basis function to express edge features. Default: [2].')
+                        help='Number of basis function to express edge features. Default: [10].')
 
     parser.add_argument('--weight-init', type=str, default='randn', metavar='',
                         help="Weight initialization distribution to use. Options: ['randn', 'rand']. Default: 'randn'.")
