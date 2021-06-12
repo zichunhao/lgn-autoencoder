@@ -54,7 +54,7 @@ def save_data(data, data_name, is_train, outpath, epoch=-1):
             torch.save(data, osp.join(outpath, f'valid_{data_name}.pkl'))
 
 
-def plot_eval_results(args, data, data_name, outpath, global_data=False):
+def plot_eval_results(args, data, data_name, outpath, global_data=False, start=None):
     '''
     Plot evaluation results
     '''
@@ -63,7 +63,7 @@ def plot_eval_results(args, data, data_name, outpath, global_data=False):
         start = args.load_epoch + 1
         end = start + args.num_epochs
     else:
-        start = 1
+        start = 1 if start is None else start
         end = args.num_epochs
 
     # (train, label)
