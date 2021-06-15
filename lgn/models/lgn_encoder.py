@@ -73,7 +73,7 @@ class LGNEncoder(CGModule):
 
     def __init__(self, num_input_particles, tau_input_scalars, tau_input_vectors,
                  tau_latent_scalars, tau_latent_vectors, maxdim, num_basis_fn,
-                 num_channels, max_zf, weight_init, level_gain,
+                 num_channels, max_zf, weight_init, level_gain, jet_features=False,
                  map_to_latent='sum', activation='leakyrelu',
                  scale=1., mlp=True, mlp_depth=None, mlp_width=None,
                  device=None, dtype=None, cg_dict=None):
@@ -104,11 +104,15 @@ class LGNEncoder(CGModule):
         self.num_basis_fn = num_basis_fn
         self.max_zf = max_zf
         self.num_channels = num_channels
+        self.jet_features = jet_features
         self.map_to_latent = map_to_latent
         self.mlp = mlp
         self.mlp_depth = mlp_depth
         self.mlp_width = mlp_width
         self.activation = activation
+
+        if jet_features:
+            self.num_input_particles += 1
 
         # Express input momenta in the basis of spherical harmonics
         self.zonal_fns_in = ZonalFunctions(max(self.max_zf), basis=self.input_basis,
@@ -254,6 +258,8 @@ class LGNEncoder(CGModule):
         """
 
         node_ps = data['p4'].to(device=self.device, dtype=self.dtype) * self.scale
+        if self.jet_features:
+            node_ps = torch.cat((node_ps, torch.sum(node_ps, dim=-2).unsqueeze(-1)), dim=-2)
 
         data['p4'].requires_grad_(True)
 
