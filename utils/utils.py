@@ -97,3 +97,10 @@ def plot_eval_results(args, data, data_name, outpath, global_data=False, start=N
     save_name = "_".join(data_name.lower().split(" "))
     plt.savefig(osp.join(outpath, f"{save_name}.pdf"), bbox_inches='tight')
     plt.close()
+
+
+def eps(args):
+    if args.dtype in [torch.float64, torch.double]:
+        return 1e-16
+    else:
+        return 1e-12

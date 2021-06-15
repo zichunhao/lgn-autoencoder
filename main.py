@@ -1,6 +1,6 @@
 from args import setup_argparse
 from utils.make_data import initialize_data
-from utils.utils import create_model_folder
+from utils.utils import create_model_folder, eps
 from utils.train import train_loop
 from lgn.models.lgn_encoder import LGNEncoder
 from lgn.models.lgn_decoder import LGNDecoder
@@ -61,8 +61,14 @@ if __name__ == "__main__":
                          mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
                          device=args.device, dtype=args.dtype)
 
-    optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.lr)
-    optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.lr)
+    if args.optimizer.lower() == 'adam':
+        optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.lr)
+        optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.lr)
+    elif args.optimizer.lower() == 'rmsprop':
+        optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
+        optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
+    else:
+        raise NotImplementedError(f"Other choices of optimizer are not implemented. Available choices are 'Adam' and 'RMSprop'. Found: {args.optimizer}.")
 
     # Both on gpu
     if (next(encoder.parameters()).is_cuda and next(encoder.parameters()).is_cuda):
