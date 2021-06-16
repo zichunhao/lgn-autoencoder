@@ -39,6 +39,7 @@ def covariance_test(encoder, decoder, data, test_type, alpha_max=None, cg_dict=N
         data['p4'] /= 1e6  # Convert to TeV for better numerical precision after boost
     elif unit.lower() == 'tev':
         data['p4'] /= 1e3  # Convert to TeV for better numerical precision after boost
+    data['scalars'] += 1e-6  # Prevent relative error from blowing up because particle masses are effectively 0
     # data['p4'] = torch.rand_like(data['p4']).to(device, dtype)
 
     covariance_test_result = dict()
