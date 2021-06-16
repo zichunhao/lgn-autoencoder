@@ -115,6 +115,13 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
                   outpath=outpath, epoch=epoch)
         save_data(data=valid_avg_loss, data_name='losses', is_train=False,
                   outpath=outpath, epoch=epoch)
+        if args.unit.lower == 'tev':
+            # Convert to GeV for plotting
+            train_target *= 1000
+            train_gen *= 1000
+            valid_target *= 1000
+            valid_gen *= 1000
+
         plot_p(args, real_data=train_target, gen_data=train_gen, save_dir=outpath_train_jet_plots,
                polar_max=args.polar_max, cartesian_max=args.cartesian_max,
                num_bins=args.num_bins, cutoff=args.cutoff, epoch=epoch)

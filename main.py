@@ -116,7 +116,7 @@ if __name__ == "__main__":
         decoder.load_state_dict(torch.load(osp.join(loadpath, f'weights_decoder/epoch_{load_epoch}_decoder_weights.pth'), map_location=args.test_device))
 
         dev = lgn_tests(encoder, decoder, test_loader, args, alpha_max=args.alpha_max,
-                        theta_max=args.theta_max, epoch=args.num_epochs, cg_dict=encoder.cg_dict)
+                        theta_max=args.theta_max, epoch=args.num_epochs, cg_dict=encoder.cg_dict, unit=args.unit)
         plot_all_dev(dev, osp.join(loadpath, 'model_evaluations/equivariance_tests'))
 
         logging.info("Done!")

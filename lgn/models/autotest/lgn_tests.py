@@ -26,16 +26,20 @@ def _gen_rot(angles, maxdim, device=torch.device('cpu'), dtype=torch.float64, cg
     return D, R
 
 
-def covariance_test(encoder, decoder, data, test_type, alpha_max=None, cg_dict=None):
+def covariance_test(encoder, decoder, data, test_type, alpha_max=None, cg_dict=None, unit='GeV'):
 
     if cg_dict is None:
         cg_dict = encoder.cg_dict
 
     device = encoder.device
     dtype = encoder.dtype
-    # data['p4'] = data['p4'].to(device, dtype)
+    data['p4'] = data['p4'].to(device, dtype)
     data = data.copy()
-    data['p4'] = torch.rand_like(data['p4']).to(device, dtype)
+    if unit.lower() == 'gev':
+        data['p4'] /= 1e6  # Convert to TeV for better numerical precision after boost
+    elif unit.lower() == 'tev':
+        data['p4'] /= 1e3  # Convert to TeV for better numerical precision after boost
+    # data['p4'] = torch.rand_like(data['p4']).to(device, dtype)
 
     covariance_test_result = dict()
 
@@ -149,7 +153,8 @@ def rot_equivariance(encoder, decoder, data, theta_range, device, dtype, cg_dict
     return theta_range, dev_output, dev_internal
 
 
-def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_max=None, cg_dict=None):
+@torch.no_grad()
+def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_max=None, cg_dict=None, unit='GeV'):
 
     t0 = time.time()
 
@@ -163,11 +168,11 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_m
 
     for data in dataloader:
         boost_results = covariance_test(encoder, decoder, data, test_type='boost',
-                                        cg_dict=cg_dict, alpha_max=alpha_max)
+                                        cg_dict=cg_dict, alpha_max=alpha_max, unit=unit)
         boost_test_all_epochs.append(boost_results)
 
         rot_results = covariance_test(encoder, decoder, data, test_type='rotation',
-                                      cg_dict=cg_dict, alpha_max=theta_max)
+                                      cg_dict=cg_dict, alpha_max=theta_max, unit=unit)
         rot_test_all_epochs.append(rot_results)
 
         perm_result = permutation_invariance_test(encoder, decoder, data)
