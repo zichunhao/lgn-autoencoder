@@ -44,6 +44,15 @@ class LGNEncoder(CGModule):
         The type of weight initialization. The choices are 'randn' and 'rand'.
     level_gain : `list` of `floats`
         The gain at each level. (args.level_gain = [1.])
+    jet_features : `bool`
+        Optional, default: False
+        Whether to incorporate jet momenta into the model.
+    map_to_latent : `str`
+        Optional, default: 'sum'
+        The way of mapping the graph to latent space.
+        Choices:
+            - 'sum': sum over all nodes.
+            - 'mix': linearly mix node features.
     activation : `str`
         Optional, default: 'leakyrelu'
         The activation function for lgn.LGNCG
