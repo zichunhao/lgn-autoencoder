@@ -130,11 +130,13 @@ def load_pt_file(filename, path='./hls4ml/150p/'):
     data = torch.load(path)
     return data
 
-# [eta, phi, pt, tag] -> [E, px, py, pz, p, tag]
-
 
 def cartesian(p_list):
+    """
+    [eta, phi, pt, tag] -> [E, px, py, pz, tag]
+    """
     eta, phi, pt, tag = p_list
+    pt /= 1000  # Convert to TeV
     if tag > 0:  # real data
         tag = 1
         px = pt * np.cos(phi)
