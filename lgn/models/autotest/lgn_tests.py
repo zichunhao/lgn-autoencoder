@@ -19,7 +19,7 @@ def _gen_rot(angles, maxdim, device=torch.device('cpu'), dtype=torch.float64, cg
                                [[0, 0, 0, 0], [0, 0, -1/sqrt(2.), 0], [0, 0, 0, 0], [0, 0, -1/sqrt(2.), 0]]], device=device, dtype=dtype)
     cartesian4H = torch.tensor([[[1, 0, 0, 0], [0, 1/sqrt(2.), 0, 0], [0, 0, 0, 1], [0, -1/sqrt(2.), 0, 0]],
                                 [[0, 0, 0, 0], [0, 0, 1/sqrt(2.), 0], [0, 0, 0, 0], [0, 0, 1/sqrt(2.), 0]]], device=device, dtype=dtype).permute(0, 2, 1)
-    R = torch.stack((D[(1, 1)][0].matmul(cartesian4[0])-D[(1, 1)][1].matmul(cartesian4[1]),
+    R = torch.stack((D[(1, 1)][0].matmul(cartesian4[0]) - D[(1, 1)][1].matmul(cartesian4[1]),
                      D[(1, 1)][0].matmul(cartesian4[1]) + D[(1, 1)][1].matmul(cartesian4[0])))
     R = cartesian4H[0].matmul(R[0]) - cartesian4H[1].matmul(R[1])
 
