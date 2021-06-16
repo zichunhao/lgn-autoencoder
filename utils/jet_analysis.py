@@ -30,7 +30,7 @@ def plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=[0.02, 0.02, 0
     real_data : `numpy.Array`
         The target jet data, with shape (num_particles, 4).
     gen_data : `numpy.Array`
-        The generated jet data, with shape (num_particles, 4).
+        The reconstructed jet data, with shape (num_particles, 4).
     save_dir : `str`
         The directory to save the figure.
     max_val :  `list`, `tuple`, or `int`
@@ -83,11 +83,11 @@ def plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=[0.02, 0.02, 0
     for ax, p_real, p_gen, range, name in zip(axs, p_reals, p_gens, ranges, names):
         if not fill:
             ax.hist(p_gen.flatten(), bins=range, histtype='step', stacked=True,
-                    fill=False, label='generated', density=density)
+                    fill=False, label='reconstructed', density=density)
             ax.hist(p_real.flatten(), bins=range, histtype='step',
                     stacked=True, fill=False, label='target', density=density)
         else:
-            ax.hist(p_gen.flatten(), bins=range, alpha=0.6, label='generated', density=density)
+            ax.hist(p_gen.flatten(), bins=range, alpha=0.6, label='reconstructed', density=density)
             ax.hist(p_real.flatten(), bins=range, alpha=0.6, label='target', density=density)
         ax.set_xlabel(f'Particle {name} (GeV)')
         ax.set_ylabel('Number of particles')
@@ -102,7 +102,7 @@ def plot_p_cartesian(args, real_data, gen_data, save_dir, max_val=[0.02, 0.02, 0
     fig.tight_layout()
 
     jet_name = get_jet_name(args)
-    fig.suptitle(fr'Distribution of target and generated particle $p_x$, $p_y$, and $p_z$ of {jet_name} jets', y=1.03)
+    fig.suptitle(fr'Distribution of target and reconstructed particle $p_x$, $p_y$, and $p_z$ of {jet_name} jets', y=1.03)
 
     filename = f'p_cartesian_{args.jet_type}_jet'
     if epoch is not None:
@@ -125,7 +125,7 @@ def plot_p_polar(args, real_data, gen_data, save_dir, max_val=[0.15, np.pi, np.p
     real_data : `numpy.Array`
         The target jet data, with shape (num_particles, 4).
     gen_data : `numpy.Array`
-        The generated jet data, with shape (num_particles, 4).
+        The reconstructed jet data, with shape (num_particles, 4).
     save_dir : `str`
         The directory to save the figure.
     max_val : `list`, `tuple`, or `float`
@@ -179,11 +179,11 @@ def plot_p_polar(args, real_data, gen_data, save_dir, max_val=[0.15, np.pi, np.p
     for ax, p_real, p_gen, bins, name in zip(axs, p_reals, p_gens, ranges, names):
         if not fill:
             ax.hist(p_gen.flatten(), bins=bins, histtype='step', stacked=True,
-                    fill=False, label='generated', density=density)
+                    fill=False, label='reconstructed', density=density)
             ax.hist(p_real.flatten(), bins=bins, histtype='step',
                     stacked=True, fill=False, label='target', density=density)
         else:
-            ax.hist(p_gen.flatten(), bins=bins, alpha=0.6, label='generated', density=density)
+            ax.hist(p_gen.flatten(), bins=bins, alpha=0.6, label='reconstructed', density=density)
             ax.hist(p_real.flatten(), bins=bins, alpha=0.6, label='target', density=density)
         ax.set_xlabel(f'Particle {name}')
         if name == r'$p_\mathrm{T}$':
@@ -201,7 +201,7 @@ def plot_p_polar(args, real_data, gen_data, save_dir, max_val=[0.15, np.pi, np.p
 
     jet_name = get_jet_name(args)
     fig.suptitle(
-        r'Distribution of target and generated particle $p_\mathrm{T}$, $\eta$, and $\phi$ ' + f'of {jet_name} jets', y=1.03)
+        r'Distribution of target and reconstructed particle $p_\mathrm{T}$, $\eta$, and $\phi$ ' + f'of {jet_name} jets', y=1.03)
 
     filename = f'p_polar_{args.jet_type}_jet'
     if epoch is not None:
