@@ -100,8 +100,8 @@ def setup_argparse():
                         help='Epoch number of the trained model to load.')
 
     ################################### Model evaluation options ###################################
-    parser.add_argument('--unit', type=str, default='GeV',
-                        help="The unit of momenta. Choices: ('GeV', 'TeV'). Default: GeV. ")
+    parser.add_argument('--unit', type=str, default='TeV',
+                        help="The unit of momenta. Choices: ('GeV', 'TeV'). Default: TeV. ")
     parser.add_argument('--polar-max', nargs="+", type=float, default=[200, 2, np.pi], metavar='',
                         help='List of maximum values of (pt, eta, phi) in the histogram. Default: [200, np.pi, 2].')
     parser.add_argument('--cartesian-max', nargs="+", type=float, default=[100, 100, 100], metavar='',
