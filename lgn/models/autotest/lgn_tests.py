@@ -39,6 +39,7 @@ def covariance_test(encoder, decoder, data, test_type, alpha_max=None, cg_dict=N
         data['p4'] /= 1e6  # Convert to TeV for better numerical precision after boost
     elif unit.lower() == 'tev':
         data['p4'] /= 1e3  # Convert to TeV for better numerical precision after boost
+
     data['scalars'] += 1e-6  # Prevent relative error from blowing up because particle masses are effectively 0
     # data['p4'] = torch.rand_like(data['p4']).to(device, dtype)
 
@@ -100,8 +101,9 @@ def boost_equivariance(encoder, decoder, data, alpha_range, device, dtype, cg_di
     boost_input_nodes_all = []
     boost_output_nodes_all = []
     for alpha in alpha_range:
+        phi_x, phi_y, phi_z = 0, 0, alpha*1j
         # boost input
-        Di, Ri = _gen_rot((0, 0, alpha*1j), encoder.maxdim,
+        Di, Ri = _gen_rot((phi_x, phi_y, phi_z), encoder.maxdim,
                           device=device, dtype=dtype, cg_dict=cg_dict)
         data_boost = data.copy()
         data_boost['p4'] = torch.einsum("...b, ba->...a", data['p4'], Ri)  # Boost input
@@ -112,8 +114,8 @@ def boost_equivariance(encoder, decoder, data, alpha_range, device, dtype, cg_di
 
         # boost output
         res, internal = get_output(encoder, decoder, data, covariance_test=True)
-        boost_res = rot.rotate_rep(res, 0, 0, alpha*1j, cg_dict=cg_dict)
-        boost_internal = [rot.rotate_rep(internal[i], 0, 0, alpha*1j, cg_dict=cg_dict)
+        boost_res = rot.rotate_rep(res, phi_x, phi_y, phi_z, cg_dict=cg_dict)
+        boost_internal = [rot.rotate_rep(internal[i], phi_x, phi_y, phi_z, cg_dict=cg_dict)
                           for i in range(len(internal))]
         boost_output.append((boost_res))
         boost_output_nodes_all.append((boost_internal))
@@ -130,8 +132,9 @@ def rot_equivariance(encoder, decoder, data, theta_range, device, dtype, cg_dict
     rot_input_nodes_all = []
     rot_output_nodes_all = []
     for theta in theta_range:
+        theta_x, theta_y, theta_z = 0, theta, 0
         # rotate input -> output
-        Di, Ri = _gen_rot((0, theta, 0), encoder.maxdim,
+        Di, Ri = _gen_rot((theta_x, theta_y, theta_z), encoder.maxdim,
                           device=device, dtype=dtype, cg_dict=cg_dict)
         data_boost = data.copy()
         data_boost['p4'] = torch.einsum("...b, ba->...a", data['p4'], Ri)  # Rotate input
@@ -142,8 +145,8 @@ def rot_equivariance(encoder, decoder, data, theta_range, device, dtype, cg_dict
 
         # Input -> rotate output
         res, internal = get_output(encoder, decoder, data, covariance_test=True)
-        rot_res = rot.rotate_rep(res, 0, theta, 0, cg_dict=cg_dict)
-        rot_internal = [rot.rotate_rep(internal[i], 0, theta, 0, cg_dict=cg_dict)
+        rot_res = rot.rotate_rep(res, theta_x, theta_y, theta_z, cg_dict=cg_dict)
+        rot_internal = [rot.rotate_rep(internal[i], theta_x, theta_y, theta_z, cg_dict=cg_dict)
                         for i in range(len(internal))]
         rot_output.append((rot_res))
         rot_output_nodes_all.append((rot_internal))
