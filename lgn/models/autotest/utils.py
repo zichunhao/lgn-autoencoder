@@ -215,19 +215,19 @@ def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
 
     if transform_type.lower() in ['boost', 'boosts']:
         if weight == (1, 1):
-            title = fr'Boost equivariance test of generated {irrep_str} $p^\mu$'
+            title = fr'Boost equivariance test of reconstructed {irrep_str} $p^\mu$'
             torch.save(dev, osp.join(pkl_path, "boost_equivariance_p4.pkl"))
         else:
-            title = f'Boost equivariance test of generated {irrep_str}'
+            title = f'Boost equivariance test of reconstructed {irrep_str}'
             torch.save(dev, osp.join(pkl_path, "boost_equivariance_scalars.pkl"))
         plt.title(title, y=1.05)
         plt.xlabel(r'Lorentz factor $\gamma$')
     elif transform_type.lower() in ['rot', 'rots', 'rotation', 'rotatons']:
         if weight == (1, 1):
-            title = fr'Rotation equivariance test of generated {irrep_str} $p^\mu$'
+            title = fr'Rotation equivariance test of reconstructed {irrep_str} $p^\mu$'
             torch.save(dev, osp.join(pkl_path, "rot_equivariance_p4.pkl"))
         else:
-            title = f'Rotation equivariance test of generated {irrep_str}'
+            title = f'Rotation equivariance test of reconstructed {irrep_str}'
             torch.save(dev, osp.join(pkl_path, "rot_equivariance_scalars.pkl"))
         plt.title(title, y=1.05)
         plt.xlabel(r'Rotation angle $\theta$ (rad)')
