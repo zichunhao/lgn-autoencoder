@@ -61,26 +61,26 @@ if __name__ == "__main__":
                          mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
                          device=args.device, dtype=args.dtype)
 
-    if args.optimizer.lower() == 'adam':
-        optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.lr)
-        optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.lr)
-    elif args.optimizer.lower() == 'rmsprop':
-        optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
-        optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
-    else:
-        raise NotImplementedError(f"Other choices of optimizer are not implemented. Available choices are 'Adam' and 'RMSprop'. Found: {args.optimizer}.")
-
-    # Both on gpu
-    if (next(encoder.parameters()).is_cuda and next(encoder.parameters()).is_cuda):
-        logging.info('The models are initialized on GPU...')
-    # One on cpu and the other on gpu
-    elif (next(encoder.parameters()).is_cuda or next(encoder.parameters()).is_cuda):
-        raise AssertionError("The encoder and decoder are not trained on the same device!")
-    # Both on cpu
-    else:
-        logging.info('The models are initialized on CPU...')
-
     if not args.equivariance_test_only:
+        if args.optimizer.lower() == 'adam':
+            optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.lr)
+            optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.lr)
+        elif args.optimizer.lower() == 'rmsprop':
+            optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
+            optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
+        else:
+            raise NotImplementedError(f"Other choices of optimizer are not implemented. Available choices are 'Adam' and 'RMSprop'. Found: {args.optimizer}.")
+
+        # Both on gpu
+        if (next(encoder.parameters()).is_cuda and next(encoder.parameters()).is_cuda):
+            logging.info('The models are initialized on GPU...')
+        # One on cpu and the other on gpu
+        elif (next(encoder.parameters()).is_cuda or next(encoder.parameters()).is_cuda):
+            raise AssertionError("The encoder and decoder are not trained on the same device!")
+        # Both on cpu
+        else:
+            logging.info('The models are initialized on CPU...')
+
         logging.info(f'Training over {args.num_epochs} epochs...')
 
         '''Training'''
@@ -105,6 +105,7 @@ if __name__ == "__main__":
             plot_all_dev(dev, osp.join(outpath, 'model_evaluations/equivariance_tests'))
 
         logging.info("Training completed!")
+    # equivariance test only
     else:
         if args.load_path is not None:
             loadpath = args.load_path
