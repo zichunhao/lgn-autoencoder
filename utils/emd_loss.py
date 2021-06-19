@@ -43,7 +43,7 @@ def emd_inference_qpth(distance_matrix, weight1, weight2, device, form='QP', l2_
 
     # h = [0 ... 0 w1 w2]
     h_1 = torch.zeros(nbatch, nelement_distmatrix).double().to(device)
-    h_2 = torch.cat([weight1, weight2], 1).double().to(device)
+    h_2 = torch.cat([weight1.to(device), weight2.to(device)], 1).double().to(device)
     h = torch.cat((h_1, h_2), 1)
 
     G_1 = -torch.eye(nelement_distmatrix).double().unsqueeze(0).repeat(nbatch, 1, 1).to(device)
