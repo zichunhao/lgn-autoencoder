@@ -9,3 +9,5 @@ The directory [`/equivariance_tests`](https://github.com/zichunhao/lgn-autoencod
 2. The input is fed into the network, and the output is transformed.
 
 The plots show the relative deviations of the two results for both generated features and internal node features. See the [`README`](https://github.com/zichunhao/lgn-autoencoder/blob/main/results/equivariance_tests/README.md) file in that directory for more details of the equivariance test results.
+
+It is concluded that the model is equivariant with respect to Lorentz transformation and invariant with respect to particle permutation within a jet within numerical precisions.
