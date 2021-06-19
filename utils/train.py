@@ -1,7 +1,8 @@
 import logging
 from utils.jet_analysis import plot_p
-from utils.utils import make_dir, save_data, plot_eval_results
+from utils.utils import make_dir, save_data, plot_eval_results, eps
 from utils.chamfer_loss import ChamferLoss
+from utils.emd_loss import emd_loss
 import time
 import os.path as osp
 import warnings
@@ -39,11 +40,15 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         p4_target = batch['p4']
         target_data.append(p4_target.cpu().detach().numpy())
 
-        loss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
-        batch_loss = loss(p4_gen, p4_target)  # preds, targets
+        if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
+            loss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
+            batch_loss = loss(p4_gen, p4_target)  # preds, targets
+            epoch_total_loss += batch_loss.item()
+        if args.loss_choice.lower() in ['emd', 'emdloss', 'emd_loss']:
+            batch_loss = emd_loss(p4_target, p4_gen, loss_norm_choice=args.loss_norm_choice, eps=eps(args))  # true, output
+            epoch_total_loss += batch_loss.item()
         if (batch_loss != batch_loss).any():
             raise RuntimeError('Batch loss is NaN!')
-        epoch_total_loss += batch_loss.item()
 
         # Backward propagation
         if is_train:

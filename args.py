@@ -71,11 +71,13 @@ def setup_argparse():
     parser.add_argument('--lr', type=float, default=1e-5, metavar='',
                         help='Learning rate of the backpropagation.')
     parser.add_argument('--optimizer', type=str, default="adam", metavar='',
-                        help="The optimizer to use. Options:('adam', 'rmprop') Default: 'adam'")
+                        help="The optimizer to use. Options: ('adam', 'rmprop') Default: 'adam'")
     parser.add_argument('-bs', '--batch-size', type=int, default=16, metavar='',
                         help='Batch size.')
     parser.add_argument('-e', '--num-epochs', type=int, default=64, metavar='',
                         help='Number of epochs for training.')
+    parser.add_argument('--loss-choice', type=str, default='ChamferLoss', metavar='',
+                        help="Choice of loss function. Options: ('ChamferLoss, EMDLoss')")
     parser.add_argument('--loss-norm-choice', type=str, default='p3', metavar='',
                         help="Choice of calculating the norms of 4-vectors when calculating the loss. "
                         "Options: ('canonical', 'real', 'cplx'). "
