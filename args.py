@@ -44,7 +44,7 @@ def setup_argparse():
     parser.add_argument('--decoder-num-channels', nargs="+", type=int, default=[2, 3, 2, 1], metavar='',
                         help='Number of channels (multiplicity of all irreps) in each CG layer in the decoder.')
 
-    parser.add_argument('--maxdim', nargs="+", type=int, default=[2], metavar='',
+    parser.add_argument('--maxdim', nargs="+", type=int, default=[3], metavar='',
                         help='Maximum weights in the model (exclusive).')
     parser.add_argument('--num-basis-fn', type=int, default=10, metavar='',
                         help='Number of basis function to express edge features. Default: [10].')
