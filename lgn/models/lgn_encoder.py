@@ -48,11 +48,12 @@ class LGNEncoder(CGModule):
         Optional, default: False
         Whether to incorporate jet momenta into the model.
     map_to_latent : `str`
-        Optional, default: 'sum'
+        Optional, default: 'mean'
         The way of mapping the graph to latent space.
         Choices:
             - 'sum': sum over all nodes.
-            - 'mix': linearly mix node features.
+            - 'mix': linearly mix each isotypic component of node features.
+            - 'mean': taking the mean over all nodes.
     activation : `str`
         Optional, default: 'leakyrelu'
         The activation function for lgn.LGNCG
@@ -95,8 +96,8 @@ class LGNEncoder(CGModule):
 
         num_cg_levels = len(num_channels) - 1
 
-        if map_to_latent.lower() not in ['mix', 'sum']:
-            raise NotImplementedError(f"map_to_latent can only be 'mix' or 'sum': {map_to_latent}")
+        if map_to_latent.lower() not in ['mix', 'sum', 'mean', 'average']:
+            raise NotImplementedError(f"map_to_latent can only one of ('mix', 'sum', 'mean'). Found: {map_to_latent}")
 
         level_gain = adapt_var_list(level_gain, num_cg_levels)
         maxdim = adapt_var_list(maxdim, num_cg_levels)
@@ -232,6 +233,9 @@ class LGNEncoder(CGModule):
 
         if self.map_to_latent.lower() == 'sum':
             latent_features = GVec({weight: torch.sum(value, dim=-3).unsqueeze(dim=-3)
+                                    for weight, value in latent_features.items()})
+        elif self.map_to_latent.lower() in ['mean', 'average']:
+            latent_features = GVec({weight: torch.mean(value, dim=-3).unsqueeze(dim=-3)
                                     for weight, value in latent_features.items()})
 
         latent_features_canonical = GVec({weight: val.clone()

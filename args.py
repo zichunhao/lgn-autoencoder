@@ -32,8 +32,8 @@ def setup_argparse():
     parser.add_argument('--jet-features', type=get_bool, default=False,
                         help='Whether to incorporate jet features in the message passing step. Default: True')
 
-    parser.add_argument('--map-to-latent', type=str, default='sum', metavar='',
-                        help="The method to map to latent space. Choice: ('sum', 'mix')")
+    parser.add_argument('--map-to-latent', type=str, default='mean', metavar='',
+                        help="The method to map to latent space. Choice: ('sum', 'mix', 'mean')")
     parser.add_argument('--tau-latent-scalars', type=int, default=3, metavar='',
                         help='Multiplicity of scalars per particle in the latent space.')
     parser.add_argument('--tau-latent-vectors', type=int, default=2, metavar='',
