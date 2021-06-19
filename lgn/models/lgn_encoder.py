@@ -230,7 +230,7 @@ class LGNEncoder(CGModule):
         # Mix
         # node_all[-1] is the updated feature in the last layer
         latent_features = self.mix_reps(node_features)
-        latent_features = {weight: latent_features[weight] for weight in [(0, 0), (1, 1)]}  # Truncate higher order irreps than (1, 1)
+        latent_features = GVec({weight: latent_features[weight] for weight in [(0, 0), (1, 1)]})  # Truncate higher order irreps than (1, 1)
 
         if self.map_to_latent.lower() == 'sum':
             latent_features = GVec({weight: torch.sum(value, dim=-3).unsqueeze(dim=-3)

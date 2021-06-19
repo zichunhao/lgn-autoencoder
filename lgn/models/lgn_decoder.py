@@ -116,8 +116,8 @@ class LGNDecoder(CGModule):
         self.latent_to_graph = MixReps(self.tau_dict['input'], tau_mix_to_graph, device=self.device, dtype=self.dtype)
 
         tau_mix_to_cg = GTau({weight: num_channels[0] for weight in [(0, 0), (1, 1)]})
-        self.input_func_node = MixReps(
-            GTau({weight: 1 for weight in [(0, 0), (1, 1)]}), tau_mix_to_cg, device=self.device, dtype=self.dtype)
+        self.input_func_node = MixReps(GTau({weight: 1 for weight in [(0, 0), (1, 1)]}),
+                                       tau_mix_to_cg, device=self.device, dtype=self.dtype)
 
         self.zonal_fns_in = ZonalFunctions(max(self.max_zf), basis=self.input_basis,
                                            dtype=dtype, device=device, cg_dict=cg_dict)
@@ -172,8 +172,7 @@ class LGNDecoder(CGModule):
                 The full node features in both encoder and decoder.
         '''
         if covariance_test and (nodes_all is None):
-            raise ValueError(
-                'covariance_test is set to True, but the full node features from the encoder is not passed in!')
+            raise ValueError('covariance_test is set to True, but the full node features from the encoder is not passed in!')
         # Get data
         node_ps, node_scalars, node_mask, edge_mask = self._prepare_input(latent_features)
 
@@ -202,7 +201,7 @@ class LGNDecoder(CGModule):
         # Mix to output
         # node_all[-1] is the updated feature in the last layer
         generated_features = self.mix_to_output(node_features)
-        generated_features = {weight: generated_features[weight] for weight in [(0, 0), (1, 1)]}  # Truncate higher order irreps than (1, 1)
+        generated_features = GVec({weight: generated_features[weight] for weight in [(0, 0), (1, 1)]})  # Truncate higher order irreps than (1, 1)
 
         decoder_nodes_all.append(generated_features)
         generated_ps = generated_features[(1, 1)].clone()
@@ -215,7 +214,7 @@ class LGNDecoder(CGModule):
         else:
             for i in range(len(decoder_cg_nodes)):
                 nodes_all.append(decoder_cg_nodes[i])
-            nodes_all.append(GVec(generated_features))
+            nodes_all.append(generated_features)
             return generated_features, nodes_all
 
     """
