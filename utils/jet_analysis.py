@@ -194,6 +194,7 @@ def plot_jet_p_cartesian(args, target_data, gen_data, save_dir, max_val=[30000, 
         ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
+        ax.set_aspect('equal')
 
     handles, labels = ax.get_legend_handles_labels()
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.05), ncol=2)
@@ -292,9 +293,10 @@ def plot_p_polar(args, target_data, gen_data, save_dir, max_val=(200, 2, np.pi),
         ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
+        ax.set_aspect('equal')
 
     handles, labels = ax.get_legend_handles_labels()
-    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.05), ncol=4)
+    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.08), ncol=4)
 
     fig.tight_layout()
 
@@ -393,12 +395,13 @@ def plot_jet_p_polar(args, target_data, gen_data, save_dir, max_val=(30000, 2000
         ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
+        ax.set_aspect('equal')
 
     handles, labels = ax.get_legend_handles_labels()
-    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.05), ncol=4)
+    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.1), ncol=2)
 
     jet_name = get_jet_name(args)
-    fig.suptitle(r'Distribution of target and reconstructed jet $p_\mathrm{T}$, $\eta$, and $\phi$ ' +
+    fig.suptitle(r'Distribution of target and reconstructed jet $m$, $p_\mathrm{T}$, $\eta$, and $\phi$ ' +
                  f'of {jet_name} jets', y=1.03)
 
     filename = f'jet_features_polar_{args.jet_type}_jet'
