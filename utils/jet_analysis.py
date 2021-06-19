@@ -14,9 +14,9 @@ def plot_p(args, target_data, gen_data, save_dir, polar_max=(200, 2, np.pi), car
     plot_p_cartesian(args, target_data, gen_data, save_dir, max_val=cartesian_max,
                      num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=False, show=show)
     plot_jet_p_polar(args, target_data, gen_data, save_dir, max_val=jet_polar_max,
-                     num_bins=81, epoch=None, density=False, fill=False, show=False)
+                     num_bins=81, epoch=epoch, density=False, fill=False, show=False)
     plot_jet_p_cartesian(args, target_data, gen_data, save_dir, max_val=jet_cartesian_max,
-                         num_bins=81, epoch=None, density=False, fill=False, show=False)
+                         num_bins=81, epoch=epoch, density=False, fill=False, show=False)
 
     if args.fill:  # Plot filled histograms in addition to unfilled histograms
         plot_p_polar(args, target_data, gen_data, save_dir, max_val=polar_max, num_bins=num_bins,
@@ -24,9 +24,9 @@ def plot_p(args, target_data, gen_data, save_dir, polar_max=(200, 2, np.pi), car
         plot_p_cartesian(args, target_data, gen_data, save_dir, max_val=cartesian_max,
                          num_bins=num_bins, cutoff=cutoff, epoch=epoch, density=False, fill=True, show=show)
         plot_jet_p_polar(args, target_data, gen_data, save_dir, max_val=jet_polar_max,
-                         num_bins=81, epoch=None, density=False, fill=True, show=False)
+                         num_bins=81, epoch=epoch, density=False, fill=True, show=False)
         plot_jet_p_cartesian(args, target_data, gen_data, save_dir, max_val=jet_cartesian_max,
-                             num_bins=81, epoch=None, density=False, fill=True, show=False)
+                             num_bins=81, epoch=epoch, density=False, fill=True, show=False)
 
 
 def plot_p_cartesian(args, target_data, gen_data, save_dir, max_val=[100, 100, 100],
