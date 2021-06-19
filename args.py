@@ -106,6 +106,10 @@ def setup_argparse():
                         help='List of maximum values of (pt, eta, phi) in the histogram. Default: [200, np.pi, 2].')
     parser.add_argument('--cartesian-max', nargs="+", type=float, default=[100, 100, 100], metavar='',
                         help='List of maximum values of (px, py, pz) in the histogram. Default: [100, 100, 100].')
+    parser.add_argument('--jet-polar-max', nargs="+", type=float, default=[30000, 4000, 2, np.pi], metavar='',
+                        help='List of maximum values of jet features (m, pt, eta, phi) in the histogram. Default: [30000, 4000, 2, np.pi].')
+    parser.add_argument('--jet-cartesian-max', nargs="+", type=float, default=[30000, 2000, 2000, 4000], metavar='',
+                        help='List of maximum values of jet features (m, px, py, pz) in the histogram. Default: [30000, 2000, 2000, 4000].')
     parser.add_argument('--num_bins', type=int, default=81, metavar='',
                         help='Number of bins in the histogram Default: 81.')
     parser.add_argument('--cutoff', type=float, default=1e-7, metavar='',

@@ -53,8 +53,8 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             optimizer_encoder.step()
             optimizer_decoder.step()
 
-    generated_data = np.concatenate(generated_data, axis=0).reshape(-1, 4)
-    target_data = np.concatenate(target_data, axis=0).reshape(-1, 4)
+    generated_data = np.concatenate(generated_data, axis=0)
+    target_data = np.concatenate(target_data, axis=0)
 
     epoch_avg_loss = epoch_total_loss / len(loader)
     save_data(data=epoch_avg_loss, data_name='loss',
@@ -122,12 +122,13 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
             valid_target *= 1000
             valid_gen *= 1000
 
-        plot_p(args, real_data=train_target, gen_data=train_gen, save_dir=outpath_train_jet_plots,
-               polar_max=args.polar_max, cartesian_max=args.cartesian_max,
-               num_bins=args.num_bins, cutoff=args.cutoff, epoch=epoch)
-        plot_p(args, real_data=valid_target, gen_data=valid_gen, save_dir=outpath_valid_jet_plots,
-               polar_max=args.polar_max, cartesian_max=args.cartesian_max,
-               num_bins=args.num_bins, cutoff=args.cutoff, epoch=epoch)
+        for target, gen, dir in zip((train_target, valid_target),
+                                    (train_gen, valid_gen),
+                                    (outpath_train_jet_plots, outpath_valid_jet_plots)):
+            plot_p(args, target_data=target, gen_data=gen, save_dir=dir,
+                   polar_max=args.polar_max, cartesian_max=args.cartesian_max,
+                   jet_polar_max=args.jet_polar_max, jet_cartesian_max=args.jet_cartesian_max,
+                   num_bins=args.num_bins, cutoff=args.cutoff, epoch=epoch)
 
         dts.append(dt)
         train_avg_losses.append(train_avg_loss)
