@@ -45,8 +45,7 @@ def setup_argparse():
                         help='Number of channels (multiplicity of all irreps) in each CG layer in the decoder.')
 
     parser.add_argument('--maxdim', nargs="+", type=int, default=[2], metavar='',
-                        help='Maximum weights in the model. Each element in maxdim will be capped to 2 because then tensor product'
-                        'of two (1/2, 1/2) irreps can be CG decomposed up to (1,1). Weights are multiplied by 2 to so that keys have integer values.')
+                        help='Maximum weights in the model (exclusive).')
     parser.add_argument('--num-basis-fn', type=int, default=10, metavar='',
                         help='Number of basis function to express edge features. Default: [10].')
 

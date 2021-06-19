@@ -101,7 +101,6 @@ class LGNEncoder(CGModule):
 
         level_gain = adapt_var_list(level_gain, num_cg_levels)
         maxdim = adapt_var_list(maxdim, num_cg_levels)
-        maxdim = [2 if dim > 2 or dim < 0 else dim for dim in maxdim]  # Cap max irrep to 4-vectors
         max_zf = adapt_var_list(max_zf, num_cg_levels)
 
         super().__init__(maxdim=max(maxdim + max_zf), device=device, dtype=dtype, cg_dict=cg_dict)
@@ -137,10 +136,12 @@ class LGNEncoder(CGModule):
         tau_pos = self.rad_funcs.tau
 
         # Input linear layer: Prepare input to the CG layers
-        tau_in = GTau({(0, 0): tau_input_scalars, (1, 1): tau_input_vectors})
+        tau_in = GTau({**{(0, 0): tau_input_scalars, (1, 1): tau_input_vectors},
+                       **{(l, l): 1 for l in range(2, max_zf[0] + 1)}})
         # A dictionary of multiplicities in the model (updated as the model is built)
         self.tau_dict = {'input': tau_in}
-        tau_out = GTau({weight: num_channels[0] for weight in [(0, 0), (1, 1)]})
+        # tau_out = GTau({weight: num_channels[0] for weight in [(0, 0), (1, 1)]})
+        tau_out = GTau({(l, l): num_channels[0] for l in range(max_zf[0] + 1)})
         self.input_func_node = MixReps(tau_in, tau_out, device=device, dtype=dtype)
 
         tau_input_node = self.input_func_node.tau
@@ -159,10 +160,11 @@ class LGNEncoder(CGModule):
             self.tau_cg_levels_node[-1] = GTau({weight: int(value * num_input_particles)
                                                 for weight, value in self.tau_cg_levels_node[-1]})
 
-        self.tau_output = GTau({(0, 0): tau_latent_scalars, (1, 1): tau_latent_vectors})
+        self.tau_output = {weight: 1 for weight in self.tau_cg_levels_node[-1].keys()}
+        self.tau_output[(0, 0)] = tau_latent_scalars
+        self.tau_output[(1, 1)] = tau_latent_vectors
         self.tau_dict['latent'] = self.tau_output
-        self.mix_reps = MixReps(
-            self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
+        self.mix_reps = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
 
         self.scale = scale
         self.tau_latent = self.tau_output
@@ -219,8 +221,6 @@ class LGNEncoder(CGModule):
 
         # Output layer: output node features to latent space.
         # Size for each rep: (2, batch_size, num_input_particles, tau_rep, dim_rep)
-        # (0,0): (2, batch_size, num_input_particles, tau_scalars, 1)
-        # (1,1): (2, batch_size, num_input_particles, tau_vectors, 4)
         node_features = nodes_all[-1]
 
         # Size for each reshaped rep: (2, batch_size, 1, tau_rep, dim_rep)
@@ -230,6 +230,7 @@ class LGNEncoder(CGModule):
         # Mix
         # node_all[-1] is the updated feature in the last layer
         latent_features = self.mix_reps(node_features)
+        latent_features = {weight: latent_features[weight] for weight in [(0, 0), (1, 1)]}  # Truncate higher order irreps than (1, 1)
 
         if self.map_to_latent.lower() == 'sum':
             latent_features = GVec({weight: torch.sum(value, dim=-3).unsqueeze(dim=-3)

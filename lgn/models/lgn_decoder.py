@@ -88,7 +88,6 @@ class LGNDecoder(CGModule):
 
         level_gain = adapt_var_list(level_gain, num_cg_levels)
         maxdim = adapt_var_list(maxdim, num_cg_levels)
-        maxdim = [2 if dim > 2 or dim < 0 else dim for dim in maxdim]  # Cap max irrep to 4-vectors
         max_zf = adapt_var_list(max_zf, num_cg_levels)
 
         super().__init__(maxdim=max(maxdim + max_zf), device=device, dtype=dtype, cg_dict=cg_dict)
@@ -112,9 +111,9 @@ class LGNDecoder(CGModule):
         self.mlp_width = mlp_width
         self.activation = activation
 
-        tau_mix_to_graph = GTau({weight: self.num_output_particles for weight in [(0, 0), (1, 1)]})
-        self.latent_to_graph = MixReps(
-            self.tau_dict['input'], tau_mix_to_graph, device=self.device, dtype=self.dtype)
+        tau_mix_to_graph = GTau({**{weight: self.num_output_particles for weight in [(0, 0), (1, 1)]},
+                                 **{(l, l): 1 for l in range(2, max_zf[0] + 1)}})
+        self.latent_to_graph = MixReps(self.tau_dict['input'], tau_mix_to_graph, device=self.device, dtype=self.dtype)
 
         tau_mix_to_cg = GTau({weight: num_channels[0] for weight in [(0, 0), (1, 1)]})
         self.input_func_node = MixReps(
@@ -139,10 +138,11 @@ class LGNDecoder(CGModule):
         self.tau_cg_levels_node = self.lgn_cg.tau_levels_node
         self.tau_dict['cg_layers'] = self.tau_cg_levels_node.copy()
 
-        self.tau_output = GTau({(0, 0): tau_output_scalars, (1, 1): tau_output_vectors})
+        self.tau_output = {weight: 1 for weight in self.tau_cg_levels_node[-1].keys()}
+        self.tau_output[(0, 0)] = 1
+        self.tau_output[(1, 1)] = 1
         self.tau_dict['output'] = self.tau_output
-        self.mix_to_output = MixReps(
-            self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
+        self.mix_to_output = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
 
         logging.info(f'Decoder initialized. Number of parameters: {sum(p.nelement() for p in self.parameters())}')
 
@@ -202,6 +202,8 @@ class LGNDecoder(CGModule):
         # Mix to output
         # node_all[-1] is the updated feature in the last layer
         generated_features = self.mix_to_output(node_features)
+        generated_features = {weight: generated_features[weight] for weight in [(0, 0), (1, 1)]}  # Truncate higher order irreps than (1, 1)
+
         decoder_nodes_all.append(generated_features)
         generated_ps = generated_features[(1, 1)].clone()
         generated_ps = rep_to_p(generated_ps)  # Convert to Cartesian coordinates
