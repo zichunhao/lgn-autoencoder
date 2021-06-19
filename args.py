@@ -24,7 +24,7 @@ def setup_argparse():
 
     ######################################## Model options ########################################
     parser.add_argument('--num-jet-particles', type=int, default=30, metavar='',
-                        help='Number of particles per jet (batch) in the input. Default: 150 for the hls4ml 150p data.')
+                        help='Number of particles per jet (batch) in the input. Default: 30 for the hls4ml 30-p data.')
     parser.add_argument('--tau-jet-scalars', type=int, default=1, metavar='',
                         help='Multiplicity of scalars per particle in a jet. Default: 1 for the hls4ml 150p data.')
     parser.add_argument('--tau-jet-vectors', type=int, default=1, metavar='',
