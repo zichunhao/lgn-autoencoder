@@ -198,6 +198,6 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_m
                      for key in perm_test_all_epochs[0].keys()}
     lgn_test_results['perm_dev_output'] = perm_test_avg
 
-    logging.info(f"Permutation invaraince test result: {lgn_test_results['perm_dev_output']}")
+    logging.info(f"Permutation invariance test result: {lgn_test_results['perm_dev_output']}")
 
     return lgn_test_results
