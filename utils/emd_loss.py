@@ -31,8 +31,7 @@ def emd_inference_qpth(distance_matrix, weight1, weight2, device, form='QP', l2_
 
     if form == 'QP':  # converting to QP - after testing L2 reg performs marginally better than QP
         # version: QTQ
-        Q = torch.bmm(Q_1.transpose(2, 1), Q_1).double() + eps * torch.eye(
-            nelement_distmatrix).double().unsqueeze(0).repeat(nbatch, 1, 1)  # 0.00001 *
+        Q = torch.bmm(Q_1.transpose(2, 1), Q_1).double() + eps * torch.eye(nelement_distmatrix).double().unsqueeze(0).repeat(nbatch, 1, 1)  # 0.00001 *
         p = torch.zeros(nbatch, nelement_distmatrix).double().to(device)
     elif form == 'L2':  # regularizing a trivial Q term with l2_strength
         # version: regularizer
@@ -130,7 +129,7 @@ def emd_loss(target_jet, jet, loss_norm_choice, eps=1e-12, form='L2', l2_strengt
     if (len(jet.shape) != 4) or (jet.shape[0] != 2):
         raise ValueError(f'Invalid dimension: {target_jet.shape}. The second argument should be output momenta.')
     if len(target_jet.shape) == 3:
-        target_jet = convert_to_complex(target_jet)
+        target_jet = convert_to_complex(target_jet, eps=eps)
     elif len(target_jet.shape) == 4:
         pass
     else:
@@ -138,6 +137,7 @@ def emd_loss(target_jet, jet, loss_norm_choice, eps=1e-12, form='L2', l2_strengt
 
     # diffs = - (jet[:, :, :2].unsqueeze(2) - target_jet[:, :, :2].unsqueeze(1)) + eps
     dists = pairwise_distance(jet, target_jet, loss_norm_choice=loss_norm_choice, device=jet.device)
+    dists = torch.sqrt(dists + eps)
 
     emd_score_real, flow_real = emd_inference_qpth(dists, target_jet[0, :, :, 2], jet[0, :, :, 2],
                                                    jet.device, form=form, l2_strength=l2_strength, eps=eps)

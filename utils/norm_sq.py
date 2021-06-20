@@ -2,7 +2,7 @@ import torch
 from lgn.cg_lib.zonal_functions import p_cplx_to_rep, repdot
 
 
-def convert_to_complex(real_ps):
+def convert_to_complex(real_ps, eps=0):
     """
     Convert real jet 4-momenta from the dataset to complex number (with imaginary dimension begin 0 tensors)
 
@@ -17,7 +17,7 @@ def convert_to_complex(real_ps):
     The 4-momenta extended to the field of complex numbers, with 0s in the imaginary components.
     The shape is `(2, batch_size, num_particles, 4)`
     """
-    return torch.stack((real_ps, torch.zeros_like(real_ps)), dim=0)
+    return torch.stack((real_ps, torch.zeros_like(real_ps) + eps), dim=0)
 
 
 def normsq_cplx(p4):
