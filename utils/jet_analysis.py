@@ -470,7 +470,8 @@ def get_jet_feature_cartesian(p4):
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
     """
     jet_p4 = np.sum(p4, axis=-2)
-    jet_mass = jet_p4[:, 0] ** 2 - np.sum(np.power(jet_p4, 2)[:, 1:], axis=-1)
+    msq = jet_p4[:, 0] ** 2 - np.sum(np.power(jet_p4, 2)[:, 1:], axis=-1)
+    jet_mass = np.sqrt(msq) * np.sign(msq)
     jet_px = jet_p4[:, 1]
     jet_py = jet_p4[:, 2]
     jet_pz = jet_p4[:, 3]
