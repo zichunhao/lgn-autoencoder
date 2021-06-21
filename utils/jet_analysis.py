@@ -6,7 +6,7 @@ from utils.utils import make_dir
 
 
 def plot_p(args, target_data, gen_data, save_dir, polar_max=(200, 2, np.pi), cartesian_max=(100, 100, 100),
-           jet_cartesian_max=(30000, 2000, 2000, 4000), jet_polar_max=(30000, 4000, 2, np.pi),
+           jet_cartesian_max=(200, 2000, 2000, 4000), jet_polar_max=(200, 4000, 2, np.pi),
            num_bins=201, cutoff=1e-6, epoch=None, show=False):
 
     plot_p_polar(args, target_data, gen_data, save_dir, max_val=polar_max, num_bins=num_bins,
@@ -123,7 +123,7 @@ def plot_p_cartesian(args, target_data, gen_data, save_dir, max_val=[100, 100, 1
     plt.close()
 
 
-def plot_jet_p_cartesian(args, target_data, gen_data, save_dir, max_val=[30000, 2000, 2000, 4000],
+def plot_jet_p_cartesian(args, target_data, gen_data, save_dir, max_val=[200, 2000, 2000, 4000],
                          num_bins=81, epoch=None, density=False, fill=True, show=False):
     """
     Plot jet features (m, px, py, pz) distribution.
