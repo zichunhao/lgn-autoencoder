@@ -101,7 +101,7 @@ def normsq_p3(p4):
 
 def pairwise_distance(p, q, loss_norm_choice, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     """
-    Compute the pairwise between jet 4-momenta p and q
+    Compute the pairwise distance between jet 4-momenta p and q
 
     Parameters
     ------
