@@ -6,7 +6,7 @@ def convert_to_complex(real_ps, eps=0):
     """
     Convert real jet 4-momenta from the dataset to complex number (with imaginary dimension begin 0 tensors)
 
-    Input
+    Parameters
     -----
     real_ps : `torch.Tensor`
         Real 4-momenta of the jets.
@@ -20,6 +20,18 @@ def convert_to_complex(real_ps, eps=0):
     return torch.stack((real_ps, torch.zeros_like(real_ps) + eps), dim=0)
 
 
+def norm_sq(p):
+    """
+    Calculate the norm square of a real 4-vector, p
+
+    Parameters
+    ----------
+    p : `torch.Tensor`
+        Real 4-momenta of the jets
+        Shape: `(batch_size, num_particles, 4)`
+    """
+    return torch.sqrt(p[:, 0] ** 2 - torch.sum(p[:, 1:] ** 2, dim=-1))
+
 def normsq_cplx(p4):
     """
     Compute the norm squared p4^2 for complex p4 and then the take the norm of the complex number.
@@ -28,7 +40,7 @@ def normsq_cplx(p4):
     2. Norm of the complex number is taken.
     Shape: `(OTHER_DIMENSIONS)`
 
-    Input
+    Parameters
     -----
     p4 : `torch.Tensor`
         The 4-momenta with shape (2, OTHER_DIMENSIONS , 4)
@@ -67,7 +79,7 @@ def normsq_real(p4):
     2. The Lorentz norm is computed using the Minkowskian metric (+, -, -, -).
     Shape: `(OTHER_DIMENSIONS)`
 
-    Input
+    Parameters
     -----
     p4 : `torch.Tensor`
         The 4-momenta with shape `(2, OTHER_DIMENSIONS, 4)`
