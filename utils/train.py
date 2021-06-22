@@ -7,6 +7,7 @@ import time
 import os.path as osp
 import warnings
 import torch
+import torch.nn as nn
 import numpy as np
 import sys
 sys.path.insert(1, 'utils/')
@@ -44,11 +45,15 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
         if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
-            batch_loss = chamferloss(p4_gen, p4_target, jet_features=True)  # preds, targets
-            epoch_total_loss += batch_loss
-        if args.loss_choice.lower() in ['emd', 'emdloss', 'emd_loss']:
+            batch_loss = chamferloss(p4_gen, p4_target, jet_features=True)  # output, target
+            epoch_total_loss += batch_loss.item()
+        elif args.loss_choice.lower() in ['emd', 'emdloss', 'emd_loss']:
             batch_loss = emd_loss(p4_target, p4_gen, loss_norm_choice=args.loss_norm_choice, eps=eps(args))  # true, output
             epoch_total_loss += batch_loss.item()
+        elif args.loss_choice.lower() in ['mse', 'mseloss', 'mse_loss']:
+            mseloss = nn.MSELoss()
+            batch_loss = mseloss(p4_gen[0, :, :, 1:], p4_target[:, :, 1:])  # output, target
+
         if (batch_loss != batch_loss).any():
             raise RuntimeError('Batch loss is NaN!')
 

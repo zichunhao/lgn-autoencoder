@@ -70,7 +70,7 @@ class ChamferLoss(nn.Module):
         min_dist_qp = torch.min(dist, dim=-2)  # Equivalent to permuting the last two axis
 
         # Adapted from Steven Tsan https://github.com/stsan9/AnomalyDetection4Jets/blob/emd/code/loss_util.py#L3
-        chamfer_loss = torch.sum(min_dist_pq.values + min_dist_qp.values).item()
+        chamfer_loss = torch.sum(min_dist_pq.values + min_dist_qp.values)
 
         if jet_features:
             jet_p = torch.sum(p[0], dim=-2)
