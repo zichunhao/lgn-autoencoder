@@ -103,7 +103,8 @@ def emd(jet, target_jet, loss_norm_choice, eps=1e-12, form='L2', l2_strength=0.0
     return emd_inference_qpth(dists, weight1, weight2, form=form, l2_strength=l2_strength)
 
 
-def emd_loss(target_jet, jet, loss_norm_choice, eps=1e-12, form='L2', l2_strength=0.0001, return_flow=False):
+def emd_loss(target_jet, jet, loss_norm_choice, eps=1e-12, imaginary_dist=False,
+             form='L2', l2_strength=0.0001, return_flow=False):
     """
     batched Energy Mover's Distance between jet and target_jet
 
@@ -115,6 +116,8 @@ def emd_loss(target_jet, jet, loss_norm_choice, eps=1e-12, form='L2', l2_strengt
     jet : `torch.Tensor`
         output momenta
         4-momenta of `(2, batch_size, num_particles, 4)` if complexified
+    imaginary_dist : `bool`
+        Whether to take the imaginary distribution into account.
     return_flow : `bool`
         Optional, default: False
         Whether to the flow as well as the EMD score
@@ -137,11 +140,13 @@ def emd_loss(target_jet, jet, loss_norm_choice, eps=1e-12, form='L2', l2_strengt
 
     # diffs = - (jet[:, :, :2].unsqueeze(2) - target_jet[:, :, :2].unsqueeze(1)) + eps
     dists = pairwise_distance(jet, target_jet, loss_norm_choice=loss_norm_choice, device=jet.device)
-    dists = torch.sqrt(dists + eps)
 
     emd_score_real, flow_real = emd_inference_qpth(dists, target_jet[0, :, :, 2], jet[0, :, :, 2],
                                                    jet.device, form=form, l2_strength=l2_strength, eps=eps)
-    emd_score_im, flow_im = emd_inference_qpth(dists, target_jet[1, :, :, 2], jet[1, :, :, 2],
-                                               jet.device, form=form, l2_strength=l2_strength, eps=eps)
+    if imaginary_dist:
+        emd_score_im, flow_im = emd_inference_qpth(dists, target_jet[1, :, :, 2], jet[1, :, :, 2],
+                                                   jet.device, form=form, l2_strength=l2_strength, eps=eps)
+    else:
+        emd_score_im, flow_im = 0
 
     return ((emd_score_real + emd_score_im).sum(), flow_real+flow_im) if return_flow else (emd_score_real + emd_score_im).sum()

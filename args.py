@@ -86,6 +86,8 @@ def setup_argparse():
                         "'cplx': Take the dot product and then find the norm out the the complex scalar. "
                         "'p3': Find the norm of each component and find the norm square of the 3-momenta part of p4"
                         "Default: 'p3.'")
+    parser.add_argument('--emd-imaginary-distribution', type=get_bool, default=False, metavar='',
+                        help="Whether to take the imaginary component into consideration when calculating the EMD. Default: False.")
 
     parser.add_argument('--save-dir', type=str, default='autoencoder-trained-models', metavar='',
                         help='The directory to save trained models and figures.')
