@@ -112,7 +112,7 @@ def normsq_p3(p4):
     return p_real + p_im
 
 
-def pairwise_distance(p, q, loss_norm_choice, eps=1e-16,
+def pairwise_distance(p, q, norm_choice, eps=1e-16,
                       device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     """
     Compute the pairwise distance between jet 4-momenta p and q
@@ -144,11 +144,11 @@ def pairwise_distance(p, q, loss_norm_choice, eps=1e-16,
     p1 = p.repeat(1, 1, 1, num_col).view(2, batch_size, -1, num_col, vec_dim).to(device)
     q1 = q.repeat(1, 1, num_row, 1).view(2, batch_size, num_row, -1, vec_dim).to(device)
 
-    if loss_norm_choice.lower() == 'real':
+    if norm_choice.lower() == 'real':
         dist = torch.sqrt(normsq_real(p1 - q1) + eps)
-    elif loss_norm_choice.lower() == 'canonical':
+    elif norm_choice.lower() == 'canonical':
         dist = torch.sqrt(normsq_canonical(p1 - q1) + eps)
-    elif loss_norm_choice.lower() in ['cplx', 'complex']:
+    elif norm_choice.lower() in ['cplx', 'complex']:
         dist = torch.sqrt(normsq_cplx(p1 - q1) + eps)
     else:
         dist = torch.sqrt(normsq_p3(p1 - q1) + eps)

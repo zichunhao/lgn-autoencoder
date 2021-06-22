@@ -139,7 +139,7 @@ def emd_loss(target_jet, jet, loss_norm_choice, eps=1e-12, imaginary_dist=False,
         raise ValueError(f'Invalid dimension: {target_jet.shape}. The first argument should be the target momenta.')
 
     # diffs = - (jet[:, :, :2].unsqueeze(2) - target_jet[:, :, :2].unsqueeze(1)) + eps
-    dists = pairwise_distance(jet, target_jet, loss_norm_choice=loss_norm_choice, device=jet.device)
+    dists = pairwise_distance(jet, target_jet, eps=eps, norm_choice=loss_norm_choice, device=jet.device)
 
     emd_score_real, flow_real = emd_inference_qpth(dists, target_jet[0, :, :, 2], jet[0, :, :, 2],
                                                    jet.device, form=form, l2_strength=l2_strength, eps=eps)
