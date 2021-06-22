@@ -20,7 +20,7 @@ def convert_to_complex(real_ps, eps=0):
     return torch.stack((real_ps, torch.zeros_like(real_ps) + eps), dim=0)
 
 
-def norm_sq(p, eps=1e-16):
+def norm_sq(p):
     """
     Calculate the norm square of a real 4-vector, p
 
@@ -30,7 +30,8 @@ def norm_sq(p, eps=1e-16):
         Real 4-momenta of the jets
         Shape: `(batch_size, num_particles, 4)`
     """
-    return torch.sqrt(p[:, 0] ** 2 - torch.sum(p[:, 1:] ** 2, dim=-1)) + eps
+    psq = torch.pow(p, 2)
+    return 2 * psq[..., 0] - psq.sum(dim=-1)
 
 def normsq_cplx(p4):
     """

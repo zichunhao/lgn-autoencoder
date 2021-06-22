@@ -41,7 +41,7 @@ class ChamferLoss(nn.Module):
         self.loss_norm_choice = loss_norm_choice
         self.device = device if (device is not None) else torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    def forward(self, p, q, jet_features=False, eps=1e-12):
+    def forward(self, p, q, jet_features=False):
         """
         The forward pass to compute the chamfer loss of the point-cloud like jets.
 
@@ -75,7 +75,7 @@ class ChamferLoss(nn.Module):
         if jet_features:
             jet_p = torch.sum(p[0], dim=-2)
             jet_q = torch.sum(q[0], dim=-2)
-            jet_loss = norm_sq(jet_p - jet_q, eps=eps).sum()
+            jet_loss = norm_sq(jet_p - jet_q).sum()
         else:
             jet_loss = 0
 
