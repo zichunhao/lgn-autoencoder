@@ -80,7 +80,7 @@ def setup_argparse():
                         help="Choice of loss function. Options: ('ChamferLoss, EMDLoss')")
     parser.add_argument('--loss-norm-choice', type=str, default='p3', metavar='',
                         help="Choice of calculating the norms of 4-vectors when calculating the loss. "
-                        "Options: ('canonical', 'real', 'cplx'). "
+                        "Options: ('canonical', 'real', 'cplx', 'p3'). "
                         "'canonical': Write p in the basis of zonal functions, take the dot product, and find the norm out of the complex scalar. "
                         "'real': Find the norm of each component and then take the dot product. "
                         "'cplx': Take the dot product and then find the norm out the the complex scalar. "
