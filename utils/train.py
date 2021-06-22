@@ -23,6 +23,8 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         assert (optimizer_encoder is not None) and (optimizer_decoder is not None), "Please specify the optimizers."
         encoder.train()
         decoder.train()
+        encoder_weight_path = make_dir(osp.join(outpath, "weights_encoder"))
+        decoder_weight_path = make_dir(osp.join(outpath, "weights_decoder"))
     else:
         encoder.eval()
         decoder.eval()
@@ -65,6 +67,11 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             optimizer_encoder.step()
             optimizer_decoder.step()
 
+            # save model
+            if ((i % 50) == 0 and i > 0):
+                torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
+                torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
+
     generated_data = np.concatenate(generated_data, axis=0)
     target_data = np.concatenate(target_data, axis=0)
 
@@ -74,13 +81,8 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
     # Save weights
     if is_train:
-        encoder_weight_path = make_dir(osp.join(outpath, "weights_encoder"))
-        torch.save(encoder.state_dict(),
-                   osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
-
-        decoder_weight_path = make_dir(osp.join(outpath, "weights_decoder"))
-        torch.save(decoder.state_dict(),
-                   osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
+        torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
+        torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
 
     return epoch_avg_loss, generated_data, target_data
 
