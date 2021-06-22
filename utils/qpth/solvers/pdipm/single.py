@@ -42,7 +42,7 @@ def forward(inputs_i, Q, G, A, b, h, U_Q, U_S, R, verbose=False):
         pri_resid = torch.norm(ry) + torch.norm(rz)
         dual_resid = torch.norm(rx)
         resid = pri_resid + dual_resid + nineq * mu
-        d = z / s
+        d = z / (s + 1e-16)
         if verbose:
             print(("primal_res = {0:.5g}, dual_res = {1:.5g}, " +
                    "gap = {2:.5g}, kappa(d) = {3:.5g}").format(
@@ -62,10 +62,10 @@ def forward(inputs_i, Q, G, A, b, h, U_Q, U_S, R, verbose=False):
         # compute centering directions
         alpha = min(min(get_step(z, dz_aff), get_step(s, ds_aff)), 1.0)
         sig = (torch.dot(s + alpha * ds_aff, z +
-                         alpha * dz_aff) / (torch.dot(s, z)))**3
+                         alpha * dz_aff) / (torch.dot(s, z)) + 1e-16)**3
         dx_cor, ds_cor, dz_cor, dy_cor = solve_kkt(
             U_Q, d, G, A, U_S, torch.zeros(nz).type_as(Q),
-            (-mu * sig * torch.ones(nineq).type_as(Q) + ds_aff * dz_aff) / s,
+            (-mu * sig * torch.ones(nineq).type_as(Q) + ds_aff * dz_aff) / (s + 1e-16),
             torch.zeros(nineq).type_as(Q), torch.zeros(neq).type_as(Q))
         # dx_cor, ds_cor, dz_cor, dy_cor = factor_solve_kkt(Q, D, G, A,
         #     torch.zeros(nz).type_as(Q),

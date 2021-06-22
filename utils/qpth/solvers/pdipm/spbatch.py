@@ -117,7 +117,7 @@ def forward(Qi, Qv, Qsz, p, Gi, Gv, Gsz, h, Ai, Av, Asz, b,
             return best['x'], best['y'], best['z'], best['s']
 
         if solver == KKTSolvers.QR:
-            D = z / s
+            D = z / (s + 1e-16)
             K[1].t()[Didx] = D.t()
             Ktilde[1].t()[Didx] = D.t() + KKTeps
             # TODO: Share memory between these or handle batched sparse
@@ -139,10 +139,10 @@ def forward(Qi, Qv, Qsz, p, Gi, Gv, Gsz, h, Ai, Av, Asz, b,
         t2 = z + alpha_nineq * dz_aff
         t3 = torch.sum(t1 * t2, 1).squeeze()
         t4 = torch.sum(s * z, 1).squeeze()
-        sig = (t3 / t4)**3
+        sig = (t3 / (t4 + 1e-16))**3
 
         rx = torch.zeros(nBatch, nz).type_as(Qv)
-        rs = ((-mu * sig).repeat(nineq, 1).t() + ds_aff * dz_aff) / s
+        rs = ((-mu * sig).repeat(nineq, 1).t() + ds_aff * dz_aff) / (s + 1e-16)
         rz = torch.zeros(nBatch, nineq).type_as(Qv)
         ry = torch.zeros(nBatch, neq).type_as(Qv)
 
@@ -176,7 +176,7 @@ def forward(Qi, Qv, Qsz, p, Gi, Gv, Gsz, h, Ai, Av, Asz, b,
 
 def get_step(v, dv):
     # nBatch = v.size(0)
-    a = -v / dv
+    a = -v / (dv + 1e-16)
     a[dv > 0] = max(1.0, a.max())
     return a.min(1)[0].squeeze()
 

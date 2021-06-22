@@ -144,7 +144,7 @@ def QPFunction(eps=1e-12, verbose=0, notImprovedLim=3,
             # Clamp here to avoid issues coming up when the slacks are too small.
             # TODO: A better fix would be to get lams and slacks from the
             # solver that don't have this issue.
-            d = torch.clamp(ctx.lams, min=1e-8) / torch.clamp(ctx.slacks, min=1e-8)
+            d = torch.clamp(ctx.lams, min=1e-8) / (torch.clamp(ctx.slacks, min=1e-8) + 1e-16)
 
             pdipm_b.factor_kkt(ctx.S_LU, ctx.R, d)
             dx, _, dlam, dnu = pdipm_b.solve_kkt(
@@ -211,7 +211,7 @@ class SpQPFunction(Function):
         zhats, Qv, p, Gv, h, Av, b = self.saved_tensors
 
         Di = type(self.Qi)([range(self.nineq), range(self.nineq)])
-        Dv = self.lams / self.slacks
+        Dv = self.lams / (self.slacks + 1e-16)
         Dsz = torch.Size([self.nineq, self.nineq])
         dx, _, dlam, dnu = pdipm_spb.solve_kkt(
             self.Qi, Qv, self.Qsz, Di, Dv, Dsz,
