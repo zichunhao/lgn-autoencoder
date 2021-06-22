@@ -33,6 +33,18 @@ def norm_sq(p):
     psq = torch.pow(p, 2)
     return 2 * psq[..., 0] - psq.sum(dim=-1)
 
+def norm_sq_p3(p3):
+    """
+    Calculate the norm square of a real 3-vector, p3
+
+    Parameters
+    ----------
+    p : `torch.Tensor`
+        Real 4-momenta of the jets
+        Shape: `(batch_size, num_particles, 3)`
+    """
+    return torch.sum(torch.pow(p3, 2)[..., 1:], dim=-1)
+
 def normsq_cplx(p4):
     """
     Compute the norm squared p4^2 for complex p4 and then the take the norm of the complex number.
@@ -153,3 +165,45 @@ def pairwise_distance(p, q, norm_choice, eps=1e-16,
     else:
         dist = torch.sqrt(normsq_p3(p1 - q1) + eps)
     return dist
+
+def pairwise_distance_real(p, q, eps=1e-16, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+    """
+    Compute the pairwise distance between jet 4-momenta p and q
+
+    Parameters
+    ------
+    p, q: `torch.Tensor`
+        The real 4-momenta of shape `(batch_size, num_particles, 4)`,
+        where num_particles *could* be different for p and q.
+    norm_choice : `str`
+        The choice of calculating the norm as distance.
+        Options:
+            - 'p4': Calculate the Minkowskian norm of the full momentum using the metric diag(1, -1, -1, -1)
+            - 'p3': Calculate the Euclidean norm of the 3-momentum.
+    Output
+    -------
+    dist : `torch.Tensor`
+        The matrix that represents distance between each particle in p and q.
+        Shape : `(batch_size, num_particles, num_particles)`
+    """
+    if (p.shape[0] != q.shape[0]):
+        raise ValueError(f"The batch size of p and q are not equal! p.shape[0] is {p.shape[0]}, whereas q.shape[0] is {q.shape[0]}!")
+    if (p.shape[-1] != 4) and (p.shape[-1] != 3):
+        raise ValueError(f"p should consist of 3-vectors or 4-vectors, but p.shape[-1] is {p.shape[-1]}.")
+    if (q.shape[-1] != 4) and (q.shape[-1] != 4):
+        raise ValueError(f"q should consist of 3-vectors or 4-vectors, but q.shape[-1] is {q.shape[-1]}.")
+
+    batch_size = p.shape[0]
+    num_row = p.shape[-2]
+    num_col = q.shape[-2]
+    vec_dim = p.shape[-1]
+
+    p1 = p.repeat(1, 1, num_col).view(batch_size, -1, num_col, vec_dim).to(device)
+    q1 = q.repeat(1, num_row, 1).view(batch_size, num_row, -1, vec_dim).to(device)
+
+    if vec_dim == 4:
+        dist = norm_sq(p1-q1)
+    elif vec_dim == 3:
+        dist = norm_sq_p3(p1-q1)
+
+    return torch.sqrt(dist + eps)
