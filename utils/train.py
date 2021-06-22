@@ -38,6 +38,8 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         generated_data.append(p4_gen[0].cpu().detach().numpy())
 
         p4_target = batch['p4']
+        if device is not None:
+            p4_target = p4_target.to(device=device)
         target_data.append(p4_target.cpu().detach().numpy())
 
         if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
