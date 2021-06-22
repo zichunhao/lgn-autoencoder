@@ -45,7 +45,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
         if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
-            batch_loss = chamferloss(p4_gen, p4_target, jet_features=True)  # output, target
+            batch_loss = chamferloss(p4_gen, p4_target, jet_features=True, eps=eps(args))  # output, target
             epoch_total_loss += batch_loss.item()
         elif args.loss_choice.lower() in ['emd', 'emdloss', 'emd_loss']:
             batch_loss = emd_loss(p4_target, p4_gen, loss_norm_choice=args.loss_norm_choice, eps=eps(args))  # true, output
