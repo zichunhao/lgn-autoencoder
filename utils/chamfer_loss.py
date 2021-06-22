@@ -64,7 +64,7 @@ class ChamferLoss(nn.Module):
         else:
             raise ValueError(f'Invalid dimension: {q.shape}. The second argument should be the jet target momenta.')
 
-        dist = torch.pow(pairwise_distance(p, q, loss_norm_choice=self.loss_norm_choice, device=self.device), 2)
+        dist = torch.pow(pairwise_distance(p, q, norm_choice=self.loss_norm_choice, device=self.device), 2)
 
         min_dist_pq = torch.min(dist, dim=-1)
         min_dist_qp = torch.min(dist, dim=-2)  # Equivalent to permuting the last two axis
