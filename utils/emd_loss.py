@@ -148,4 +148,4 @@ def emd_loss(target_jet, jet, loss_norm_choice, eps=1e-12, imaginary_dist=False,
     else:
         emd_score_im, flow_im = emd_inference_qpth(dists, target_jet[1, :, :, 2], jet[1, :, :, 2],
                                                    jet.device, form=form, l2_strength=l2_strength, eps=eps)
-       return ((emd_score_real + emd_score_im).sum(), flow_real + flow_im) if return_flow else (emd_score_real + emd_score_im).sum()
+        return ((emd_score_real + emd_score_im).sum(), flow_real + flow_im) if return_flow else (emd_score_real + emd_score_im).sum()
