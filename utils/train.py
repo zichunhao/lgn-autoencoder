@@ -55,7 +55,8 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             epoch_total_loss += batch_loss.item()
         elif args.loss_choice.lower() in ['mse', 'mseloss', 'mse_loss']:
             mseloss = nn.MSELoss()
-            batch_loss = mseloss(p4_gen[0, :, :, 1:], p4_target[:, :, 1:])  # output, target
+            batch_loss = mseloss(p4_gen[0], p4_target)  # output, target
+            epoch_total_loss += batch_loss
 
         if (batch_loss != batch_loss).any():
             raise RuntimeError('Batch loss is NaN!')
