@@ -156,9 +156,9 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
         if (epoch > 0) and ((epoch + 1) % 10 == 0):
             plot_eval_results(args, data=(train_avg_losses[-50:], valid_avg_losses[-50:]), data_name=f"losses from {epoch + 1 - 50} to {epoch + 1}",
                               outpath=outpath, global_data=False)
-        if (epoch > 0) and ((epoch + 1) % 50 == 0):
+        if (epoch > 0) and ((epoch + 1) % 2 == 0):
             plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
-                              data_name='Losses', outpath=outpath, global_data=True)
+                              data_name='Losses', outpath=outpath, global_data=False)
 
     # Save global data
     save_data(data=train_avg_losses, data_name='losses', is_train=True, outpath=outpath, epoch=-1)
