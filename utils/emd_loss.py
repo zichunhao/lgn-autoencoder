@@ -136,7 +136,7 @@ def get_p_polar(p, eps=1e-16):
         eta = torch.asinh(pz / (pt + eps))
     except AttributeError:
         eta = arcsinh(pz / (pt + eps))
-    phi = torch.atan2(py, px)
+    phi = torch.atan2(py + eps, px + eps)
 
     return torch.stack((eta, phi, pt), dim=-1)
 
