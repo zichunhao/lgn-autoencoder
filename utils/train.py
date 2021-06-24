@@ -153,7 +153,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
                      f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, dt={dt}')
 
         if (epoch > 0) and ((epoch + 1) % 10 == 0):
-            plot_eval_results(args, data=(train_avg_losses[-50:], valid_avg_losses[-50:]), data_name=f"losses from {epoch + 1 - 50} to {epoch + 1}",
+            plot_eval_results(args, data=(train_avg_losses[-10:], valid_avg_losses[-10:]), data_name=f"losses from {epoch + 1 - 50} to {epoch + 1}",
                               outpath=outpath, global_data=False)
         if (epoch > 0) and ((epoch + 1) % 2 == 0):
             plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
