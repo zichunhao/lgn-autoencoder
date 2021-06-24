@@ -73,8 +73,8 @@ def emd_inference_qpth(distance_matrix, weight1, weight2, device, form='QP', l2_
     return emd_score, flow.view(-1, nelement_weight1, nelement_weight2)
 
 
-def emd_loss(target_jet, jet_gen, loss_norm_choice, eps=1e-12, form='L2',
-             l2_strength=0.0001, return_flow=False, device=None):
+def emd_loss(target_jet, jet_gen, eps=1e-12, form='L2', l2_strength=0.0001,
+             return_flow=False, device=None):
     """
     batched Energy Mover's Distance between jet_gen and target_jet
 
@@ -114,7 +114,7 @@ def emd_loss(target_jet, jet_gen, loss_norm_choice, eps=1e-12, form='L2',
     jet_gen = get_p_polar(jet_gen, eps=eps)
     target_jet = get_p_polar(target_jet, eps=eps)
 
-    diffs = -(target_jet[:, :, :2].unsqueeze(2) - jet_gen[:, :, :2].unsqueeze(1)) + 1e-12
+    diffs = -(target_jet[:, :, :2].unsqueeze(2) - jet_gen[:, :, :2].unsqueeze(1)) + eps
     dists = torch.norm(diffs, dim=3)
 
     emd_score, flow = emd_inference_qpth(dists, target_jet[:, :, 2], jet_gen[:, :, 2],
