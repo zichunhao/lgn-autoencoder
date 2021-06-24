@@ -73,51 +73,19 @@ def emd_inference_qpth(distance_matrix, weight1, weight2, device, form='QP', l2_
     return emd_score, flow.view(-1, nelement_weight1, nelement_weight2)
 
 
-def emd(jet, target_jet, loss_norm_choice, eps=1e-12, form='L2', l2_strength=0.0001, device=torch.device('cpu')):
+def emd_loss(target_jet, jet_gen, loss_norm_choice, eps=1e-12, form='L2',
+             l2_strength=0.0001, return_flow=False, device=None):
     """
-    calculate Energy Mover's Distance between each jet in jet and each in jet2
-    :param jet: [nbatch * ] num_particles * 3
-        - 3 particle features [eta, phi, pt]
-    :param target_jet: [nbatch * ] num_particles * 3
-    :return:
-    emd distance: nbatch * nbatch
-    flow : nbatch * nbatch * num_particles * num_particles
-    """
-
-    if len(jet.shape) < 3:
-        jet = jet.unsqueeze(0)
-        target_jet = target_jet.unsqueeze(0)
-
-    n = jet.shape[0]
-
-    x1 = jet.unsqueeze(1).repeat(1, n, 1, 1).view(n * n, -1, 3)
-    x2 = target_jet.repeat(n, 1, 1)
-
-    # diffs = -(x1[:, :, :2].unsqueeze(2) - x2[:, :, :2].unsqueeze(1)) + eps
-    diffs = pairwise_distance(x1, x2, loss_norm_choice=loss_norm_choice, device=device)
-    dists = torch.norm(diffs, dim=3)
-
-    weight1 = jet[:, :, 2].unsqueeze(1).repeat(1, n, 1).view(n * n, -1)
-    weight2 = target_jet[:, :, 2].repeat(n, 1)
-
-    return emd_inference_qpth(dists, weight1, weight2, form=form, l2_strength=l2_strength)
-
-
-def emd_loss(target_jet, jet, loss_norm_choice, eps=1e-12, imaginary_dist=False,
-             form='L2', l2_strength=0.0001, return_flow=False):
-    """
-    batched Energy Mover's Distance between jet and target_jet
+    batched Energy Mover's Distance between jet_gen and target_jet
 
     Parameters
     ----------
     target_jet : `torch.Tensor`
         target momenta
         4-momenta of shape `(batch_size, num_particles, 4)` or `(2, batch_size, num_particles, 4)` if complexified
-    jet : `torch.Tensor`
+    jet_gen : `torch.Tensor`
         output momenta
         4-momenta of `(2, batch_size, num_particles, 4)` if complexified
-    imaginary_dist : `bool`
-        Whether to take the imaginary distribution into account.
     return_flow : `bool`
         Optional, default: False
         Whether to the flow as well as the EMD score
@@ -129,23 +97,42 @@ def emd_loss(target_jet, jet, loss_norm_choice, eps=1e-12, imaginary_dist=False,
         flow : torch.Tensor with shape (batch_size, num_particles, num_particles)
     """
 
-    if (len(jet.shape) != 4) or (jet.shape[0] != 2):
+    if (len(jet_gen.shape) != 4) or (jet_gen.shape[0] != 2):
         raise ValueError(f'Invalid dimension: {target_jet.shape}. The second argument should be output momenta.')
-    if len(target_jet.shape) == 3:
-        target_jet = convert_to_complex(target_jet, eps=eps)
-    elif len(target_jet.shape) == 4:
-        pass
-    else:
-        raise ValueError(f'Invalid dimension: {target_jet.shape}. The first argument should be the target momenta.')
+    if len(target_jet.shape) == 4:  # complexified
+        target_jet = target_jet[0]
+    elif len(target_jet.shape) != 3:
+        raise ValueError(f'Invalid dimension: {target_jet.shape}. The first argument should be target momenta.')
 
-    # diffs = - (jet[:, :, :2].unsqueeze(2) - target_jet[:, :, :2].unsqueeze(1)) + eps
-    dists = pairwise_distance(jet, target_jet, eps=eps, norm_choice=loss_norm_choice, device=jet.device)
+    if device is None:
+        device = jet_gen.device
 
-    emd_score_real, flow_real = emd_inference_qpth(dists, target_jet[0, :, :, 2], jet[0, :, :, 2],
-                                                   jet.device, form=form, l2_strength=l2_strength, eps=eps)
-    if not imaginary_dist:
-        return (emd_score_real.sum(), flow_real) if return_flow else emd_score_real.sum()
-    else:
-        emd_score_im, flow_im = emd_inference_qpth(dists, target_jet[1, :, :, 2], jet[1, :, :, 2],
-                                                   jet.device, form=form, l2_strength=l2_strength, eps=eps)
-        return ((emd_score_real + emd_score_im).sum(), flow_real + flow_im) if return_flow else (emd_score_real + emd_score_im).sum()
+    target_jet = target_jet.to(device)
+
+    # Convert to polar coordinate (eta, phi, pt)
+    jet_gen = jet_gen[0]  # real component only
+    jet_gen = get_p_polar(jet_gen, eps=eps)
+    target_jet = get_p_polar(target_jet, eps=eps)
+
+    diffs = -(target_jet[:, :, :2].unsqueeze(2) - jet_gen[:, :, :2].unsqueeze(1)) + 1e-12
+    dists = torch.norm(diffs, dim=3)
+
+    emd_score, flow = emd_inference_qpth(dists, target_jet[:, :, 2], jet_gen[:, :, 2],
+                                         device, form=form, l2_strength=l2_strength)
+
+    return (emd_score.sum(), flow) if return_flow else emd_score.sum()
+
+
+def get_p_polar(p, eps=1e-16):
+    """
+    (E, px, py, pt) -> (eta, phi, pt)
+    """
+    px = p[..., 1]
+    py = p[..., 2]
+    pz = p[..., 3]
+
+    pt = torch.sqrt(px ** 2 + py ** 2 + eps)
+    eta = torch.asinh(pz / (pt + eps))
+    phi = torch.atan2(py, px)
+
+    return torch.stack((eta, phi, pt), dim=-1)
