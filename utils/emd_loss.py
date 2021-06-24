@@ -132,7 +132,13 @@ def get_p_polar(p, eps=1e-16):
     pz = p[..., 3]
 
     pt = torch.sqrt(px ** 2 + py ** 2 + eps)
-    eta = torch.arcsinh(pz / (pt + eps))
+    try:
+        eta = torch.asinh(pz / (pt + eps))
+    except AttributeError:
+        eta = arcsinh(pz / (pt + eps))
     phi = torch.atan2(py, px)
 
     return torch.stack((eta, phi, pt), dim=-1)
+
+def arcsinh(z):
+    return torch.log(z + torch.sqrt(1 + torch.pow(z, 2)))
