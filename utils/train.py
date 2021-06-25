@@ -58,7 +58,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             epoch_total_loss += batch_loss
         elif args.loss_choice.lower() in ['hybrid', 'combined', 'mix']:
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
-            batch_loss = chamferloss(p4_gen, p4_target, jet_features=True) + emd_loss(p4_target, p4_gen, eps=eps(args))
+            batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features=True) + emd_loss(p4_target, p4_gen, eps=eps(args))
             epoch_total_loss += batch_loss.item()
 
         if (batch_loss != batch_loss).any():

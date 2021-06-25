@@ -78,6 +78,8 @@ def setup_argparse():
                         help='Number of epochs for training.')
     parser.add_argument('--loss-choice', type=str, default='ChamferLoss', metavar='',
                         help="Choice of loss function. Options: ('ChamferLoss', 'EMDLoss', 'hybrid')")
+    parser.add_argument('--chamfer-loss-weight', type=float, default=1.0, metavar='',
+                        help="The weight for the chamfer loss, only relevant if loss-choice is 'hybrid'. Default: 1.0.")
     parser.add_argument('--loss-norm-choice', type=str, default='p3', metavar='',
                         help="Choice of calculating the norms of 4-vectors when calculating the loss. "
                         "Options: ('canonical', 'real', 'cplx', 'p3'). "
