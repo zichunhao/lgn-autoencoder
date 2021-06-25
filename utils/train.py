@@ -56,6 +56,10 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             mseloss = nn.MSELoss()
             batch_loss = mseloss(p4_gen[0], p4_target)  # output, target
             epoch_total_loss += batch_loss
+        elif args.loss_choice.lower() in ['hybrid', 'combined', 'mix']:
+            chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
+            batch_loss = chamferloss(p4_gen, p4_target, jet_features=True) + emd_loss(p4_target, p4_gen, eps=eps(args))
+            epoch_total_loss += batch_loss.item()
 
         if (batch_loss != batch_loss).any():
             raise RuntimeError('Batch loss is NaN!')
