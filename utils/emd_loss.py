@@ -3,7 +3,6 @@ Slightly adapted from Raghav Kansal's code (https://github.com/rkansal47/emd_los
 """
 import torch
 from utils.qpth.qp import QPFunction
-from utils.norm_sq import convert_to_complex, pairwise_distance
 
 
 # derived from https://github.com/icoz69/DeepEMD/blob/master/Models/models/emd_utils.py
