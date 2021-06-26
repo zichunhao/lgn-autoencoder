@@ -105,7 +105,9 @@ def emd_loss(target_jet, jet_gen, eps=1e-12, form='L2', l2_strength=0.0001,
 
     if device is None:
         device = jet_gen.device
-
+    else:
+        jet_gen = jet_gen.to(device)
+        
     target_jet = target_jet.to(device)
 
     # Convert to polar coordinate (eta, phi, pt)
