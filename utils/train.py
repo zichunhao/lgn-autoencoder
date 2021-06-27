@@ -38,12 +38,18 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         p4_gen = decoder(latent_features, covariance_test=False)
         if (p4_gen != p4_gen).any():
             raise RuntimeError('NaN data!')
-        generated_data.append(p4_gen[0].cpu().detach().numpy())
+        if type(generated_data) is list:
+            generated_data = p4_gen[0].cpu().detach().numpy()
+        else:
+            generated_data = np.append(generated_data, p4_gen[0].cpu().detach().numpy(), axis=0)
 
         p4_target = batch['p4']
         if device is not None:
             p4_target = p4_target.to(device=device)
-        target_data.append(p4_target.cpu().detach().numpy())
+        if type(target_data) is list:
+            target_data = p4_target.cpu().detach().numpy()
+        else:
+            target_data = np.append(target_data, p4_target.cpu().detach().numpy(), axis=0)
 
         if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
