@@ -83,9 +83,6 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
                 torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
                 torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
 
-    generated_data = np.concatenate(generated_data, axis=0)
-    target_data = np.concatenate(target_data, axis=0)
-
     epoch_avg_loss = epoch_total_loss / len(loader)
     save_data(data=epoch_avg_loss, data_name='loss',
               is_train=is_train, outpath=outpath, epoch=epoch)
