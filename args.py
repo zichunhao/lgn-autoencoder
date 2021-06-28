@@ -93,6 +93,8 @@ def setup_argparse():
                         help='The directory to save trained models and figures.')
     parser.add_argument('--custom-suffix', type=str, default=None, metavar='',
                         help='Custom suffix of the saving directory.')
+    parser.add_argument('--save-freq', type=int, default=500, metavar='',
+                        help='How frequent the model weights are saved in each epoch. Default: 500.')
 
     # Loading existing models
     parser.add_argument('--load-to-train', default=False, action='store_true',
