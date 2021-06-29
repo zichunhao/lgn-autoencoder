@@ -51,10 +51,6 @@ def initialize_data(path, batch_size, train_fraction):
     num_jets = len(data['Nobj'])
     num_train = int(num_jets * train_fraction)
     num_val = num_jets - num_train
-    print(f'{num_jets = }')
-    print(f'{num_train = }')
-    print(f'{num_val = }')
-    print(f'{num_train + num_val = }')
 
     # split into training and validation set
     train_set, test_set = torch.utils.data.random_split(jet_data, [num_train, num_val])
