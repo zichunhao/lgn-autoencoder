@@ -169,7 +169,7 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_m
     rot_test_all_epochs = []
     perm_test_all_epochs = []
 
-    for data in dataloader:
+    for idx, data in enumerate(dataloader):
         boost_results = covariance_test(encoder, decoder, data, test_type='boost',
                                         cg_dict=cg_dict, alpha_max=alpha_max, unit=unit)
         boost_test_all_epochs.append(boost_results)
@@ -180,6 +180,8 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_m
 
         perm_result = permutation_invariance_test(encoder, decoder, data)
         perm_test_all_epochs.append(perm_result)
+        if idx + 1 == args.num_test_batch:
+            break
 
     dt = time.time() - t0
     logging.info(f"Covariance test completed! Time it took testing equivariance of epoch {epoch} is {round(dt/60, 2)} min")

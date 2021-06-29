@@ -20,8 +20,8 @@ class JetDataset(Dataset):
             self.num_pts = len(data['Nobj'])
         else:
             if num_pts > len(data['Nobj']):
-                logging.warn(
-                    f'Desired number of points ({num_pts}) is greater than the number of data points ({len(data)}) available in the dataset!')
+                logging.warn(f'Desired number of points ({num_pts}) is greater than '
+                             f'the number of data points ({len(data)}) available in the dataset!')
                 self.num_pts = len(data['Nobj'])
             else:
                 self.num_pts = num_pts
@@ -40,46 +40,36 @@ class JetDataset(Dataset):
         return {key: val[idx] for key, val in self.data.items()}
 
 
-def initialize_data(path, batch_size, num_train, num_test=-1, num_val=-1, test_batch_size=None):
+def initialize_data(path, batch_size, train_fraction):
     data = torch.load(path)
 
     jet_data = JetDataset(data, shuffle=True)  # The original data is not shuffled yet
 
-    if not (num_test < 0 or num_val < 0):  # Specified num_test and num_val
-        assert num_train + num_test + num_val <= len(jet_data), f"num_train + num_test + num_val = {num_train + num_test + num_val}" \
-                                                                f"is larger than the data size {len(jet_data)}!"
+    if (train_fraction > 1) or (train_fraction < 0):
+        train_fraction = 0.8
 
-        # split into training, testing, and valid set
-        jet_data = JetDataset(jet_data[0: num_train + num_test + num_val], shuffle=True)
-        train_set, test_set, valid_set = torch.utils.data.random_split(jet_data,
-                                                                       [num_train, num_test, num_val])
-        train_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=True)
-        valid_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=True)
-        if test_batch_size is None:
-            test_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=False)
-        else:
-            test_loader = DataLoader(jet_data, batch_size=test_batch_size, shuffle=False)
+    num_jets = len(data['Nobj'])
+    num_train = int(num_jets * train_fraction)
+    num_val = num_jets - num_train
+    print(f'{num_jets = }')
+    print(f'{num_train = }')
+    print(f'{num_val = }')
+    print(f'{num_train + num_val = }')
 
-    # Unspecified num_test and num_val -> Choose training data and then divide the rest in half into testing and validation datasets
-    else:
-        assert num_train <= len(jet_data), f"num_train = {num_train} is larger than the data size {len(jet_data)}!"
-
-        # split into training, testing, and valid sets
-        # split the rest in half
-        num_test = int((len(jet_data) - num_train) / 2)
-        num_val = len(jet_data) - num_train - num_test
-        train_set, test_set, valid_set = torch.utils.data.random_split(jet_data,
-                                                                       [num_train, num_test, num_val])
-        train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
-        valid_loader = DataLoader(valid_set, batch_size=batch_size, shuffle=True)
-        if test_batch_size is None:
-            test_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=False)
-        else:
-            test_loader = DataLoader(jet_data, batch_size=test_batch_size, shuffle=False)
+    # split into training and validation set
+    train_set, test_set = torch.utils.data.random_split(jet_data, [num_train, num_val])
+    train_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=True)
+    valid_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=True)
 
     print('Data loaded')
 
-    return train_loader, valid_loader, test_loader
+    return train_loader, valid_loader
+
+
+def initialize_test_data(path, batch_size):
+    data = torch.load(path)
+    jet_data = JetDataset(data, shuffle=False)
+    return DataLoader(jet_data, batch_size=batch_size, shuffle=True)
 
 
 def prepare_input(data, scale, cg_levels=True, device=None, dtype=None):
@@ -149,8 +139,8 @@ def cartesian(p_list):
     return [E, px, py, pz, tag]
 
 
-def convert_to_cartesian(jet_data, name_str, save=False):
-    print(f"preprocessing {name_str}...")
+def convert_to_cartesian(jet_data, save_path, file_name, test_fraction=0.2, save=False):
+    print(f"preprocessing {file_name}...")
 
     shape = list(jet_data.shape)
     shape[-1] += 1  # [eta, phi, pt, tag] -> [E, px, py, pz, tag]
@@ -166,17 +156,21 @@ def convert_to_cartesian(jet_data, name_str, save=False):
     p_cartesian = torch.from_numpy(p_cartesian_tag[:, :, :4])
     labels = torch.from_numpy(p_cartesian_tag[:, :, -1])
     Nobj = labels.sum(dim=-1)
+    num_jets = len(Nobj)
+    num_test = int(num_jets * test_fraction)
+
     jet_data_cartesian = {'p4': p_cartesian, 'labels': labels, 'Nobj': Nobj}
+    jet_data_cartesian_test = {key: val[:num_test] for key, val in jet_data_cartesian.items()}
+    jet_data_cartesian_train = {key: val[num_test:] for key, val in jet_data_cartesian.items()}
 
     if save:
-        print(f"saving {name_str}...")
-        filename = name_str + '_cartesian.pt'
-        path = './150p/cartesian/'
-        if not osp.isdir(path):
-            os.makedirs(path)
-        path += filename
-        torch.save(jet_data_cartesian, path)
-        print(f"{name_str} saved as {path}")
+        print(f"saving {file_name}...")
+        if not osp.isdir(save_path):
+            os.makedirs(save_path)
+        torch.save(jet_data_cartesian, osp.join(save_path, f'{file_name}_full.pt'))
+        torch.save(jet_data_cartesian_train, osp.join(save_path, f'{file_name}.pt'))
+        torch.save(jet_data_cartesian_test, osp.join(save_path, f'{file_name}_test.pt'))
+        print(f"{file_name} saved as {save_path}")
 
     return jet_data_cartesian
 
@@ -189,4 +183,4 @@ if __name__ == "__main__":
 
     for type in jet:
         polarrel_mask = load_pt_file(f'all_{type}_jets_30p_cartesian.pt', path=dir).numpy()
-        convert_to_cartesian(polarrel_mask, f"{type}_jets_150p", save=True)
+        convert_to_cartesian(jet_data=polarrel_mask, save_path=dir, file_name=f"{type}_jets_150p", save=True)

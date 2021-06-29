@@ -1,5 +1,5 @@
 from args import setup_argparse
-from utils.make_data import initialize_data
+from utils.make_data import initialize_data, initialize_test_data
 from utils.utils import create_model_folder, eps
 from utils.train import train_loop
 from lgn.models.lgn_encoder import LGNEncoder
@@ -27,14 +27,13 @@ if __name__ == "__main__":
     # torch.autograd.set_detect_anomaly(True)
     args = setup_argparse()
 
-    data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}")
+    train_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}.pt")
+    test_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}_test.pt")
 
-    train_loader, valid_loader, test_loader = initialize_data(path=data_path,
-                                                              batch_size=args.batch_size,
-                                                              num_train=args.num_train,
-                                                              num_val=args.num_val,
-                                                              num_test=args.num_test,
-                                                              test_batch_size=args.test_batch_size)
+    train_loader, valid_loader = initialize_data(path=train_data_path,
+                                                 batch_size=args.batch_size,
+                                                 train_fraction = args.train_fraction)
+    test_loader = initialize_test_data(path=test_data_path, batch_size=args.test_batch_size)
 
     """Initializations"""
     encoder = LGNEncoder(num_input_particles=args.num_jet_particles,

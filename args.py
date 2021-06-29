@@ -11,14 +11,10 @@ def setup_argparse():
                         help="The jet type to train. Options: ('g', 'q', 't', 'w', 'z').")
     parser.add_argument('--file-path', type=str, default='hls4ml/', metavar='',
                         help='The path of the data.')
-    parser.add_argument('--file-suffix', type=str, default='jets_30p_p4.pt', metavar='',
-                        help="The suffix of the file. Default: 'jets_150p_cartesian.pt'")
-    parser.add_argument('--num-train', type=int, default=106400, metavar='',
-                        help='Number of samples to train on. Default: 106400')
-    parser.add_argument('--num-val', type=int, default=-1, metavar='',
-                        help='Number of samples to validate on. Default: -1.')
-    parser.add_argument('--num-test', type=int, default=-1, metavar='',
-                        help='Number of samples to test eqvuivariance on. Default: -1.')
+    parser.add_argument('--file-suffix', type=str, default='jets_30p_p4', metavar='',
+                        help="The suffix of the file. Default: 'jets_30p_p4'")
+    parser.add_argument('--train-fraction', type=float, default=0.8,
+                        help='The fraction of data used for training.')
     parser.add_argument('--scale', type=float, default=1., metavar='',
                         help='The rescaling factor of the input 4-momenta. Default: 1.')
 
@@ -39,9 +35,9 @@ def setup_argparse():
     parser.add_argument('--tau-latent-vectors', type=int, default=2, metavar='',
                         help='Multiplicity of 4-vectors per particle the latent space.')
 
-    parser.add_argument('--encoder-num-channels', nargs="+", type=int, default=[2, 3, 2, 1], metavar='',
+    parser.add_argument('--encoder-num-channels', nargs="+", type=int, default=[2, 3, 2, 3], metavar='',
                         help='Number of channels (multiplicity of all irreps) in each CG layer in the encoder.')
-    parser.add_argument('--decoder-num-channels', nargs="+", type=int, default=[2, 3, 2, 1], metavar='',
+    parser.add_argument('--decoder-num-channels', nargs="+", type=int, default=[2, 3, 2, 3], metavar='',
                         help='Number of channels (multiplicity of all irreps) in each CG layer in the decoder.')
 
     parser.add_argument('--maxdim', nargs="+", type=int, default=[3], metavar='',
@@ -130,6 +126,8 @@ def setup_argparse():
                         help='Whether to take the equivariance test only (i.e. no training).')
     parser.add_argument('-tbs', '--test-batch-size', type=int, default=4, metavar='',
                         help='The batch size for equivariance test.')
+    parser.add_argument('--num-test-batch', type=int, default=-1, metavar='',
+                        help='The number of batches used for equivariance test. For full test set, use -1.')
     parser.add_argument('--test-device', type=get_device, default=torch.device('cuda' if torch.cuda.is_available() else 'cpu'), metavar='',
                         help="Device to for testing. Options: ('gpu', 'cpu', 'cuda', '-1')."
                         "Default: -1, which means deciding device based on whether gpu is available.")
