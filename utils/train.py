@@ -38,12 +38,12 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         p4_gen = decoder(latent_features, covariance_test=False)
         if (p4_gen != p4_gen).any():
             raise RuntimeError('NaN data!')
-        generated_data.append(p4_gen[0].cpu())
+        generated_data.append(p4_gen[0].cpu().detach())
 
         p4_target = batch['p4']
         if device is not None:
             p4_target = p4_target.to(device=device)
-        target_data.append(p4_target.cpu())
+        target_data.append(p4_target.cpu().detach())
 
         if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
@@ -77,8 +77,8 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
                 torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
                 torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
 
-    generated_data = torch.cat(generated_data, dim=0).detach().numpy()
-    target_data = torch.cat(target_data, dim=0).detach().numpy()
+    generated_data = torch.cat(generated_data, dim=0).numpy()
+    target_data = torch.cat(target_data, dim=0).numpy()
 
     epoch_avg_loss = epoch_total_loss / len(loader)
     save_data(data=epoch_avg_loss, data_name='loss',
