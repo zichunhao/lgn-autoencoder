@@ -36,6 +36,8 @@ if __name__ == "__main__":
                                                               num_test=args.num_test,
                                                               test_batch_size=args.test_batch_size)
 
+    torch.save(test_loader, osp.join(data_path, 'test_loader.pt'))
+
     """Initializations"""
     encoder = LGNEncoder(num_input_particles=args.num_jet_particles,
                          tau_input_scalars=args.tau_jet_scalars,
