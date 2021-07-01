@@ -53,9 +53,9 @@ def initialize_data(path, batch_size, train_fraction):
     num_val = num_jets - num_train
 
     # split into training and validation set
-    train_set, test_set = torch.utils.data.random_split(jet_data, [num_train, num_val])
-    train_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=True)
-    valid_loader = DataLoader(jet_data, batch_size=batch_size, shuffle=True)
+    train_set, val_set = torch.utils.data.random_split(jet_data, [num_train, num_val])
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+    valid_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True)
 
     print('Data loaded')
 
