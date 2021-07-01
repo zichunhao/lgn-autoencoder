@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     train_loader, valid_loader = initialize_data(path=train_data_path,
                                                  batch_size=args.batch_size,
-                                                 train_fraction = args.train_fraction)
+                                                 train_fraction=args.train_fraction)
     test_loader = initialize_test_data(path=test_data_path, batch_size=args.test_batch_size)
 
     """Initializations"""
