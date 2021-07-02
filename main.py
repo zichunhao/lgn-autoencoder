@@ -24,8 +24,8 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
 
-    # torch.autograd.set_detect_anomaly(True)
     args = setup_argparse()
+    logging.info(args)
 
     train_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}.pt")
     test_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}_test.pt")
@@ -58,7 +58,7 @@ if __name__ == "__main__":
                          weight_init=args.weight_init, level_gain=args.level_gain,
                          num_basis_fn=args.num_basis_fn, activation=args.activation,
                          mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
-                         device=args.device, dtype=args.dtype)
+                         cg_dict=encoder.cg_dict, device=args.device, dtype=args.dtype)
 
     if not args.equivariance_test_only:
         if args.optimizer.lower() == 'adam':
