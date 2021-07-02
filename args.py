@@ -67,7 +67,7 @@ def setup_argparse():
     parser.add_argument('--lr', type=float, default=1e-5, metavar='',
                         help='Learning rate of the backpropagation.')
     parser.add_argument('--optimizer', type=str, default="adam", metavar='',
-                        help="The optimizer to use. Options: ('adam', 'rmprop') Default: 'adam'")
+                        help="The optimizer to use. Options: ('adam', 'rmsprop') Default: 'adam'")
     parser.add_argument('-bs', '--batch-size', type=int, default=16, metavar='',
                         help='Batch size.')
     parser.add_argument('-e', '--num-epochs', type=int, default=64, metavar='',
