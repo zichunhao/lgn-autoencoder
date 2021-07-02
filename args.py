@@ -140,7 +140,7 @@ def setup_argparse():
 
     args = parser.parse_args()
 
-    if args.load_to_train and ((args.load_model_path is None) or (args.load_epoch is None)):
+    if args.load_to_train and ((args.load_path is None) or (args.load_epoch is None)):
         raise ValueError("--load-to-train requires --load-model-path and --load-epoch.")
 
     return args
