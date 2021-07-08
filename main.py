@@ -83,7 +83,6 @@ def main(args):
         else:
             outpath = create_model_folder(args)
 
-        outpath = create_model_folder(args)
         train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_encoder, optimizer_decoder, outpath, args.device)
 
         # Equivariance tests
