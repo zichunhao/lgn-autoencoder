@@ -16,8 +16,8 @@ def get_output(encoder, decoder, data, covariance_test=True):
     return generated_features, nodes_all
 
 
-def get_node_dev(transform_input, transform_output):
-    return {weight: ((transform_input[weight] - transform_output[weight]) / (transform_output[weight] + 1e-6)).abs().max().item() for weight in [(0, 0), (1, 1)]}
+def get_node_dev(transform_input, transform_output, eps=1e-16):
+    return {weight: ((transform_input[weight] - transform_output[weight]) / (transform_output[weight] + eps)).abs().max().item() for weight in [(0, 0), (1, 1)]}
 
 
 def get_dev(transform_input, transform_output, transform_input_nodes_all, transform_output_nodes_all):
