@@ -44,7 +44,7 @@ def main(args):
                          maxdim=args.maxdim, max_zf=[1],
                          num_channels=args.decoder_num_channels,
                          weight_init=args.weight_init, level_gain=args.level_gain,
-                         num_basis_fn=args.num_basis_fn, activation=args.activation, scale=args.scale,
+                         num_basis_fn=args.num_basis_fn, activation=args.activation,
                          mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
                          cg_dict=encoder.cg_dict, device=args.device, dtype=args.dtype)
 
