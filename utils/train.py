@@ -117,7 +117,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
     outpath_valid_jet_plots = make_dir(osp.join(outpath, 'model_evaluations/jet_plots/valid'))
 
     for ep in range(args.num_epochs):
-        epoch = args.load_epoch + ep + 1 if args.load_to_train else ep
+        epoch = args.load_epoch + ep if args.load_to_train else ep
 
         # Training
         start = time.time()
