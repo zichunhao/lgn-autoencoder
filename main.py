@@ -8,23 +8,10 @@ from lgn.models.autotest.lgn_tests import lgn_tests
 from lgn.models.autotest.utils import plot_all_dev
 
 import torch
-import warnings
 import os.path as osp
-
 import logging
-import sys
-sys.path.insert(1, 'lgn/')
-if not sys.warnoptions:
-    warnings.simplefilter("ignore")
 
-
-torch.autograd.set_detect_anomaly(True)
-
-if __name__ == "__main__":
-
-    logging.basicConfig(level=logging.INFO)
-
-    args = setup_argparse()
+def main(args):
     logging.info(args)
 
     train_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}.pt")
@@ -120,3 +107,10 @@ if __name__ == "__main__":
         plot_all_dev(dev, osp.join(loadpath, 'model_evaluations/equivariance_tests'))
 
         logging.info("Done!")
+
+
+if __name__ == "__main__":
+    torch.autograd.set_detect_anomaly(True)
+    logging.basicConfig(level=logging.INFO)
+    args = setup_argparse()
+    main(args)
