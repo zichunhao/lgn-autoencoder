@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 from utils.norm_sq import convert_to_complex, pairwise_distance, norm_sq
 
-
 class ChamferLoss(nn.Module):
     """
     Parameters
@@ -35,8 +34,9 @@ class ChamferLoss(nn.Module):
 
     def __init__(self, loss_norm_choice='p3', device=None):
         super(ChamferLoss, self).__init__()
-        if loss_norm_choice.lower() not in ['real', 'cplx', 'complex', 'canonical', 'p3']:
-            raise ValueError(f"loss_norm_choice can only be one of 'real', 'cplx', or 'canonical'. Found: {loss_norm_choice}")
+        if loss_norm_choice.lower() not in ['real', 'cplx', 'complex', 'canonical', 'p3', 'polar']:
+            raise ValueError("loss_norm_choice can only be one of ['real', 'cplx', 'canonical', 'p3', 'polar']. "
+                             f"Found: {loss_norm_choice}")
 
         self.loss_norm_choice = loss_norm_choice
         self.device = device if (device is not None) else torch.device('cuda' if torch.cuda.is_available() else 'cpu')

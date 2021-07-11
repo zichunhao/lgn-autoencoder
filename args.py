@@ -80,11 +80,12 @@ def setup_argparse():
                         help="The weight for the chamfer loss, only relevant if loss-choice is 'hybrid'. Default: 1.0.")
     parser.add_argument('--loss-norm-choice', type=str, default='p3', metavar='',
                         help="Choice of calculating the norms of 4-vectors when calculating the loss. "
-                        "Options: ('canonical', 'real', 'cplx', 'p3'). "
+                        "Options: ['canonical', 'real', 'cplx', 'p3', 'polar']. "
                         "'canonical': Write p in the basis of zonal functions, take the dot product, and find the norm out of the complex scalar. "
                         "'real': Find the norm of each component and then take the dot product. "
                         "'cplx': Take the dot product and then find the norm out the the complex scalar. "
-                        "'p3': Find the norm of each component and find the norm square of the 3-momenta part of p4"
+                        "'p3': Find the norm of each component and find the norm square of the 3-momenta part of p4. "
+                        "'polar': Find the distance of real component in polar coordinate: ΔpT^2 + Δphi^2 + Δeta^2"
                         "Default: 'p3.'")
 
     parser.add_argument('--save-dir', type=str, default='autoencoder-trained-models', metavar='',

@@ -1,6 +1,6 @@
 import torch
 from lgn.cg_lib.zonal_functions import p_cplx_to_rep, repdot
-
+from utils.utils import get_p_polar
 
 def convert_to_complex(real_ps, eps=0):
     """
@@ -123,6 +123,17 @@ def normsq_p3(p4):
     p_im = torch.sum(torch.pow(p4_im, 2)[..., 1:], dim=-1)
     return p_real + p_im
 
+def normsq_polar(p, q):
+    """
+    Calculate the norm square of the 3-momentum. This is useful when particle mass is neglible.
+    1. Norm of p4 is taken so that it only contains real components.
+    Shape: `(OTHER_DIMENSIONS, 4)`
+    2. The norm of the 3-momenta is computed (in 3D Euclidean metric in )
+    Shape: `(OTHER_DIMENSIONS)`
+    """
+    p_polar = get_p_polar(p[0])  # eta, phi, pt
+    q_polar = get_p_polar(q[0])
+    return torch.sum(torch.pow(p_polar - q_polar, 2), dim=-1)  # ΔpT^2 + Δphi^2 + Δeta^2
 
 def pairwise_distance(p, q, norm_choice, eps=1e-16,
                       device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
@@ -162,6 +173,8 @@ def pairwise_distance(p, q, norm_choice, eps=1e-16,
         dist = torch.sqrt(normsq_canonical(p1 - q1) + eps)
     elif norm_choice.lower() in ['cplx', 'complex']:
         dist = torch.sqrt(normsq_cplx(p1 - q1) + eps)
+    elif norm_choice.lower() == 'polar':
+        dist = torch.sqrt(normsq_polar(p1, q1) + eps)
     else:
         dist = torch.sqrt(normsq_p3(p1 - q1) + eps)
     return dist

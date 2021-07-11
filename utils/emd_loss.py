@@ -3,7 +3,7 @@ Slightly adapted from Raghav Kansal's code (https://github.com/rkansal47/emd_los
 """
 import torch
 from utils.qpth.qp import QPFunction
-
+from utils.utils import get_p_polar
 
 # derived from https://github.com/icoz69/DeepEMD/blob/master/Models/models/emd_utils.py
 def emd_inference_qpth(distance_matrix, weight1, weight2, device, form='QP', l2_strength=0.0001, add_energy_diff=True, eps=1e-12):
@@ -123,23 +123,3 @@ def emd_loss(target_jet, jet_gen, eps=1e-12, form='L2', l2_strength=0.0001,
 
     return (emd_score.sum(), flow) if return_flow else emd_score.sum()
 
-
-def get_p_polar(p, eps=1e-16):
-    """
-    (E, px, py, pt) -> (eta, phi, pt)
-    """
-    px = p[..., 1]
-    py = p[..., 2]
-    pz = p[..., 3]
-
-    pt = torch.sqrt(px ** 2 + py ** 2 + eps)
-    try:
-        eta = torch.asinh(pz / (pt + eps))
-    except AttributeError:
-        eta = arcsinh(pz / (pt + eps))
-    phi = torch.atan2(py + eps, px + eps)
-
-    return torch.stack((eta, phi, pt), dim=-1)
-
-def arcsinh(z):
-    return torch.log(z + torch.sqrt(1 + torch.pow(z, 2)))
