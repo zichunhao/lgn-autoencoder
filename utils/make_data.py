@@ -40,27 +40,37 @@ class JetDataset(Dataset):
         return {key: val[idx] for key, val in self.data.items()}
 
 
-def initialize_data(path, batch_size, train_fraction):
+def initialize_data(path, batch_size, train_fraction, num_val=None):
     data = torch.load(path)
 
     jet_data = JetDataset(data, shuffle=True)  # The original data is not shuffled yet
 
-    if (train_fraction > 1) or (train_fraction < 0):
-        train_fraction = 0.8
-
-    num_jets = len(data['Nobj'])
-    num_train = int(num_jets * train_fraction)
-    num_val = num_jets - num_train
+    if train_fraction > 1:
+        num_train = int(train_fraction)
+        if num_val is None:
+            num_jets = len(data['Nobj'])
+            num_val = num_jets - num_train
+        else:
+            num_others = len(data['Nobj']) - num_train - num_val
+            train_set, val_set, _ = torch.utils.data.random_split(jet_data, [num_train, num_val, num_others])
+            train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+            valid_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True)
+            return train_loader, valid_loader
+    else:
+        if train_fraction < 0:
+            train_fraction = 0.8
+        num_jets = len(data['Nobj'])
+        num_train = int(num_jets * train_fraction)
+        num_val = num_jets - num_train
 
     # split into training and validation set
     train_set, val_set = torch.utils.data.random_split(jet_data, [num_train, num_val])
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
     valid_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True)
 
-    print('Data loaded')
+    logging.info('Data loaded')
 
     return train_loader, valid_loader
-
 
 def initialize_test_data(path, batch_size):
     data = torch.load(path)

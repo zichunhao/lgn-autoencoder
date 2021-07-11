@@ -14,7 +14,9 @@ def setup_argparse():
     parser.add_argument('--file-suffix', type=str, default='jets_30p_p4', metavar='',
                         help="The suffix of the file. Default: 'jets_30p_p4'")
     parser.add_argument('--train-fraction', type=float, default=0.8,
-                        help='The fraction of data used for training.')
+                        help='The fraction (or number) of data used for training.')
+    parser.add_argument('--num-valid', type=int, default=None,
+                        help='The number of data used for validation. Used only if train-fraction is int (for test runs).')
     parser.add_argument('--scale', type=float, default=1., metavar='',
                         help='The rescaling factor of the input 4-momenta. Default: 1.')
 
