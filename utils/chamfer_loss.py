@@ -32,13 +32,14 @@ class ChamferLoss(nn.Module):
             3. The result is converted to real.
     """
 
-    def __init__(self, loss_norm_choice='p3', device=None):
+    def __init__(self, loss_norm_choice='p3', im=True, device=None):
         super(ChamferLoss, self).__init__()
         if loss_norm_choice.lower() not in ['real', 'cplx', 'complex', 'canonical', 'p3', 'polar']:
             raise ValueError("loss_norm_choice can only be one of ['real', 'cplx', 'canonical', 'p3', 'polar']. "
                              f"Found: {loss_norm_choice}")
 
         self.loss_norm_choice = loss_norm_choice
+        self.im = im
         self.device = device if (device is not None) else torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def forward(self, p, q, jet_features=False):
@@ -64,7 +65,8 @@ class ChamferLoss(nn.Module):
         else:
             raise ValueError(f'Invalid dimension: {q.shape}. The second argument should be the jet target momenta.')
 
-        dist = torch.pow(pairwise_distance(p, q, norm_choice=self.loss_norm_choice, device=self.device), 2)
+        dist = torch.pow(pairwise_distance(p, q, norm_choice=self.loss_norm_choice, 
+                                           im=self.im, device=self.device), 2)
 
         min_dist_pq = torch.min(dist, dim=-1)
         min_dist_qp = torch.min(dist, dim=-2)  # Equivalent to permuting the last two axis

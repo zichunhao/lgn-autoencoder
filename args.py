@@ -76,6 +76,7 @@ def setup_argparse():
                         help='Number of epochs for training.')
     parser.add_argument('--loss-choice', type=str, default='ChamferLoss', metavar='',
                         help="Choice of loss function. Options: ('ChamferLoss', 'EMDLoss', 'hybrid')")
+    # chamfer loss options
     parser.add_argument('--chamfer-loss-weight', type=float, default=1.0, metavar='',
                         help="The weight for the chamfer loss, only relevant if loss-choice is 'hybrid'. Default: 1.0.")
     parser.add_argument('--loss-norm-choice', type=str, default='p3', metavar='',
@@ -87,6 +88,10 @@ def setup_argparse():
                         "'p3': Find the norm of each component and find the norm square of the 3-momenta part of p4. "
                         "'polar': Find the distance of real component in polar coordinate: ΔpT^2 + Δphi^2 + Δeta^2"
                         "Default: 'p3.'")
+    parser.add_argument('--im', type=get_bool, default=True,
+                        help="Whether to take into imaginary component of the reconstructed jet into account if using the chamfer loss."
+                        "Only used when --loss-norm-choice is in ['p3', 'polar']"
+                        "If set to True, the target will be complexified with 0 imaginary components.")
 
     parser.add_argument('--save-dir', type=str, default='autoencoder-trained-models', metavar='',
                         help='The directory to save trained models and figures.')

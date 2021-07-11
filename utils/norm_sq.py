@@ -2,6 +2,7 @@ import torch
 from lgn.cg_lib.zonal_functions import p_cplx_to_rep, repdot
 from utils.utils import get_p_polar
 
+
 def convert_to_complex(real_ps, eps=0):
     """
     Convert real jet 4-momenta from the dataset to complex number (with imaginary dimension begin 0 tensors)
@@ -33,6 +34,7 @@ def norm_sq(p):
     psq = torch.pow(p, 2)
     return 2 * psq[..., 0] - psq.sum(dim=-1)
 
+
 def norm_sq_p3(p3):
     """
     Calculate the norm square of a real 3-vector, p3
@@ -44,6 +46,7 @@ def norm_sq_p3(p3):
         Shape: `(batch_size, num_particles, 3)`
     """
     return torch.sum(torch.pow(p3, 2)[..., 1:], dim=-1)
+
 
 def normsq_cplx(p4):
     """
@@ -109,7 +112,7 @@ def normsq_real(p4):
     return 2 * p4_norm[..., 0] - p4_norm.sum(dim=-1)
 
 
-def normsq_p3(p4):
+def normsq_p3(p4, im=True):
     """
     Calculate the norm square of the 3-momentum. This is useful when particle mass is neglible.
     1. Norm of p4 is taken so that it only contains real components.
@@ -118,14 +121,19 @@ def normsq_p3(p4):
     Shape: `(OTHER_DIMENSIONS)`
     """
     p4_real = p4[0]
-    p4_im = p4[1]
     p_real = torch.sum(torch.pow(p4_real, 2)[..., 1:], dim=-1)
+    if not im:
+        return p_real
+
+    p4_im = p4[1]
     p_im = torch.sum(torch.pow(p4_im, 2)[..., 1:], dim=-1)
     return p_real + p_im
 
-def normsq_polar(p, q):
+
+def normsq_polar(p, q, im=True):
     """
-    Calculate the norm square of the 3-momentum. This is useful when particle mass is neglible.
+    Calculate the norm square of the 3-momentum in polar coordinates. This is useful when particle mass is neglible.
+    q is the target.
     1. Norm of p4 is taken so that it only contains real components.
     Shape: `(OTHER_DIMENSIONS, 4)`
     2. The norm of the 3-momenta is computed (in 3D Euclidean metric in )
@@ -133,9 +141,14 @@ def normsq_polar(p, q):
     """
     p_polar = get_p_polar(p[0])  # eta, phi, pt
     q_polar = get_p_polar(q[0])
+    if im:
+        p_polar = torch.stack((p_polar, p_polar), dim=0)
+        q_polar = torch.stack((q_polar, q_polar), dim=0)
+        q_polar[1, -1, ...] = 0
     return torch.sum(torch.pow(p_polar - q_polar, 2), dim=-1)  # ΔpT^2 + Δphi^2 + Δeta^2
 
-def pairwise_distance(p, q, norm_choice, eps=1e-16,
+
+def pairwise_distance(p, q, norm_choice, eps=1e-16, im=True,
                       device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     """
     Compute the pairwise distance between jet 4-momenta p and q
@@ -174,10 +187,11 @@ def pairwise_distance(p, q, norm_choice, eps=1e-16,
     elif norm_choice.lower() in ['cplx', 'complex']:
         dist = torch.sqrt(normsq_cplx(p1 - q1) + eps)
     elif norm_choice.lower() == 'polar':
-        dist = torch.sqrt(normsq_polar(p1, q1) + eps)
+        dist = torch.sqrt(normsq_polar(p1, q1, im=im) + eps)
     else:
-        dist = torch.sqrt(normsq_p3(p1 - q1) + eps)
+        dist = torch.sqrt(normsq_p3(p1 - q1, im=im) + eps)
     return dist
+
 
 def pairwise_distance_real(p, q, eps=1e-16, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     """

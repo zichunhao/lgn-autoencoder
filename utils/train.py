@@ -8,7 +8,6 @@ import os.path as osp
 import warnings
 import torch
 import torch.nn as nn
-import numpy as np
 import sys
 sys.path.insert(1, 'utils/')
 sys.path.insert(1, 'lgn/')
@@ -36,8 +35,6 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
     for i, batch in enumerate(loader):
         latent_features = encoder(batch, covariance_test=False)
         p4_gen = decoder(latent_features, covariance_test=False)
-        if (p4_gen != p4_gen).any():
-            raise RuntimeError('NaN data!')
         generated_data.append(p4_gen[0].cpu().detach())
 
         p4_target = batch['p4']
@@ -46,7 +43,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         target_data.append(p4_target.cpu().detach())
 
         if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
-            chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
+            chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice, im=args.im)
             batch_loss = chamferloss(p4_gen, p4_target, jet_features=True)  # output, target
             epoch_total_loss += batch_loss.item()
         elif args.loss_choice.lower() in ['emd', 'emdloss', 'emd_loss']:
@@ -60,9 +57,6 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
             batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features=True) + emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)
             epoch_total_loss += batch_loss.item()
-
-        if (batch_loss != batch_loss).any():
-            raise RuntimeError('Batch loss is NaN!')
 
         # Backward propagation
         if is_train:
