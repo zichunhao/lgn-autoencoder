@@ -235,7 +235,7 @@ def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
     plt.ylabel('Relative deviation')
     plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
 
-    plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_generated_{irrep_str}.pdf"),
+    plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_reconstructed_{irrep_str}.pdf"),
                 bbox_inches='tight', transparent=True)
     plt.close()
 
