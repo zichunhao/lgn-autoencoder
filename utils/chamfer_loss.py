@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from utils.norm_sq import convert_to_complex, pairwise_distance, norm_sq
 
+
 class ChamferLoss(nn.Module):
     """
     Parameters
@@ -65,7 +66,7 @@ class ChamferLoss(nn.Module):
         else:
             raise ValueError(f'Invalid dimension: {q.shape}. The second argument should be the jet target momenta.')
 
-        dist = torch.pow(pairwise_distance(p, q, norm_choice=self.loss_norm_choice, 
+        dist = torch.pow(pairwise_distance(p, q, norm_choice=self.loss_norm_choice,
                                            im=self.im, device=self.device), 2)
 
         min_dist_pq = torch.min(dist, dim=-1)

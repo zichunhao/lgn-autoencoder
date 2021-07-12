@@ -123,5 +123,6 @@ def get_p_polar(p, eps=1e-16):
 
     return torch.stack((eta, phi, pt), dim=-1)
 
+
 def arcsinh(z):
     return torch.log(z + torch.sqrt(1 + torch.pow(z, 2)))
