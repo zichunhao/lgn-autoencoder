@@ -142,9 +142,9 @@ def normsq_polar(p, q, im=True):
     p_polar = get_p_polar(p[0])  # eta, phi, pt
     q_polar = get_p_polar(q[0])
     if im:
-        p_polar = torch.stack((p_polar, p_polar), dim=0)
+        p_polar = get_p_polar(p)
         q_polar = torch.stack((q_polar, q_polar), dim=0)
-        q_polar[1, -1, ...] = 0
+        q_polar[1, ..., -1] = 0
     return torch.sum(torch.pow(p_polar - q_polar, 2), dim=-1)  # ΔpT^2 + Δphi^2 + Δeta^2
 
 
