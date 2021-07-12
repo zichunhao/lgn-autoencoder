@@ -6,7 +6,7 @@ To achieve Lorentz equivariance, the model works on the [irreducible representat
 
 ## Results
 ### Equivariance Tests
-Boost and rotational equivariance tests were done on the model. The rotation angles range from `0` to `2pi`, and the Lorentz factors range from `0` to `11013.2`. The model is equivariant with respect to rotation up to floating point errors and is equivariant with respect to boost in the physically relevant region (the errors increase as the Lorentz factor increases because of the floating point sensitivity of boost). See [`/results/equivariant_tests/`](https://github.com/zichunhao/lgn-autoencoder/tree/main/results/equivariance_tests) for more details.
+Boost and rotational equivariance tests were done on the model. The rotation angles range from `0` to `2pi`, and the Lorentz factors range from `0` to `11013.2`. The model is equivariant with respect to rotation up to floating point errors and is equivariant with respect to boost in the physically relevant region (the errors increase as the Lorentz factor increases because of the floating point sensitivity of boost). See [`results/equivariance_tests`](results/equivariance_tests) for more details.
 
 
 ## References
@@ -20,7 +20,7 @@ Boost and rotational equivariance tests were done on the model. The rotation ang
 - B. Hall, "Lie Groups, Lie Algebras, and Representations: An Elementary Introduction". Graduate Texts in Mathematics. Springer, doi: [10.1007/978-3-319-13467-3](https://doi.org/10.1007/978-3-319-13467-3). ISBN 9783319134673.
 - D. Arovas, ["Lecture Notes on Group Theory in Physics (A Work in Progress)"](https://courses.physics.ucsd.edu/2016/Spring/physics220/LECTURES/GROUP_THEORY.pdf). Accessed Nov. 22, 2020.
 - D. Dummit and R. Foote, ["Abstract Algebra"](https://www.wiley.com/en-us/Abstract+Algebra%2C+3rd+Edition-p-9780471433347). Wiley, 3rd edition, 2003. ISBN 9780471433347.
-- H. Georgi, ["Lie Algebras In Particle Physics: from Isospin To Unified Theories"](https://www.amazon.com/Lie-Algebras-Particle-Physics-Frontiers/dp/0738202339). CRC Press, 2018, doi: [10.1201/9780429499210](https://doi.org/10.1201/9780429499210). ISBN 9780429978845.
+- H. Georgi, ["Lie Algebras In Particle Physics: from Isospin to Unified Theories"](https://www.amazon.com/Lie-Algebras-Particle-Physics-Frontiers/dp/0738202339). CRC Press, 2018, doi: [10.1201/9780429499210](https://doi.org/10.1201/9780429499210). ISBN 9780429978845.
 - H. Muller-kirsten and A. Wiedemann, "Introduction To Supersymmetry". World Scientific Lecture Notes In Physics. World Scientific Publishing Company, 2nd edition, 2010, doi: [10.1142/7594](https://doi.org/10.1142/7594). ISBN 9789813100961.
 
 #### The Lorentz group and its representations
