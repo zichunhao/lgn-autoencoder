@@ -132,11 +132,12 @@ def normsq_p3(p4, im=True):
 
 def normsq_polar(p, q, im=True):
     """
-    Calculate the norm square of the 3-momentum in polar coordinates. This is useful when particle mass is neglible.
+    Calculate the norm square of the 3-momentum in polar coordinates.
+    This is useful when particle mass is neglible.
     q is the target.
     1. Norm of p4 is taken so that it only contains real components.
     Shape: `(OTHER_DIMENSIONS, 4)`
-    2. The norm of the 3-momenta is computed (in 3D Euclidean metric in )
+    2. The norm of the 3-momenta is computed (ΔpT^2 + Δphi^2 + Δeta^2)
     Shape: `(OTHER_DIMENSIONS)`
     """
     p_polar = get_p_polar(p[0])  # eta, phi, pt
@@ -145,7 +146,7 @@ def normsq_polar(p, q, im=True):
         p_polar = get_p_polar(p)
         q_polar = torch.stack((q_polar, q_polar), dim=0)
         q_polar[1, ..., -1] = 0
-    return torch.sum(torch.pow(p_polar - q_polar, 2), dim=-1)  # ΔpT^2 + Δphi^2 + Δeta^2
+    return torch.sum(torch.pow(p_polar - q_polar, 2), dim=-1)  # ΔpT^2 + Δphi^2 + Δeta^2ß
 
 
 def pairwise_distance(p, q, norm_choice, eps=1e-16, im=True,
