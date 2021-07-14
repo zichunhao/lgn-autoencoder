@@ -96,22 +96,23 @@ def emd_loss(target_jet, jet_gen, eps=1e-12, form='L2', l2_strength=0.0001,
         flow : torch.Tensor with shape (batch_size, num_particles, num_particles)
     """
 
-    if (len(jet_gen.shape) != 4) or (jet_gen.shape[0] != 2):
-        raise ValueError(f'Invalid dimension: {target_jet.shape}. The second argument should be output momenta.')
-    if len(target_jet.shape) == 4:  # complexified
-        target_jet = target_jet[0]
-    elif len(target_jet.shape) != 3:
-        raise ValueError(f'Invalid dimension: {target_jet.shape}. The first argument should be target momenta.')
+    if (len(jet_gen.shape) == 4) and (jet_gen.shape[0] == 2) and (jet_gen.shape[-1] == 4):
+        jet_gen = jet_gen[0]  # real component only
+        if len(target_jet.shape) == 4:  # complexified
+            target_jet = target_jet[0]
+    elif (len(jet_gen.shape) == 3):  # real only
+        pass
+    else:
+        assert ValueError(f"Invalid shape of jet_gen! Found: {jet_gen.shape=}")
 
     if device is None:
         device = jet_gen.device
     else:
         jet_gen = jet_gen.to(device)
-        
+
     target_jet = target_jet.to(device)
 
     # Convert to polar coordinate (eta, phi, pt)
-    jet_gen = jet_gen[0]  # real component only
     jet_gen = get_p_polar(jet_gen, eps=eps)
     target_jet = get_p_polar(target_jet, eps=eps)
 
@@ -122,4 +123,3 @@ def emd_loss(target_jet, jet_gen, eps=1e-12, form='L2', l2_strength=0.0001,
                                          device, form=form, l2_strength=l2_strength)
 
     return (emd_score.sum(), flow) if return_flow else emd_score.sum()
-

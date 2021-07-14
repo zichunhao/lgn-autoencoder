@@ -106,9 +106,13 @@ def eps(args):
         return 1e-12
 
 
-def get_p_polar(p, eps=1e-16):
+def get_p_polar(p, eps=1e-16, keep_p0=False):
     """
-    (E, px, py, pz) -> (eta, phi, pt)
+    (E, px, py, pz) -> (eta, phi, pt) or (E, eta, phi, pt)
+
+    keep_p0: `bool`
+        Whether to keep p0.
+        Optional, default: False
     """
     px = p[..., 1]
     py = p[..., 2]
@@ -121,7 +125,11 @@ def get_p_polar(p, eps=1e-16):
         eta = arcsinh(pz / (pt + eps))
     phi = torch.atan2(py + eps, px + eps)
 
-    return torch.stack((eta, phi, pt), dim=-1)
+    if not keep_p0:
+        return torch.stack((eta, phi, pt), dim=-1)
+    else:
+        E = p[..., 0]
+        return torch.stack((E, eta, phi, pt), dim=-1)
 
 
 def arcsinh(z):
