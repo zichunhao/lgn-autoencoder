@@ -137,20 +137,20 @@ def normsq_polar(p, q, im=True):
     q is the target.
     1. Norm of p4 is taken so that it only contains real components.
     Shape: `(OTHER_DIMENSIONS, 4)`
-    2. The norm of the 3-momenta is computed (ΔpT^2 + Δphi^2 + Δeta^2)
+    2. The norm of the 4-momenta is computed (ΔE^2 + ΔpT^2 + Δphi^2 + Δeta^2)
     Shape: `(OTHER_DIMENSIONS)`
     """
-    p_polar = get_p_polar(p[0])  # eta, phi, pt
-    q_polar = get_p_polar(q[0])
+    p_polar = get_p_polar(p[0], keep_p0=True)  # eta, phi, pt
+    q_polar = get_p_polar(q[0], keep_p0=True)
     if im:
-        p_polar = get_p_polar(p)
+        p_polar = get_p_polar(p, keep_p0=True)
         q_polar = torch.stack((q_polar, q_polar), dim=0)
         q_polar[1, ..., -1] = 0
-    return torch.sum(torch.pow(p_polar - q_polar, 2), dim=-1)  # ΔpT^2 + Δphi^2 + Δeta^2ß
+    return torch.sum(torch.pow(p_polar - q_polar, 2), dim=-1)  # ΔE^2 + ΔpT^2 + Δphi^2 + Δeta^2ß
 
 
-def pairwise_distance(p, q, norm_choice, eps=1e-16, im=True,
-                      device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+def pairwise_distance_sq(p, q, norm_choice, eps=1e-16, im=True,
+                         device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     """
     Compute the pairwise distance between jet 4-momenta p and q
 
@@ -182,19 +182,19 @@ def pairwise_distance(p, q, norm_choice, eps=1e-16, im=True,
     q1 = q.repeat(1, 1, num_row, 1).view(2, batch_size, num_row, -1, vec_dim).to(device)
 
     if norm_choice.lower() == 'real':
-        dist = torch.sqrt(normsq_real(p1 - q1) + eps)
+        dist = normsq_real(p1 - q1) + eps
     elif norm_choice.lower() == 'canonical':
-        dist = torch.sqrt(normsq_canonical(p1 - q1) + eps)
+        dist = normsq_canonical(p1 - q1)
     elif norm_choice.lower() in ['cplx', 'complex']:
-        dist = torch.sqrt(normsq_cplx(p1 - q1) + eps)
+        dist = normsq_cplx(p1 - q1)
     elif norm_choice.lower() == 'polar':
-        dist = torch.sqrt(normsq_polar(p1, q1, im=im) + eps)
+        dist = normsq_polar(p1, q1, im=im)
     else:
-        dist = torch.sqrt(normsq_p3(p1 - q1, im=im) + eps)
+        dist = normsq_p3(p1 - q1, im=im)
     return dist
 
 
-def pairwise_distance_real(p, q, eps=1e-16, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+def pairwise_distance_sq_real(p, q, eps=1e-16, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     """
     Compute the pairwise distance between jet 4-momenta p and q
 

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from utils.norm_sq import convert_to_complex, pairwise_distance, norm_sq
+from utils.distance_sq import convert_to_complex, pairwise_distance_sq, norm_sq
 
 
 class ChamferLoss(nn.Module):
@@ -66,8 +66,7 @@ class ChamferLoss(nn.Module):
         else:
             raise ValueError(f'Invalid dimension: {q.shape}. The second argument should be the jet target momenta.')
 
-        dist = torch.pow(pairwise_distance(p, q, norm_choice=self.loss_norm_choice,
-                                           im=self.im, device=self.device), 2)
+        dist = pairwise_distance_sq(p, q, norm_choice=self.loss_norm_choice, im=self.im, device=self.device)
 
         min_dist_pq = torch.min(dist, dim=-1)
         min_dist_qp = torch.min(dist, dim=-2)  # Equivalent to permuting the last two axis
@@ -83,11 +82,3 @@ class ChamferLoss(nn.Module):
             jet_loss = 0
 
         return chamfer_loss + jet_loss
-
-
-############################################## Unused ##############################################
-def reshape_generated_ps(generated_ps):
-    """
-    Reshape the generated 4-momenta to `(batch_size, num_particles, 2, 4)`, the second last axis is the complex dimension.
-    """
-    return generated_ps.permute(1, 2, 0, 3)  # (batch_size, num_particles, 2, 4)
