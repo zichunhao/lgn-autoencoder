@@ -21,4 +21,4 @@ python main.py \
 --file-path "./hls4ml" \
 --file-suffix "jets_30p_p4" \
 --save-dir autoencoder-trained-models-test \
-| tee -a "./autoencoder-trained-models/autoencoder-g-s1-v1-4544-4544.txt"
+| tee -a "./autoencoder-trained-models-test/autoencoder-g-s1-v1-4544-4544.txt"
