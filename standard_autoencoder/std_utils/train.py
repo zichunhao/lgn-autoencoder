@@ -1,16 +1,14 @@
+import torch.nn as nn
+import torch
+import os.path as osp
+import time
+from utils.emd_loss import emd_loss
+from standard_autoencoder.std_utils.chamfer_loss import ChamferLoss
+from standard_autoencoder.std_utils.utils import make_dir, save_data, plot_eval_results, eps
+from utils.jet_analysis import plot_p
+import logging
 import sys
 sys.path.insert(1, '../')
-
-import logging
-from utils.jet_analysis import plot_p
-from standard_autoencoder.std_utils.utils import make_dir, save_data, plot_eval_results, eps
-from standard_autoencoder.std_utils.chamfer_loss import ChamferLoss
-from utils.emd_loss import emd_loss
-import time
-import os.path as osp
-import torch
-import torch.nn as nn
-
 
 
 def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
@@ -93,7 +91,7 @@ def validate(args, loader, encoder, decoder, epoch, outpath, device):
     return epoch_avg_loss, generated_data, target_data
 
 
-def train_loop(args, train_loader, valid_loader, encoder, decoder, 
+def train_loop(args, train_loader, valid_loader, encoder, decoder,
                optimizer_encoder, optimizer_decoder, outpath, device=None):
 
     if device is None:

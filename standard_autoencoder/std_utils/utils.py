@@ -3,6 +3,7 @@ import os.path as osp
 import torch
 import matplotlib.pyplot as plt
 
+
 def create_model_folder(args):
     make_dir(args.save_dir)
     return make_dir(osp.join(args.save_dir, get_model_fname(args)))
@@ -12,16 +13,19 @@ def get_model_fname(args):
     model_fname = f"StandardAutoencoder_{args.jet_type}Jet_LatentDim{args.latent_node_size}"
     return model_fname
 
+
 def make_dir(path):
     os.makedirs(path, exist_ok=True)
     return path
+
 
 def eps(args):
     if args.dtype in [torch.float64, torch.double]:
         return 1e-16
     else:
         return 1e-12
-    
+
+
 def save_data(data, data_name, is_train, outpath, epoch=-1):
     '''
     Save data like losses and dts. If epoch is -1, the data will be considered a global data, such as
@@ -48,8 +52,8 @@ def save_data(data, data_name, is_train, outpath, epoch=-1):
             torch.save(data, osp.join(outpath, f'train_{data_name}.pt'))
         else:
             torch.save(data, osp.join(outpath, f'valid_{data_name}.pt'))
-            
-            
+
+
 def plot_eval_results(args, data, data_name, outpath, global_data=False, start=None):
     '''
     Plot evaluation results

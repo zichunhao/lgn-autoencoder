@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class ChamferLoss(nn.Module):
     def __init__(self, device):
         super(ChamferLoss, self).__init__()
@@ -17,6 +18,7 @@ class ChamferLoss(nn.Module):
         loss = torch.sum(min_dist_xy.values + min_dist_yx.values)
 
         return loss
+
 
 def pairwise_distance(x, y, device):
     assert (x.shape[0] == y.shape[0]), f"The batch size of x and y are not equal! x.shape[0] is {x.shape[0]}, whereas y.shape[0] is {y.shape[0]}!"

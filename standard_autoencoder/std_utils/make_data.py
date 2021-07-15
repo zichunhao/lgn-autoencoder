@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import logging
 
+
 class JetDataset(Dataset):
     """
     PyTorch dataset.
@@ -35,6 +36,7 @@ class JetDataset(Dataset):
             idx = self.perm[idx]
         return self.p4[idx]
 
+
 def initialize_data(path, batch_size, train_fraction, num_val=None):
     data = torch.load(path)
 
@@ -66,6 +68,7 @@ def initialize_data(path, batch_size, train_fraction, num_val=None):
     logging.info('Data loaded')
 
     return train_loader, valid_loader
+
 
 def initialize_test_data(path, batch_size):
     data = torch.load(path)

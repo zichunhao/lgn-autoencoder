@@ -2,8 +2,9 @@ import torch
 import torch.nn as nn
 import logging
 
+
 class ChamferLoss(nn.Module):
-    
+
     def __init__(self, loss_norm_choice):
         super(ChamferLoss, self).__init__()
         self.loss_norm_choice = loss_norm_choice
@@ -39,6 +40,7 @@ class ChamferLoss(nn.Module):
             jet_loss = 0
 
         return chamfer_loss + jet_loss
+
 
 def pairwise_distance_sq(p, q, norm_choice='cartesian',
                          device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
@@ -77,8 +79,9 @@ def pairwise_distance_sq(p, q, norm_choice='cartesian',
 
     p1 = p.repeat(1, 1, num_col).view(batch_size, -1, num_col, vec_dim).to(device)
     q1 = q.repeat(1, num_row, 1).view(batch_size, num_row, -1, vec_dim).to(device)
-    
+
     return normsq(p1-q1, norm_choice=norm_choice)
+
 
 def normsq(p, norm_choice='cartesian'):
     if norm_choice.lower() == 'minkowskian':
@@ -88,14 +91,16 @@ def normsq(p, norm_choice='cartesian'):
     else:
         return normsq_cartesian(p)
 
+
 def normsq_minkowskian(p):
     psq = torch.pow(p, 2)
     return 2 * psq[..., 0] - psq.sum(dim=-1)
 
+
 def normsq_cartesian(p):
     return torch.sum(torch.pow(p, 2), dim=-1)
+
 
 def normsq_polar(p):
     psq = torch.pow(p, 2)
     return 2 * psq[..., 0] - psq.sum(dim=-1)
-
