@@ -89,6 +89,8 @@ def setup_argparse():
                         "'p3': Find the norm of each component and find the norm square of the 3-momenta part of p4. "
                         "'polar': Find the distance of real component in polar coordinate: ΔpT^2 + Δphi^2 + Δeta^2"
                         "Default: 'p3.'")
+    parser.add_argument('--chamfer-jet-features', type=get_bool, default=True,
+                        help="Whether to take into the jet features.")
     parser.add_argument('--im', type=get_bool, default=True,
                         help="Whether to take into imaginary component of the reconstructed jet into account if using the chamfer loss."
                         "Only used when --loss-norm-choice is in ['p3', 'polar']"

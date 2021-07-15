@@ -44,7 +44,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
         if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice, im=args.im)
-            batch_loss = chamferloss(p4_gen, p4_target, jet_features=True)  # output, target
+            batch_loss = chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features)  # output, target
             epoch_total_loss += batch_loss.item()
         elif args.loss_choice.lower() in ['emd', 'emdloss', 'emd_loss']:
             batch_loss = emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)  # true, output
@@ -55,7 +55,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             epoch_total_loss += batch_loss
         elif args.loss_choice.lower() in ['hybrid', 'combined', 'mix']:
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
-            batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features=True) + emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)
+            batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features) + emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)
             epoch_total_loss += batch_loss.item()
 
         # Backward propagation
