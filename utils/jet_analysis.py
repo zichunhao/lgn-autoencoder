@@ -471,10 +471,7 @@ def get_jet_feature_cartesian(p4):
     """
     jet_p4 = np.sum(p4, axis=-2)
     msq = jet_p4[:, 0] ** 2 - np.sum(np.power(jet_p4, 2)[:, 1:], axis=-1)
-    try:
-        jet_mass = np.sqrt(msq)
-    except RuntimeError:
-        jet_mass = np.sqrt(np.abs(msq)) * np.sign(msq)
+    jet_mass = np.sqrt(np.abs(msq)) * np.sign(msq)
     jet_px = jet_p4[:, 1]
     jet_py = jet_p4[:, 2]
     jet_pz = jet_p4[:, 3]
