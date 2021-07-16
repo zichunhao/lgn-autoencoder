@@ -32,6 +32,7 @@ class Decoder(nn.Module):
         logging.info(f"Decoder initialized. Number of parameters: {sum(p.nelement() for p in self.parameters())}")
 
     def forward(self, x, batch_size):
+        x = x.to(self.device)
         x = self.linear(x).view(batch_size, self.num_nodes, self.latent_node_size)
         x = self.decoder(x)
         x = torch.tanh(x) * 10
