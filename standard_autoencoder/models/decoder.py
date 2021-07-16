@@ -15,14 +15,13 @@ class Decoder(nn.Module):
 
         self.num_nodes = num_nodes
         self.node_size = node_size
-        self.num_latent_node = 1  # We are summing over all node features, resulting in one node feature
         self.latent_node_size = latent_node_size
         self.num_mps = num_mps
 
         self.device = device
 
         # layers
-        self.linear = nn.Linear(self.num_latent_node*self.latent_node_size, self.num_nodes*self.latent_node_size).to(self.device)
+        self.linear = nn.Linear(self.latent_node_size, self.num_nodes*self.latent_node_size).to(self.device)
 
         self.decoder = GraphNet(num_nodes=self.num_nodes, input_node_size=self.latent_node_size, output_node_size=self.node_size,
                                 num_hidden_node_layers=num_hidden_node_layers, hidden_edge_size=hidden_edge_size,
@@ -31,9 +30,9 @@ class Decoder(nn.Module):
 
         logging.info(f"Decoder initialized. Number of parameters: {sum(p.nelement() for p in self.parameters())}")
 
-    def forward(self, x, batch_size):
+    def forward(self, x):
         x = x.to(self.device)
-        x = self.linear(x).view(batch_size, self.num_nodes, self.latent_node_size)
+        x = self.linear(x).view(-1, self.num_nodes, self.latent_node_size)
         x = self.decoder(x)
         x = torch.tanh(x) * 10
         return x
