@@ -5,11 +5,12 @@ import logging
 
 
 def setup_argparse():
-    parser = argparse.ArgumentParser(description='hls4ml Graph autoencoder options')
+    parser = argparse.ArgumentParser(
+        description='hls4ml Graph autoencoder options')
 
     ######################################### Data options #########################################
     parser.add_argument('-j', '--jet-type', type=str, required=True, metavar='',
-                            help="Jet type to train. Options: ('g', 'q', 't', 'w', 'z').")
+                        help="Jet type to train. Options: ('g', 'q', 't', 'w', 'z').")
     parser.add_argument('--file-path', type=str, default='../hls4ml/', metavar='',
                         help='Path of the data.')
     parser.add_argument('--file-suffix', type=str, default='jets_30p_p4', metavar='',
@@ -26,9 +27,9 @@ def setup_argparse():
                         help='Dimension of vectors. Default: 4 for 4-vectors.')
     parser.add_argument('--latent-node-size', type=int, default=20, metavar='',
                         help='Dimension of latent vectors (shape: N x 1).')
-    
+
     # encoder
-    parser.add_argument('--encoder-num-hidden-node-layers', type=int, default=30, metavar='',
+    parser.add_argument('--encoder-num-hidden-node-layers', type=int, default=3, metavar='',
                         help='Number of hidden node layers in the encoder.')
     parser.add_argument('--encoder-hidden-edge-size', type=int, default=30, metavar='',
                         help='Hidden edge size in edge convolution of the encoder.')
@@ -42,9 +43,9 @@ def setup_argparse():
                         help='Alpha value for the leaky relu layer in the encoder.')
     parser.add_argument('--encoder-batch-norm', type=get_bool, default=True, metavar='',
                         help='Whether to include batch normalizations in the encoder. Default: True.')
-    
+
     # decoder
-    parser.add_argument('--decoder-num-hidden-node-layers', type=int, default=30, metavar='',
+    parser.add_argument('--decoder-num-hidden-node-layers', type=int, default=3, metavar='',
                         help='Number of hidden node layers in the decoder.')
     parser.add_argument('--decoder-hidden-edge-size', type=int, default=30, metavar='',
                         help='Hidden edge size in edge convolution of the decoder.')
@@ -52,13 +53,12 @@ def setup_argparse():
                         help='Output edge size in edge convolution of the decoder.')
     parser.add_argument('--decoder-num-mps', type=int, default=3, metavar='',
                         help='Number of message passing steps in the decoder.')
-    parser.add_argument('--decoder-dropout', type=float, default=0.2, metavar='',
+    parser.add_argument('--decoder-dropout', type=float, default=0.1, metavar='',
                         help='Dropout value for edge features in the decoder.')
-    parser.add_argument('--decoder-alpha', type=float, default=0.2, metavar='',
+    parser.add_argument('--decoder-alpha', type=float, default=0.1, metavar='',
                         help='Alpha value for the leaky relu layer in the decoder.')
     parser.add_argument('--decoder-batch-norm', type=get_bool, default=True, metavar='',
                         help='Whether to include batch normalizations in the decoder. Default: True.')
-    
 
     ####################################### Training options #######################################
     parser.add_argument('--device', type=get_device, default=torch.device('cuda' if torch.cuda.is_available() else 'cpu'), metavar='',
