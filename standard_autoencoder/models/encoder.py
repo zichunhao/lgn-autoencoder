@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import logging
 
-from standard_autoencoder.models.graphnet import GraphNet
+from models.graphnet import GraphNet
 
 
 class Encoder(nn.Module):

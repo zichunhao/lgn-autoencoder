@@ -3,19 +3,18 @@ import torch
 import os.path as osp
 import time
 from utils.emd_loss import emd_loss
-from standard_autoencoder.std_utils.chamfer_loss import ChamferLoss
-from standard_autoencoder.std_utils.utils import make_dir, save_data, plot_eval_results, eps
+from utils.chamfer_loss import ChamferLoss
+from utils.utils import make_dir, save_data, plot_eval_results, eps
 from utils.jet_analysis import plot_p
 import logging
-import sys
-sys.path.insert(1, '../')
 
 
 def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
           epoch, outpath, is_train=True, device=None):
 
     if is_train:
-        assert (optimizer_encoder is not None) and (optimizer_decoder is not None), "Please specify the optimizers."
+        assert (optimizer_encoder is not None) and (
+            optimizer_decoder is not None), "Please specify the optimizers."
         encoder.train()
         decoder.train()
         encoder_weight_path = make_dir(osp.join(outpath, "weights_encoder"))
@@ -40,10 +39,12 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
         if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
-            batch_loss = chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features)  # output, target
+            batch_loss = chamferloss(
+                p4_gen, p4_target, jet_features=args.chamfer_jet_features)  # output, target
             epoch_total_loss += batch_loss.item()
         elif args.loss_choice.lower() in ['emd', 'emdloss', 'emd_loss']:
-            batch_loss = emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)  # true, output
+            batch_loss = emd_loss(p4_target, p4_gen, eps=eps(
+                args), device=args.device)  # true, output
             epoch_total_loss += batch_loss.item()
         elif args.loss_choice.lower() in ['mse', 'mseloss', 'mse_loss']:
             mseloss = nn.MSELoss()
@@ -51,7 +52,9 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             epoch_total_loss += batch_loss
         elif args.loss_choice.lower() in ['hybrid', 'combined', 'mix']:
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
-            batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features) + emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)
+            batch_loss = args.chamfer_loss_weight * \
+                chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features) + \
+                emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)
             epoch_total_loss += batch_loss.item()
 
         # Backward propagation
@@ -64,8 +67,10 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
             # save model
             if ((i % args.save_freq) == 0 and i > 0):
-                torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
-                torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
+                torch.save(encoder.state_dict(), osp.join(
+                    encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
+                torch.save(decoder.state_dict(), osp.join(
+                    decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
 
     generated_data = torch.cat(generated_data, dim=0).numpy()
     target_data = torch.cat(target_data, dim=0).numpy()
@@ -76,8 +81,10 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
     # Save weights
     if is_train:
-        torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
-        torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
+        torch.save(encoder.state_dict(), osp.join(
+            encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
+        torch.save(decoder.state_dict(), osp.join(
+            decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
 
     return epoch_avg_loss, generated_data, target_data
 
@@ -104,8 +111,10 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
     valid_avg_losses = []
     dts = []
 
-    outpath_train_jet_plots = make_dir(osp.join(outpath, 'model_evaluations/jet_plots/train'))
-    outpath_valid_jet_plots = make_dir(osp.join(outpath, 'model_evaluations/jet_plots/valid'))
+    outpath_train_jet_plots = make_dir(
+        osp.join(outpath, 'model_evaluations/jet_plots/train'))
+    outpath_valid_jet_plots = make_dir(
+        osp.join(outpath, 'model_evaluations/jet_plots/valid'))
 
     for ep in range(args.num_epochs):
         epoch = args.load_epoch + ep if args.load_to_train else ep
@@ -120,7 +129,8 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
                                                            epoch, outpath, device=device)
 
         dt = time.time() - start
-        save_data(data=dt, data_name='dts', is_train=None, outpath=outpath, epoch=epoch)
+        save_data(data=dt, data_name='dts', is_train=None,
+                  outpath=outpath, epoch=epoch)
         save_data(data=train_avg_loss, data_name='losses', is_train=True,
                   outpath=outpath, epoch=epoch)
         save_data(data=valid_avg_loss, data_name='losses', is_train=False,
@@ -156,12 +166,16 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
                               data_name='Losses', outpath=outpath, global_data=False)
 
     # Save global data
-    save_data(data=train_avg_losses, data_name='losses', is_train=True, outpath=outpath, epoch=-1)
-    save_data(data=valid_avg_losses, data_name='losses', is_train=False, outpath=outpath, epoch=-1)
-    save_data(data=dts, data_name='dts', is_train=None, outpath=outpath, epoch=-1)
+    save_data(data=train_avg_losses, data_name='losses',
+              is_train=True, outpath=outpath, epoch=-1)
+    save_data(data=valid_avg_losses, data_name='losses',
+              is_train=False, outpath=outpath, epoch=-1)
+    save_data(data=dts, data_name='dts',
+              is_train=None, outpath=outpath, epoch=-1)
 
     plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
                       data_name='Losses', outpath=outpath, global_data=True)
-    plot_eval_results(args, data=dts, data_name='Time durations', outpath=outpath, global_data=True)
+    plot_eval_results(args, data=dts, data_name='Time durations',
+                      outpath=outpath, global_data=True)
 
     return train_avg_losses, valid_avg_losses, dts

@@ -26,6 +26,36 @@ def eps(args):
         return 1e-12
 
 
+def get_p_polar(p, eps=1e-16, keep_p0=False):
+    """
+    (E, px, py, pz) -> (eta, phi, pt) or (E, eta, phi, pt)
+
+    keep_p0: `bool`
+        Whether to keep p0.
+        Optional, default: False
+    """
+    px = p[..., 1]
+    py = p[..., 2]
+    pz = p[..., 3]
+
+    pt = torch.sqrt(px ** 2 + py ** 2 + eps)
+    try:
+        eta = torch.asinh(pz / (pt + eps))
+    except AttributeError:
+        eta = arcsinh(pz / (pt + eps))
+    phi = torch.atan2(py + eps, px + eps)
+
+    if not keep_p0:
+        return torch.stack((eta, phi, pt), dim=-1)
+    else:
+        E = p[..., 0]
+        return torch.stack((E, eta, phi, pt), dim=-1)
+
+
+def arcsinh(z):
+    return torch.log(z + torch.sqrt(1 + torch.pow(z, 2)))
+
+
 def save_data(data, data_name, is_train, outpath, epoch=-1):
     '''
     Save data like losses and dts. If epoch is -1, the data will be considered a global data, such as
@@ -37,16 +67,19 @@ def save_data(data, data_name, is_train, outpath, epoch=-1):
 
     if is_train is None:
         if epoch >= 0:
-            torch.save(data, osp.join(outpath, f'{data_name}_epoch_{epoch+1}.pt'))
+            torch.save(data, osp.join(
+                outpath, f'{data_name}_epoch_{epoch+1}.pt'))
         else:
             torch.save(data, osp.join(outpath, f'{data_name}.pt'))
         return
 
     if epoch >= 0:
         if is_train:
-            torch.save(data, osp.join(outpath, f'train_{data_name}_epoch_{epoch+1}.pt'))
+            torch.save(data, osp.join(
+                outpath, f'train_{data_name}_epoch_{epoch+1}.pt'))
         else:
-            torch.save(data, osp.join(outpath, f'valid_{data_name}_epoch_{epoch+1}.pt'))
+            torch.save(data, osp.join(
+                outpath, f'valid_{data_name}_epoch_{epoch+1}.pt'))
     else:
         if is_train:
             torch.save(data, osp.join(outpath, f'train_{data_name}.pt'))
