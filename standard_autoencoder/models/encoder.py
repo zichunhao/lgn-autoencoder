@@ -11,13 +11,14 @@ class Encoder(nn.Module):
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         if dtype is None:
-            device = torch.float
+            dtype = torch.float
 
         super(Encoder, self).__init__()
 
         self.num_nodes = num_nodes
         self.node_size = node_size
-        self.num_latent_node = 1  # We are summing over all node features, resulting in one node feature
+        # We are summing over all node features, resulting in one node feature
+        self.num_latent_node = 1
         self.latent_node_size = latent_node_size
         self.num_mps = num_mps
 
