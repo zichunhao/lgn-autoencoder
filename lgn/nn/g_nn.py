@@ -2,7 +2,7 @@ import torch
 from torch.nn import Module
 from functools import reduce
 from lgn.cg_lib import CGModule
-from lgn.g_lib import g_torch, GWeight, GTau, GScalar
+from lgn.g_lib import g_torch, GWeight, GTau, GScalar, GVec
 
 
 class MixReps(CGModule):
@@ -88,6 +88,8 @@ class MixReps(CGModule):
         rep : list of `torch.Tensor`
             Mixed representation.
         """
+        if isinstance(reps, dict):
+            reps = GVec(reps)
 
         if not GTau.from_rep(reps) == self.tau_in:
             raise ValueError(f'Tau of input reps, {GTau.from_rep(reps)}, does not match initialized tau, {self.tau_in}!')
