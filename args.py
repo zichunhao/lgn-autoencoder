@@ -108,8 +108,8 @@ def setup_argparse():
                         help='Whether to load existing (trained) model for training.')
     parser.add_argument('--load-path', type=str, default=None, metavar='',
                         help='Path of the trained model to load.')
-    parser.add_argument('--load-epoch', type=int, default=None, metavar='',
-                        help='Epoch number of the trained model to load.')
+    parser.add_argument('--load-epoch', type=int, default=-1, metavar='',
+                        help='Epoch number of the trained model to load. -1 for loading weights in the lastest model.')
 
     ################################### Model evaluation options ###################################
     parser.add_argument('--unit', type=str, default='TeV',

@@ -2,6 +2,7 @@ import os
 import os.path as osp
 import torch
 import matplotlib.pyplot as plt
+import glob
 
 
 def create_model_folder(args):
@@ -134,3 +135,11 @@ def get_p_polar(p, eps=1e-16, keep_p0=False):
 
 def arcsinh(z):
     return torch.log(z + torch.sqrt(1 + torch.pow(z, 2)))
+
+
+def latest_epoch(model_path):
+    path = osp.join(model_path, 'weights_decoder/*pth')
+    file_list = glob.glob(f"{path}")
+    epochs = [[int(s) for s in filename.split('_') if s.isdigit()] for filename in file_list]
+    epochs.sort()
+    return epochs[-1][0]
