@@ -1,6 +1,6 @@
 from args import setup_argparse
 from utils.make_data import initialize_data, initialize_test_data
-from utils.utils import create_model_folder, eps, last_epoch
+from utils.utils import create_model_folder, eps, latest_epoch
 from utils.train import train_loop
 from lgn.models.lgn_encoder import LGNEncoder
 from lgn.models.lgn_decoder import LGNDecoder
@@ -14,7 +14,7 @@ import logging
 
 def main(args):
     if args.load_to_train and args.load_epoch < 0:
-        args.load_epoch = last_epoch(args.load_path)
+        args.load_epoch = latest_epoch(args.load_path)
     logging.info(args)
 
     train_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}.pt")
