@@ -145,7 +145,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
         dts.append(dt)
         train_avg_losses.append(train_avg_loss)
-        valid_avg_losses.append(train_avg_loss)
+        valid_avg_losses.append(valid_avg_loss)
 
         logging.info(f'epoch={epoch+1}/{args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch}, '
                      f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, dt={dt}')
