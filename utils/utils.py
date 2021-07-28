@@ -55,7 +55,7 @@ def save_data(data, data_name, is_train, outpath, epoch=-1):
             torch.save(data, osp.join(outpath, f'valid_{data_name}.pkl'))
 
 
-def plot_eval_results(args, data, data_name, outpath, global_data=False, start=None):
+def plot_eval_results(args, data, data_name, outpath, start=None):
     '''
     Plot evaluation results
     '''
@@ -64,7 +64,6 @@ def plot_eval_results(args, data, data_name, outpath, global_data=False, start=N
         start = args.load_epoch + 1
     else:
         start = 1 if start is None else start
-
     # (train, label)
     if type(data) in [tuple, list] and len(data) == 2:
         train, valid = data
@@ -78,7 +77,7 @@ def plot_eval_results(args, data, data_name, outpath, global_data=False, start=N
         plt.legend()
     # only one type of data (e.g. dt)
     else:
-        x = [start + i for i in range(len(train))]
+        x = [start + i for i in range(len(data))]
         if isinstance(data, torch.Tensor):
             data = data.detach().cpu().numpy()
         plt.plot(x, data)
