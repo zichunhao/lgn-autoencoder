@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import logging
 
 
 class GraphNet(nn.Module):
@@ -9,159 +10,205 @@ class GraphNet(nn.Module):
 
     Parameters
     ----------
-    num_nodes: int
+    num_nodes : int
         Number of nodes for the graph.
-    input_node_size: int
+    input_node_size : int
         Dimension of input node feature vectors.
-    output_node_size: int
-        Dimension of output node feature vectors.
-    num_hidden_node_layers: int
-        Number of layers of hidden nodes.
-    hidden_edge_size: int
-        Dimension of hidden edges before message passing.
-    output_edge_size: int
-        Dimension of output edges for message passing.
-    num_mps: int
+    output_node_size : int
+        Dimension of output node feature vectors of the network.
+    node_sizes : list of list of int
+        Dimensions of hidden node per layer per iteration of message passing.
+    edge_sizes : list of list of int
+        Dimension of edges networks per layer per iteration of message passing.
+    num_mps : int
         The number of message passing step.
-    dropout: float
-        Dropout value for edge features.
-    alpha: float
-        Alpha value for the leaky relu layer for edge features.
-    batch_norm: bool (default: True)
+    dropout : float
+        Dropout momentum for edge features per iteration of message passing.s
+    alphas : list of int or list float
+        Alpha value for the leaky relu layer for edge features per iteration of message passing.
+    batch_norm : bool (default: True)
         Whether to use batch normalization.
+    device : torch.device
+        Device to which the model is initialized
     """
 
-    def __init__(self, num_nodes, input_node_size, output_node_size, num_hidden_node_layers,
-                 hidden_edge_size, output_edge_size, num_mps, dropout, alpha, batch_norm=True, 
-                 device=None):
+    def __init__(self, num_nodes, input_node_size, output_node_size, node_sizes, edge_sizes,
+                 num_mps, dropout=0.1, alphas=0.1, batch_norm=True, dtype=None, device=None):
+
+        node_sizes = _adjust_var_list(node_sizes, num_mps)
+        edge_sizes = _adjust_var_list(edge_sizes, num_mps)
+        alphas = _adjust_var_list(alphas, num_mps)
+
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        super(GraphNet, self).__init__()
+        if dtype is None:
+            dtype = torch.float
 
-        # Nodes
+        super(GraphNet, self).__init__()
+        self.device = device
+        self.dtype = dtype
+        self.eps = 1e-16 if self.dtype in [torch.float64, torch.double] else 1e-12
+
+        # Node networks
         self.num_nodes = num_nodes  # Number of nodes in graph
         self.input_node_size = input_node_size  # Dimension of input node features
-        self.hidden_node_size = output_node_size  # Dimension of hidden node features
-        self.num_hidden_node_layers = num_hidden_node_layers  # Node layers in node networks
+        self.node_sizes = node_sizes  # List of dimensions of hidden node features
+        self.node_net = nn.ModuleList()
+        self.output_node_size = output_node_size  # Dimension of output node features
+        self.output_layer = nn.Linear(self.node_sizes[-1][-1], self.output_node_size)
 
-        # Edges
-        self.hidden_edge_size = hidden_edge_size  # Hidden size in edge networks
-        self.output_edge_size = output_edge_size  # Output size in edge networks
-        self.input_edge_size = 2 * self.hidden_node_size + 1
+        # Edge networks
+        self.edge_sizes = edge_sizes  # Output sizes in edge networks
+        self.input_edge_sizes = [2 * s[0] + 1 for s in self.node_sizes]  # mij = xi ⊕ xj ⊕ d(xi, xj)
+        self.edge_net = nn.ModuleList()
 
         self.num_mps = num_mps  # Number of message passing
         self.batch_norm = batch_norm  # Use batch normalization (bool)
+        if self.batch_norm:
+            self.bn_node = nn.ModuleList()
+            self.bn_edge = nn.ModuleList()
 
-        self.alpha = alpha  # For leaky relu layer for edge features
-        self.dropout = nn.Dropout(p=dropout)  # Dropout layer for edge features
-
-        # AGGREGATE function
-        self.aggregate_hidden = nn.ModuleList()
-        self.aggregate = nn.ModuleList()
-
-        # UPDATE function
-        self.update_hidden = nn.ModuleList()
-        self.update = nn.ModuleList()
-
-        # Batch normalization layers
-        self.bn_edge_hidden = nn.ModuleList()
-        self.bn_edge = nn.ModuleList()
-        self.bn_node = nn.ModuleList()
-
-        self.device = device
+        self.alphas = alphas  # For leaky relu layer for edge features
+        self.dropout_p = dropout  # Dropout layer for edge features
 
         for i in range(self.num_mps):
-            # Edge feature layers
-            self.aggregate_hidden.append(nn.Linear(self.input_edge_size, self.hidden_edge_size))
-            self.aggregate.append(nn.Linear(self.hidden_edge_size, self.output_edge_size))
+            # Edge layers
+            edge_layers = _create_dnn(layer_sizes=self.edge_sizes[i], input_size=self.input_edge_sizes[i])
+            self.edge_net.append(edge_layers)
+            if self.batch_norm:
+                bn_edge_i = nn.ModuleList()
+                for j in range(len(edge_layers)):
+                    bn_edge_i.append(nn.BatchNorm1d(self.edge_sizes[i][j]))
+                self.bn_edge.append(bn_edge_i)
 
-            if batch_norm:
-                self.bn_edge_hidden.append(nn.BatchNorm1d(self.hidden_edge_size))
-                self.bn_edge.append(nn.BatchNorm1d(self.output_edge_size))
-
-            # Node feature layers
-            node_layers = nn.ModuleList()
-            node_layers.append(nn.Linear(self.output_edge_size + self.hidden_node_size, self.hidden_node_size))
-
-            for j in range(self.num_hidden_node_layers - 1):
-                node_layers.append(nn.Linear(self.hidden_node_size, self.hidden_node_size))
-
-            self.update_hidden.append(node_layers)  # Layer for message Aggregation of hidden layer
-            self.update.append(nn.Linear(self.hidden_node_size, self.hidden_node_size))  # Layer for message Aggregation
-
-            if batch_norm:
+            # Node layers
+            node_layers = _create_dnn(layer_sizes=self.node_sizes[i])
+            node_layers.insert(0, nn.Linear(self.edge_sizes[i][-1] + self.node_sizes[i][0], self.node_sizes[i][0]))
+            if i+1 < self.num_mps:
+                node_layers.append(nn.Linear(node_sizes[i][-1], self.node_sizes[i+1][0]))
+            else:
+                node_layers.append(nn.Linear(node_sizes[i][-1], self.output_node_size))
+            self.node_net.append(node_layers)
+            if self.batch_norm:
                 bn_node_i = nn.ModuleList()
-                for i in range(num_hidden_node_layers):
-                    bn_node_i.append(nn.BatchNorm1d(self.hidden_node_size))
+                for j in range(len(self.node_net[i])):
+                    bn_node_i.append(nn.BatchNorm1d(self.node_net[i][j].out_features))
                 self.bn_node.append(bn_node_i)
 
-    def forward(self, x, eps=1e-12):
+        self.to(self.device)
+
+    def forward(self, x, metric='cartesian'):
         """
         Parameter
         ----------
-        x: torch.Tensor
+        x : torch.Tensor
             The input node features.
+        metric : str
+            The metric for computing distances between nodes.
+            Choices:
+                - 'cartesian': diag(+, +, +, +)
+                - 'minkowskian': diag(+, -, -, -), which is used only if x.shape[-1] == 4
+            Default: 'cartesian'
 
         Return
         ------
-        x: torch.Tensor
-            Node features after message passing.
+        x : torch.Tensor
+            Updated node features.
         """
-        self.x = x
+        self.metric = metric
         batch_size = x.shape[0]
 
-        x = F.pad(x, (0, self.hidden_node_size - self.input_node_size, 0, 0, 0, 0)).to(self.device)
+        x = F.pad(x, (0, self.node_sizes[0][0] - self.input_node_size, 0, 0, 0, 0)).to(self.device)
 
         for i in range(self.num_mps):
-            # Edge features
-            A = self.getA(x, batch_size, eps=eps)
+            metric = _get_metric_func(self.metric if x.shape[-1] == 4 else 'cartesian')
+            A = self._getA(x, batch_size, self.input_edge_sizes[i], self.node_sizes[i][0], metric)
+            A = self._edge_conv(A, i)
+            x = self._aggregate(x, A, i, batch_size)
+            x = x.view(batch_size, self.num_nodes, -1)
 
-            # Edge layer 1
-            A = F.leaky_relu(self.aggregate_hidden[i](A), negative_slope=self.alpha)
-            if self.batch_norm:
-                A = self.bn_edge_hidden[i](A)
-            A = self.dropout(A)
-
-            # Edge layer 2
-            A = F.leaky_relu(self.aggregate[i](A), negative_slope=self.alpha)
-            if self.batch_norm:
-                A = self.bn_edge[i](A)
-            A = self.dropout(A)
-
-            # Concatenation
-            A = A.view(batch_size, self.num_nodes, self.num_nodes, self.output_edge_size)
-            A = torch.sum(A, 2)
-            x = torch.cat((A, x), 2)
-            x = x.view(batch_size * self.num_nodes, self.output_edge_size + self.hidden_node_size)
-
-            # Aggregation
-            for j in range(self.num_hidden_node_layers):
-                x = F.leaky_relu(self.update_hidden[i][j](x), negative_slope=self.alpha)
-                if self.batch_norm:
-                    x = self.bn_node[i][j](x)
-                x = self.dropout(x)
-
-            x = self.dropout(self.update[i](x))
-            x = x.view(batch_size, self.num_nodes, self.hidden_node_size)
-
+        x = x.view(batch_size, self.num_nodes, self.output_node_size)
         return x
 
-    def getA(self, x, batch_size, eps=1e-12):
+    def _getA(self, x, batch_size, input_edge_size, hidden_node_size, metric):
         """
         Parameters
         ----------
         x: torch.Tensor
-            The node features.
+            Node features with shape (batch_size, num_particles, 4)
         batch_size: int
-            The batch size.
+            Batch size.
 
         Return
         ------
-        A: torch.Tensor with shape (batch_size * self.num_nodes * self.num_nodes, self.input_edge_size)
-            The adjacency matrix that stores the message m = MESSAGE(hv, hw).
+        A: torch.Tensor with shape (batch_size * self.num_nodes * self.num_nodes, input_edge_size)
+            Adjacency matrix that stores distances among nodes.
         """
-        x1 = x.repeat(1, 1, self.num_nodes).view(batch_size, self.num_nodes*self.num_nodes, self.hidden_node_size).to(self.device)
-        x2 = x.repeat(1, self.num_nodes, 1).to(self.device)  # 1*(self.num_nodes)*1 tensor with repeated x along axis=1
-        dists = torch.norm(x2 - x1 + eps, dim=2).unsqueeze(2)
-        A = torch.cat((x1, x2, dists), 2).view(batch_size * self.num_nodes * self.num_nodes, self.input_edge_size)
+        x1 = x.repeat(1, 1, self.num_nodes).view(batch_size, self.num_nodes*self.num_nodes, hidden_node_size)
+        x2 = x.repeat(1, self.num_nodes, 1)  # 1*(self.num_nodes)*1 tensor with repeated x along axis=1
+        dists = metric(x2 - x1 + self.eps)
+        A = torch.cat((x1, x2, dists), 2).view(batch_size*self.num_nodes*self.num_nodes, input_edge_size)
         return A
+
+    def _concat(self, A, x, batch_size, edge_size, node_size):
+        A = A.view(batch_size, self.num_nodes, self.num_nodes, edge_size)
+        A = torch.sum(A, 2)
+        x = torch.cat((A, x), 2)
+        x = x.view(batch_size * self.num_nodes, edge_size + node_size)
+        return x
+
+    def _dropout(self, x):
+        dropout = nn.Dropout(p=self.dropout_p)
+        return dropout(x)
+
+    def _aggregate(self, x, A, i, batch_size):
+        x = self._concat(A, x, batch_size, self.edge_sizes[i][-1], self.node_sizes[i][0])
+        for j in range(len(self.node_net[i])):
+            x = self.node_net[i][j](x)
+            x = F.leaky_relu(x, negative_slope=self.alphas[i])
+            if self.batch_norm:
+                x = self.bn_node[i][j](x)
+            x = self._dropout(x)
+        return x
+
+    def _edge_conv(self, A, i):
+        for j in range(len(self.edge_net[i])):
+            A = self.edge_net[i][j](A)
+            A = F.leaky_relu(A, negative_slope=self.alphas[i])
+            if self.batch_norm:
+                A = self.bn_edge[i][j](A)
+            A = self._dropout(A)
+        return A
+
+
+def _create_dnn(self, layer_sizes, input_size=-1):
+    dnn = nn.ModuleList()
+    if input_size >= 0:
+        sizes = layer_sizes.copy()
+        sizes.insert(0, input_size)
+        for i in range(len(layer_sizes)):
+            dnn.append(nn.Linear(sizes[i], sizes[i+1]))
+    else:
+        for i in range(len(layer_sizes) - 1):
+            dnn.append(nn.Linear(layer_sizes[i], layer_sizes[i+1]))
+    return dnn
+
+
+def _adjust_var_list(data, num):
+    try:
+        if len(data) < num:
+            data = data + [data[-1]] * (num - len(data))
+            return data
+    except TypeError:  # Non interable
+        data = [data] * num
+    return data[:num]
+
+
+def _get_metric_func(metric):
+    if metric.lower() == 'cartesian':
+        return lambda x: torch.norm(x, dim=2).unsqueeze(2)
+    if metric.lower() == 'minkowskian':
+        return lambda x: (2 * torch.pow(x[..., 0], 2) - 2 * torch.sum(torch.pow(x, 2), dim=-1)).unsqueeze(2)
+    else:
+        logging.warning(f"Metric ({metric}) for adjacency matrix is not implemented. Use 'cartesian' instead.")
+        return lambda x: torch.norm(x, dim=2).unsqueeze(2)

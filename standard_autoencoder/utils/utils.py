@@ -87,7 +87,7 @@ def save_data(data, data_name, is_train, outpath, epoch=-1):
             torch.save(data, osp.join(outpath, f'valid_{data_name}.pt'))
 
 
-def plot_eval_results(args, data, data_name, outpath, global_data=False, start=None):
+def plot_eval_results(args, data, data_name, outpath, start=None):
     '''
     Plot evaluation results
     '''

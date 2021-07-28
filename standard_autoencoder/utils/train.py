@@ -28,7 +28,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
     for i, data in enumerate(loader):
         p4_target = data
-        p4_gen = decoder(encoder(p4_target))
+        p4_gen = decoder(encoder(p4_target, metric=args.encoder_metric), metric=args.decoder_metric)
         generated_data.append(p4_gen.cpu().detach())
 
         if device is not None:
@@ -37,12 +37,10 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
         if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
-            batch_loss = chamferloss(
-                p4_gen, p4_target, jet_features=args.chamfer_jet_features)  # output, target
+            batch_loss = chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features)  # output, target
             epoch_total_loss += batch_loss.item()
         elif args.loss_choice.lower() in ['emd', 'emdloss', 'emd_loss']:
-            batch_loss = emd_loss(p4_target, p4_gen, eps=eps(
-                args), device=args.device)  # true, output
+            batch_loss = emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)  # true, output
             epoch_total_loss += batch_loss.item()
         elif args.loss_choice.lower() in ['mse', 'mseloss', 'mse_loss']:
             mseloss = nn.MSELoss()
@@ -58,7 +56,13 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         if is_train:
             optimizer_encoder.zero_grad()
             optimizer_decoder.zero_grad()
-            batch_loss.backward()
+            try:
+                batch_loss.backward()
+            except RuntimeError as e:
+                torch.set_printoptions(profile="full")
+                logging.error(f"{p4_target = }")
+                logging.error(f"{p4_gen = }")
+                raise RuntimeError(str(e))
             optimizer_encoder.step()
             optimizer_decoder.step()
 
@@ -109,7 +113,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
     outpath_valid_jet_plots = make_dir(osp.join(outpath, 'model_evaluations/jet_plots/valid'))
 
     for ep in range(args.num_epochs):
-        epoch = args.load_epoch + ep if args.load_to_train else ep
+        epoch = args.load_epoch + ep if args.load_to_train else ep + 1
 
         # Training
         start = time.time()
@@ -147,16 +151,16 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         train_avg_losses.append(train_avg_loss)
         valid_avg_losses.append(valid_avg_loss)
 
-        logging.info(f'epoch={epoch+1}/{args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch}, '
-                     f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, dt={dt}')
+        logging.info(f'{epoch=}/{args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch}, '
+                     f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, {dt=}')
 
-        if (epoch > 0) and ((epoch + 1) % 10 == 0):
+        if (epoch > 1) and (epoch % 10 == 0):
             plot_eval_results(args, data=(train_avg_losses[-10:], valid_avg_losses[-10:]),
-                              data_name=f"losses from {epoch + 1 - 10} to {epoch + 1}",
-                              outpath=outpath, global_data=False)
-        if (epoch > 0) and ((epoch + 1) % 2 == 0):
+                              data_name=f"losses from {epoch-10} to {epoch}",
+                              outpath=outpath, start=epoch-10)
+        if (epoch > 1) and (epoch % 100 == 0):
             plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
-                              data_name='Losses', outpath=outpath, global_data=False)
+                              data_name='Losses', outpath=outpath, start=epoch-10)
 
     # Save global data
     save_data(data=train_avg_losses, data_name='losses', is_train=True, outpath=outpath, epoch=-1)
@@ -164,8 +168,8 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
     save_data(data=dts, data_name='dts', is_train=None, outpath=outpath, epoch=-1)
 
     plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
-                      data_name='Losses', outpath=outpath, global_data=True)
+                      data_name='Losses', outpath=outpath)
     plot_eval_results(args, data=dts, data_name='Time durations',
-                      outpath=outpath, global_data=True)
+                      outpath=outpath)
 
     return train_avg_losses, valid_avg_losses, dts

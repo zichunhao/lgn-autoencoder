@@ -15,8 +15,7 @@ def main(args):
     logging.info(args)
 
     # Loading data and initializing models
-    train_data_path = osp.join(
-        args.file_path, f"{args.jet_type}_{args.file_suffix}.pt")
+    train_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}.pt")
 
     train_loader, valid_loader = initialize_data(path=train_data_path,
                                                  batch_size=args.batch_size,
@@ -30,10 +29,8 @@ def main(args):
         optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.lr)
         optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.lr)
     elif args.optimizer.lower() == 'rmsprop':
-        optimizer_encoder = torch.optim.RMSprop(
-            encoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
-        optimizer_decoder = torch.optim.RMSprop(
-            decoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
+        optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
+        optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
     else:
         raise NotImplementedError("Other choices of optimizer are not implemented. "
                                   f"Available choices are 'Adam' and 'RMSprop'. Found: {args.optimizer}.")
@@ -68,23 +65,30 @@ def main(args):
 
 
 def initialize_models(args):
-    encoder = Encoder(num_nodes=args.num_jet_particles, node_size=args.vec_dims,
+    encoder = Encoder(num_nodes=args.num_jet_particles,
+                      input_node_size=args.vec_dims,
                       latent_node_size=args.latent_node_size,
-                      num_hidden_node_layers=args.encoder_num_hidden_node_layers,
-                      hidden_edge_size=args.encoder_hidden_edge_size,
-                      output_edge_size=args.encoder_output_edge_size,
+                      node_sizes=args.encoder_node_sizes,
+                      edge_sizes=args.encoder_edge_sizes,
                       num_mps=args.encoder_num_mps,
-                      dropout=args.encoder_dropout, alpha=args.encoder_alpha,
-                      batch_norm=args.encoder_batch_norm, device=args.device)
+                      dropout=args.encoder_dropout,
+                      alphas=args.encoder_alphas,
+                      batch_norm=args.encoder_batch_norm,
+                      dtype=args.dtype, device=args.device)
 
-    decoder = Decoder(num_nodes=args.num_jet_particles, node_size=args.vec_dims,
+    decoder = Decoder(num_nodes=args.num_jet_particles,
                       latent_node_size=args.latent_node_size,
-                      num_hidden_node_layers=args.decoder_num_hidden_node_layers,
-                      hidden_edge_size=args.decoder_hidden_edge_size,
-                      output_edge_size=args.decoder_output_edge_size,
+                      output_node_size=args.vec_dims,
+                      node_sizes=args.decoder_node_sizes,
+                      edge_sizes=args.decoder_edge_sizes,
                       num_mps=args.decoder_num_mps,
-                      dropout=args.decoder_dropout, alpha=args.decoder_alpha,
-                      batch_norm=args.decoder_batch_norm, device=args.device)
+                      dropout=args.decoder_dropout,
+                      alphas=args.decoder_alphas,
+                      batch_norm=args.decoder_batch_norm,
+                      dtype=args.dtype, device=args.device)
+
+    logging.info(f"{encoder = }")
+    logging.info(f"{decoder = }")
 
     return encoder, decoder
 
