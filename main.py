@@ -12,21 +12,7 @@ import os.path as osp
 import logging
 
 
-def main(args):
-    if args.load_to_train and args.load_epoch < 0:
-        args.load_epoch = latest_epoch(args.load_path)
-    logging.info(args)
-
-    train_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}.pt")
-    test_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}_test.pt")
-
-    train_loader, valid_loader = initialize_data(path=train_data_path,
-                                                 batch_size=args.batch_size,
-                                                 train_fraction=args.train_fraction,
-                                                 num_val=args.num_valid)
-    test_loader = initialize_test_data(path=test_data_path, batch_size=args.test_batch_size)
-
-    """Initializations"""
+def initialize_autoencoder(args):
     encoder = LGNEncoder(num_input_particles=args.num_jet_particles,
                          tau_input_scalars=args.tau_jet_scalars,
                          tau_input_vectors=args.tau_jet_vectors,
@@ -50,17 +36,44 @@ def main(args):
                          num_basis_fn=args.num_basis_fn, activation=args.activation,
                          mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
                          cg_dict=encoder.cg_dict, device=args.device, dtype=args.dtype)
+    logging.info(f"{encoder=}")
+    logging.info(f"{decoder=}")
+
+    return encoder, decoder
+
+
+def initialize_optimizers(args, encoder, decoder):
+    if args.optimizer.lower() == 'adam':
+        optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.lr)
+        optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.lr)
+    elif args.optimizer.lower() == 'rmsprop':
+        optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
+        optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
+    else:
+        raise NotImplementedError("Other choices of optimizer are not implemented. "
+                                  f"Available choices are 'Adam' and 'RMSprop'. Found: {args.optimizer}.")
+    return optimizer_encoder, optimizer_decoder
+
+
+def main(args):
+    if args.load_to_train and args.load_epoch < 0:
+        args.load_epoch = latest_epoch(args.load_path)
+    logging.info(args)
+
+    train_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}.pt")
+    test_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}_test.pt")
+
+    train_loader, valid_loader = initialize_data(path=train_data_path,
+                                                 batch_size=args.batch_size,
+                                                 train_fraction=args.train_fraction,
+                                                 num_val=args.num_valid)
+    test_loader = initialize_test_data(path=test_data_path, batch_size=args.test_batch_size)
+
+    """Initializations"""
+    encoder, decoder = initialize_autoencoder(args)
 
     if not args.equivariance_test_only:
-        if args.optimizer.lower() == 'adam':
-            optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.lr)
-            optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.lr)
-        elif args.optimizer.lower() == 'rmsprop':
-            optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
-            optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
-        else:
-            raise NotImplementedError("Other choices of optimizer are not implemented. "
-                                      f"Available choices are 'Adam' and 'RMSprop'. Found: {args.optimizer}.")
+        optimizer_encoder, optimizer_decoder = initialize_optimizers(args, encoder, decoder)
 
         # Both on gpu
         if (next(encoder.parameters()).is_cuda and next(encoder.parameters()).is_cuda):
