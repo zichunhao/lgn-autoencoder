@@ -85,8 +85,8 @@ def setup_argparse():
                         "'minkowskian': (+, -, -, -) \n"
                         "'polar': convert to (E, pt, eta, phi) paired with metric (+, +, +, +) \n"
                         "Default: 'cartesian.'")
-    parser.add_argument('--chamfer-jet-features', type=get_bool, default=True,
-                        help="Whether to take into the jet features.")
+    parser.add_argument('--chamfer-jet-features-weight', type=float, default=1,
+                        help="The weight of jet momenta when adding to the particle momenta chamfer loss.")
 
     parser.add_argument('--save-dir', type=str, default='standard-autoencoder-trained-models', metavar='',
                         help='The directory to save trained models and figures.')

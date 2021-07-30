@@ -27,6 +27,7 @@ python main.py \
 -b 2 \
 -j g \
 -e $num_epochs \
+--chamfer-jet-features-weight 10 \
 --train-fraction "$train_fraction" \
 --num-valid "$num_valid" \
 --save-dir "$output_path" \

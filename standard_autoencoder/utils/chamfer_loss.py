@@ -9,7 +9,7 @@ class ChamferLoss(nn.Module):
         super(ChamferLoss, self).__init__()
         self.loss_norm_choice = loss_norm_choice
 
-    def forward(self, p, q, jet_features=False):
+    def forward(self, p, q, jet_features_weight=1):
         """
         The forward pass to compute the chamfer loss of the point-cloud like jets.
 
@@ -32,14 +32,12 @@ class ChamferLoss(nn.Module):
         # Adapted from Steven Tsan https://github.com/stsan9/AnomalyDetection4Jets/blob/emd/code/loss_util.py#L3
         chamfer_loss = torch.sum(min_dist_pq.values + min_dist_qp.values)
 
-        if jet_features:
+        if jet_features_weight != 0:
             jet_p = torch.sum(p, dim=-2).to(self.device)
             jet_q = torch.sum(q, dim=-2).to(self.device)
             jet_loss = normsq(jet_p - jet_q, norm_choice=self.loss_norm_choice).sum()
-        else:
-            jet_loss = 0
-
-        return chamfer_loss + jet_loss
+            chamfer_loss += jet_features_weight * jet_loss
+        return jet_loss
 
 
 def pairwise_distance_sq(p, q, norm_choice='cartesian',
