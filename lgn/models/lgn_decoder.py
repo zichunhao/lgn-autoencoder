@@ -144,7 +144,7 @@ class LGNDecoder(CGModule):
         self.tau_dict['output'] = self.tau_output
         self.mix_to_output = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
 
-        logging.info(f'Decoder initialized. Number of parameters: {sum(p.nelement() for p in self.parameters())}')
+        logging.info(f'Decoder initialized. Number of parameters: {sum(p.nelement() for p in self.parameters() if p.requires_grad)}')
 
     def forward(self, latent_features, covariance_test=False, nodes_all=None):
         '''

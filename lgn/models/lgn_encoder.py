@@ -169,7 +169,7 @@ class LGNEncoder(CGModule):
         self.scale = scale
         self.tau_latent = self.tau_output
 
-        logging.info(f'Encoder initialized. Number of parameters: {sum(p.nelement() for p in self.parameters())}')
+        logging.info(f'Encoder initialized. Number of parameters: {sum(p.nelement() for p in self.parameters() if p.requires_grad)}')
 
     def forward(self, data, covariance_test=False):
         '''
