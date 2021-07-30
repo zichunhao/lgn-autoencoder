@@ -181,7 +181,7 @@ class GraphNet(nn.Module):
         return A
 
 
-def _create_dnn(self, layer_sizes, input_size=-1):
+def _create_dnn(layer_sizes, input_size=-1):
     dnn = nn.ModuleList()
     if input_size >= 0:
         sizes = layer_sizes.copy()
