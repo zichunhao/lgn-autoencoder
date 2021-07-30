@@ -57,7 +57,7 @@ def initialize_optimizers(args, encoder, decoder):
 
 def main(args):
     if args.load_to_train and args.load_epoch < 0:
-        args.load_epoch = latest_epoch(args.load_path)
+        args.load_epoch = latest_epoch(args.load_path, num=args.load_epoch)
     logging.info(args)
 
     train_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}.pt")

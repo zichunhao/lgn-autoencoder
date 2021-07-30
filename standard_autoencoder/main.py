@@ -1,6 +1,6 @@
 import torch
 import os.path as osp
-from utils.utils import create_model_folder, eps
+from utils.utils import create_model_folder, eps, latest_epoch
 from args import setup_argparse
 from utils.make_data import initialize_data
 from utils.train import train_loop
@@ -12,6 +12,9 @@ logging.basicConfig(level=logging.INFO)
 
 
 def main(args):
+    if args.load_to_train and args.load_epoch < 0:
+        args.load_epoch = latest_epoch(args.load_path, num=args.load_epoch)
+
     logging.info(args)
 
     # Loading data and initializing models
@@ -22,7 +25,7 @@ def main(args):
                                                  train_fraction=args.train_fraction,
                                                  num_val=args.num_valid)
 
-    encoder, decoder = initialize_models(args)
+    encoder, decoder, outpath = initialize_models(args)
 
     # trainings
     if args.optimizer.lower() == 'adam':
@@ -49,17 +52,6 @@ def main(args):
     logging.info(f'Training over {args.num_epochs} epochs...')
 
     '''Training'''
-    # Load existing model
-    if args.load_to_train:
-        outpath = args.load_path
-        encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'),
-                                           map_location=args.device))
-        decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'),
-                                           map_location=args.device))
-    # Create new model
-    else:
-        outpath = create_model_folder(args)
-
     train_loop(args, train_loader, valid_loader, encoder, decoder,
                optimizer_encoder, optimizer_decoder, outpath, args.device)
 
@@ -87,10 +79,20 @@ def initialize_models(args):
                       batch_norm=args.decoder_batch_norm,
                       dtype=args.dtype, device=args.device)
 
-    logging.info(f"{encoder = }")
-    logging.info(f"{decoder = }")
+    if args.load_to_train:
+        outpath = args.load_path
+        encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'),
+                                           map_location=args.device))
+        decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'),
+                                           map_location=args.device))
+    # Create new model
+    else:
+        outpath = create_model_folder(args)
 
-    return encoder, decoder
+    logging.info(f"{encoder=}")
+    logging.info(f"{decoder=}")
+
+    return encoder, decoder, outpath
 
 
 if __name__ == '__main__':

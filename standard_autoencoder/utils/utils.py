@@ -1,6 +1,7 @@
 import os
 import os.path as osp
 import torch
+import glob
 import matplotlib.pyplot as plt
 
 
@@ -121,3 +122,18 @@ def plot_eval_results(args, data, data_name, outpath, start=None):
     save_name = "_".join(data_name.lower().split(" "))
     plt.savefig(osp.join(outpath, f"{save_name}.pdf"), bbox_inches='tight')
     plt.close()
+
+
+def latest_epoch(model_path, num=-1):
+    path = osp.join(model_path, 'weights_decoder/*pth')
+    file_list = glob.glob(f"{path}")
+    epochs = [[int(s) for s in filename.split('_') if s.isdigit()] for filename in file_list]
+    epochs.sort()
+    try:
+        latest = epochs[num][0]
+    except IndexError:
+        try:
+            latest = epochs[-1][0]
+        except IndexError:
+            raise RuntimeError(f"Model does exist in {model_path}")
+    return latest
