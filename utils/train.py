@@ -152,10 +152,10 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
 
         if (epoch > 0) and ((epoch + 1) % 10 == 0):
             plot_eval_results(args, data=(train_avg_losses[-10:], valid_avg_losses[-10:]), data_name=f"losses from {epoch + 1 - 10} to {epoch + 1}",
-                              outpath=outpath, global_data=False)
+                              outpath=outpath)
         if (epoch > 0) and ((epoch + 1) % 2 == 0):
             plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
-                              data_name='Losses', outpath=outpath, global_data=False)
+                              data_name='Losses', outpath=outpath)
 
     # Save global data
     save_data(data=train_avg_losses, data_name='losses', is_train=True, outpath=outpath, epoch=-1)
@@ -163,7 +163,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
     save_data(data=dts, data_name='dts', is_train=None, outpath=outpath, epoch=-1)
 
     plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
-                      data_name='Losses', outpath=outpath, global_data=True)
-    plot_eval_results(args, data=dts, data_name='Time durations', outpath=outpath, global_data=True)
+                      data_name='Losses', outpath=outpath)
+    plot_eval_results(args, data=dts, data_name='Time durations', outpath=outpath)
 
     return train_avg_losses, valid_avg_losses, dts
