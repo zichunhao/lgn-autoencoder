@@ -2,8 +2,6 @@ import torch.nn as nn
 import torch
 import os.path as osp
 import time
-from utils.emd_loss import emd_loss
-from utils.chamfer_loss import ChamferLoss
 from utils.utils import make_dir, save_data, plot_eval_results, eps
 from utils.jet_analysis import plot_p
 import logging
@@ -35,23 +33,8 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             p4_target = p4_target.to(device=device)
         target_data.append(p4_target.cpu().detach())
 
-        if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
-            chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
-            batch_loss = chamferloss(p4_gen, p4_target,
-                                     jet_features_weight=args.chamfer_jet_features_weight)  # output, target
-            epoch_total_loss += batch_loss.item()
-        elif args.loss_choice.lower() in ['emd', 'emdloss', 'emd_loss']:
-            batch_loss = emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)  # true, output
-            epoch_total_loss += batch_loss.item()
-        elif args.loss_choice.lower() in ['mse', 'mseloss', 'mse_loss']:
-            mseloss = nn.MSELoss()
-            batch_loss = mseloss(p4_gen[0], p4_target)  # output, target
-            epoch_total_loss += batch_loss
-        elif args.loss_choice.lower() in ['hybrid', 'combined', 'mix']:
-            chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
-            batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features_weight=args.chamfer_jet_features_weight) + \
-                emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)
-            epoch_total_loss += batch_loss.item()
+        batch_loss = get_loss(args, p4_gen, p4_target.to(args.dtype))
+        epoch_total_loss += batch_loss.item()
 
         # Backward propagation
         if is_train:
@@ -174,3 +157,29 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
                       outpath=outpath)
 
     return train_avg_losses, valid_avg_losses, dts
+
+
+def get_loss(args, p4_gen, p4_target):
+    if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
+        from utils.chamfer_loss import ChamferLoss
+        chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
+        batch_loss = chamferloss(p4_gen, p4_target, jet_features_weight=args.chamfer_jet_features_weight)  # output, target
+        return batch_loss
+
+    if args.loss_choice.lower() in ['emd', 'emdloss', 'emd_loss']:
+        from utils.emd_loss import emd_loss
+        batch_loss = emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)  # true, output
+        return batch_loss
+
+    if args.loss_choice.lower() in ['mse', 'mseloss', 'mse_loss']:
+        mseloss = nn.MSELoss()
+        batch_loss = mseloss(p4_gen, p4_target)  # output, target
+        return batch_loss
+
+    if args.loss_choice.lower() in ['hybrid', 'combined', 'mix']:
+        from utils.chamfer_loss import ChamferLoss
+        from utils.emd_loss import emd_loss
+        chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
+        batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features_weight=args.chamfer_jet_features_weight) + \
+            emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)
+        return batch_loss
