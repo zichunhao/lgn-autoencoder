@@ -69,7 +69,7 @@ def save_data(data, data_name, is_train, outpath, epoch=-1):
     if is_train is None:
         if epoch >= 0:
             torch.save(data, osp.join(
-                outpath, f'{data_name}_epoch_{epoch+1}.pt'))
+                outpath, f'{data_name}_epoch_{epoch}.pt'))
         else:
             torch.save(data, osp.join(outpath, f'{data_name}.pt'))
         return
@@ -77,10 +77,10 @@ def save_data(data, data_name, is_train, outpath, epoch=-1):
     if epoch >= 0:
         if is_train:
             torch.save(data, osp.join(
-                outpath, f'train_{data_name}_epoch_{epoch+1}.pt'))
+                outpath, f'train_{data_name}_epoch_{epoch}.pt'))
         else:
             torch.save(data, osp.join(
-                outpath, f'valid_{data_name}_epoch_{epoch+1}.pt'))
+                outpath, f'valid_{data_name}_epoch_{epoch}.pt'))
     else:
         if is_train:
             torch.save(data, osp.join(outpath, f'train_{data_name}.pt'))
