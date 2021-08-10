@@ -133,7 +133,8 @@ def main(args):
 
 
 if __name__ == "__main__":
+    import sys
     torch.autograd.set_detect_anomaly(True)
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     args = setup_argparse()
     main(args)
