@@ -13,8 +13,8 @@ class ChamferLoss(nn.Module):
         """
         The forward pass to compute the chamfer loss of the point-cloud like jets.
 
-        Parameters
-        ------
+        Args
+        ----
         p : `torch.Tensor`
             The **reconstructed** jets 4-momenta.
             Shape: `(batch_size, num_particles, 4)`
@@ -45,35 +45,39 @@ def pairwise_distance_sq(p, q, norm_choice='cartesian',
     """
     Compute the squared pairwise distance between jet 4-momenta p and q.
 
-    Parameters
-    ------
+    Args
+    ----
     p, q: `torch.Tensor`
-        The 4-momenta of shape `(batch_size, num_particles, 4)`,
+        The 3- or 4-momenta of shape `(batch_size, num_particles, 3)` or `(batch_size, num_particles, 4)`,
         where num_particles *could* be different for p and q.
     norm_choice : `str`
         The metric choice for distance.
         Option:
-            - 'cartesian': (+, +, +, +)
+            - 'cartesian': (+, +, +, +) (mandatory for 3-momenta)
             - 'minkowskian': (+, -, -, -)
             - 'polar': (E, pt, eta, phi) paired with metric (+, +, +, +)
 
-    Output
-    -------
+    Return
+    ------
     dist : `torch.Tensor`
         The matrix that represents distance between each particle in p and q.
         Shape : `(batch_size, num_particles, num_particles)`
     """
     if (p.shape[0] != q.shape[0]):
         raise ValueError(f"The batch size of p and q are not equal! Found: {p.shape[0]=}, {q.shape[0]=}.")
-    if (p.shape[-1] != 4):
-        raise ValueError(f"p should consist of 4-vectors. Found: {p.shape[-1]=}.")
-    if (q.shape[-1] != 4):
-        raise ValueError(f"q should consist of 4-vectors. Found: {q.shape[-1]=}.")
+    if (p.shape[-1] not in [3, 4]):
+        raise ValueError(f"p should consist of 3- or 4-vectors. Found: {p.shape[-1]=}.")
+    if (q.shape[-1] not in [3, 4]):
+        raise ValueError(f"q should consist of 3- or 4-vectors. Found: {q.shape[-1]=}.")
+    if (q.shape[-1] != p.shape[-1]):
+        raise ValueError(f"Dimension of q ({q.shape[-1]}) does not match with dimension of p ({p.shape[-1]}).")
+    if (q.shape[-1] == 3):
+        norm_choice = 'cartesian'
 
     batch_size = p.shape[0]
     num_row = p.shape[-2]
     num_col = q.shape[-2]
-    vec_dim = 4  # 4-vectors
+    vec_dim = p.shape[-1]
 
     p1 = p.repeat(1, 1, num_col).view(batch_size, -1, num_col, vec_dim).to(device)
     q1 = q.repeat(1, num_row, 1).view(batch_size, num_row, -1, vec_dim).to(device)

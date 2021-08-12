@@ -35,9 +35,18 @@ def get_p_polar(p, eps=1e-16, keep_p0=False):
         Whether to keep p0.
         Optional, default: False
     """
-    px = p[..., 1]
-    py = p[..., 2]
-    pz = p[..., 3]
+    if p.shape[-1] == 4:  # 4-vectors
+        px = p[..., 1]
+        py = p[..., 2]
+        pz = p[..., 3]
+        get_E = lambda p: p[..., 0]
+    elif p.shape[-1] == 3:  # 3-vectors
+        px = p[..., 0]
+        py = p[..., 1]
+        pz = p[..., 2]
+        get_E = lambda p: torch.sum(torch.pow(p, 2), axis=-1)
+    else:
+        raise ValueError(f"Invalid dimension of p; p should be 3- or 4-vectors. Found: {p.shape[-1]=}.")
 
     pt = torch.sqrt(px ** 2 + py ** 2 + eps)
     try:
@@ -49,7 +58,7 @@ def get_p_polar(p, eps=1e-16, keep_p0=False):
     if not keep_p0:
         return torch.stack((eta, phi, pt), dim=-1)
     else:
-        E = p[..., 0]
+        E = get_E(p)
         return torch.stack((E, eta, phi, pt), dim=-1)
 
 

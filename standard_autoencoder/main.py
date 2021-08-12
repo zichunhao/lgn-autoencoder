@@ -22,6 +22,7 @@ def main(args):
 
     train_loader, valid_loader = initialize_data(path=train_data_path,
                                                  batch_size=args.batch_size,
+                                                 vec_dims=args.vec_dims,
                                                  train_fraction=args.train_fraction,
                                                  num_val=args.num_valid)
 

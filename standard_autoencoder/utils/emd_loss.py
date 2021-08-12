@@ -96,7 +96,7 @@ def emd_loss(target_jet, jet_gen, eps=1e-12, form='L2', l2_strength=0.0001,
         flow : torch.Tensor with shape (batch_size, num_particles, num_particles)
     """
 
-    if (len(jet_gen.shape) == 4) and (jet_gen.shape[0] == 2) and (jet_gen.shape[-1] == 4):
+    if (len(jet_gen.shape) == 4) and (jet_gen.shape[0] == 2) and (jet_gen.shape[-1] in [3, 4]):
         jet_gen = jet_gen[0]  # real component only
         if len(target_jet.shape) == 4:  # complexified
             target_jet = target_jet[0]
