@@ -40,13 +40,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         if is_train:
             optimizer_encoder.zero_grad()
             optimizer_decoder.zero_grad()
-            try:
-                batch_loss.backward()
-            except RuntimeError as e:
-                torch.set_printoptions(profile="full")
-                logging.error(f"{p4_target = }")
-                logging.error(f"{p4_gen = }")
-                raise RuntimeError(str(e))
+            batch_loss.backward()
             optimizer_encoder.step()
             optimizer_decoder.step()
 
