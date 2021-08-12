@@ -114,7 +114,7 @@ def plot_p_cartesian(args, target_data, gen_data, save_dir, max_val=[100, 100, 1
 
     filename = f'p_cartesian_{args.jet_type}_jet'
     if epoch is not None:
-        filename = f'{filename}_epoch_{epoch+1}'
+        filename = f'{filename}_epoch_{epoch}'
     if density:
         filename = f'{filename}_density'
     plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight", transparent=True)
@@ -205,7 +205,7 @@ def plot_jet_p_cartesian(args, target_data, gen_data, save_dir, max_val=[200, 20
 
     filename = f'jet_features_cartesian_{args.jet_type}_jet'
     if epoch is not None:
-        filename = f'{filename}_epoch_{epoch+1}'
+        filename = f'{filename}_epoch_{epoch}'
     if density:
         filename = f'{filename}_density'
     plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight", transparent=True)
@@ -304,7 +304,7 @@ def plot_p_polar(args, target_data, gen_data, save_dir, max_val=(200, 2, np.pi),
 
     filename = f'p_polar_{args.jet_type}_jet'
     if epoch is not None:
-        filename = f'{filename}_epoch_{epoch+1}'
+        filename = f'{filename}_epoch_{epoch}'
     if density:
         filename = f'{filename}_density'
     plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight", transparent=True)
@@ -405,7 +405,7 @@ def plot_jet_p_polar(args, target_data, gen_data, save_dir, max_val=(30000, 2000
 
     filename = f'jet_features_polar_{args.jet_type}_jet'
     if epoch is not None:
-        filename = f'{filename}_epoch_{epoch+1}'
+        filename = f'{filename}_epoch_{epoch}'
     if density:
         filename = f'{filename}_density'
     plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight", transparent=True)
