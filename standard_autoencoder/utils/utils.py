@@ -135,5 +135,5 @@ def latest_epoch(model_path, num=-1):
         try:
             latest = epochs[-1][0]
         except IndexError:
-            raise RuntimeError(f"Model does exist in {model_path}")
+            raise RuntimeError(f"Model does not exist in {model_path}")
     return latest
