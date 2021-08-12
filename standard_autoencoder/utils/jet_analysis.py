@@ -114,7 +114,7 @@ def plot_p_cartesian(args, target_data, gen_data, save_dir, max_val=[100, 100, 1
 
     filename = f'p_cartesian_{args.jet_type}_jet'
     if epoch is not None:
-        filename = f'{filename}_epoch_{epoch+1}'
+        filename = f'{filename}_epoch_{epoch}'
     if density:
         filename = f'{filename}_density'
     plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight", transparent=True)
@@ -205,7 +205,7 @@ def plot_jet_p_cartesian(args, target_data, gen_data, save_dir, max_val=[200, 20
 
     filename = f'jet_features_cartesian_{args.jet_type}_jet'
     if epoch is not None:
-        filename = f'{filename}_epoch_{epoch+1}'
+        filename = f'{filename}_epoch_{epoch}'
     if density:
         filename = f'{filename}_density'
     plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight", transparent=True)
@@ -304,7 +304,7 @@ def plot_p_polar(args, target_data, gen_data, save_dir, max_val=(200, 2, np.pi),
 
     filename = f'p_polar_{args.jet_type}_jet'
     if epoch is not None:
-        filename = f'{filename}_epoch_{epoch+1}'
+        filename = f'{filename}_epoch_{epoch}'
     if density:
         filename = f'{filename}_density'
     plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight", transparent=True)
@@ -405,7 +405,7 @@ def plot_jet_p_polar(args, target_data, gen_data, save_dir, max_val=(30000, 2000
 
     filename = f'jet_features_polar_{args.jet_type}_jet'
     if epoch is not None:
-        filename = f'{filename}_epoch_{epoch+1}'
+        filename = f'{filename}_epoch_{epoch}'
     if density:
         filename = f'{filename}_density'
     plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight", transparent=True)
@@ -425,10 +425,18 @@ def get_p_cartesian(jet_data, cutoff=1e-6):
     cutoff : `float`
         The cutoff value of 3-momenta.
     """
-    jet_data = np.copy(jet_data).reshape(-1, 4)
-    px = jet_data[:, 1].copy()
-    py = jet_data[:, 2].copy()
-    pz = jet_data[:, 3].copy()
+    if jet_data.shape[-1] == 4:
+        jet_data = np.copy(jet_data).reshape(-1, 4)
+        px = jet_data[:, 1].copy()
+        py = jet_data[:, 2].copy()
+        pz = jet_data[:, 3].copy()
+    elif jet_data.shape[-1] == 3:  # 3 vectors
+        jet_data = np.copy(jet_data).reshape(-1, 3)
+        px = jet_data[:, 0].copy()
+        py = jet_data[:, 1].copy()
+        pz = jet_data[:, 2].copy()
+    else:
+        raise ValueError(f"Particle momenta must be 3- or 4-vectors. Found: {jet_data.shape[-1]=}.")
 
     p = get_magnitude(jet_data)  # |p| of 3-momenta
     px[p < cutoff] = np.nan
@@ -439,8 +447,12 @@ def get_p_cartesian(jet_data, cutoff=1e-6):
 
 
 def get_magnitude(p):
-    return np.sqrt(np.sum(np.power(p, 2)[..., 1:], axis=-1))
-
+    if p.shape[-1] == 4:
+        return np.sqrt(np.sum(np.power(p, 2)[..., 1:], axis=-1))
+    elif p.shape[-1] == 3:
+        return np.sqrt(np.sum(np.power(p, 2), axis=-1))  # E^2 = p^2 for each particle
+    else:
+        raise ValueError(f"Particle momenta must be 3- or 4-vectors. Found: {p.shape[-1]=}.")
 
 def get_p_polar(jet_data, cutoff=1e-6):
     """
@@ -460,7 +472,7 @@ def get_p_polar(jet_data, cutoff=1e-6):
     return pt, eta, phi
 
 
-def get_jet_feature_cartesian(p4):
+def get_jet_feature_cartesian(p):
     """
     Get jet (m, pt, eta, phi) from the jet data.
 
@@ -469,6 +481,14 @@ def get_jet_feature_cartesian(p4):
     jet_data : `numpy.Array`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
     """
+    if p.shape[-1] == 3:
+        p0 = np.expand_dims(get_magnitude(p), axis=-1)
+        p4 = np.concatenate((p0, p), axis=-1)
+    elif p.shape[-1] == 4:
+        p4 = p
+    else:
+        raise ValueError(f"Particle momenta must be 3- or 4-vectors. Found: {p.shape[-1]=}.")
+
     jet_p4 = np.sum(p4, axis=-2)
     msq = jet_p4[:, 0] ** 2 - np.sum(np.power(jet_p4, 2)[:, 1:], axis=-1)
     jet_mass = np.sqrt(np.abs(msq)) * np.sign(msq)

@@ -47,9 +47,9 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             # save model
             if ((i % args.save_freq) == 0 and i > 0):
                 torch.save(encoder.state_dict(), osp.join(
-                    encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
+                    encoder_weight_path, f"epoch_{epoch}_encoder_weights.pth"))
                 torch.save(decoder.state_dict(), osp.join(
-                    decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
+                    decoder_weight_path, f"epoch_{epoch}_decoder_weights.pth"))
 
     generated_data = torch.cat(generated_data, dim=0).numpy()
     target_data = torch.cat(target_data, dim=0).numpy()
@@ -59,8 +59,8 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
     # Save weights
     if is_train:
-        torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
-        torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
+        torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch}_encoder_weights.pth"))
+        torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch}_decoder_weights.pth"))
 
     return epoch_avg_loss, generated_data, target_data
 

@@ -81,10 +81,14 @@ def emd_loss(target_jet, jet_gen, eps=1e-12, form='L2', l2_strength=0.0001,
     ----------
     target_jet : `torch.Tensor`
         target momenta
-        4-momenta of shape `(batch_size, num_particles, 4)` or `(2, batch_size, num_particles, 4)` if complexified
+        4-momenta of shape `(batch_size, num_particles, 4)`
+        or
+        3-momenta of shape `(batch_size, num_particles, 3)`
     jet_gen : `torch.Tensor`
         output momenta
-        4-momenta of `(2, batch_size, num_particles, 4)` if complexified
+        4-momenta of shape `(batch_size, num_particles, 4)`
+        or
+        3-momenta of shape `(batch_size, num_particles, 3)`
     return_flow : `bool`
         Optional, default: False
         Whether to the flow as well as the EMD score
@@ -96,13 +100,7 @@ def emd_loss(target_jet, jet_gen, eps=1e-12, form='L2', l2_strength=0.0001,
         flow : torch.Tensor with shape (batch_size, num_particles, num_particles)
     """
 
-    if (len(jet_gen.shape) == 4) and (jet_gen.shape[0] == 2) and (jet_gen.shape[-1] == 4):
-        jet_gen = jet_gen[0]  # real component only
-        if len(target_jet.shape) == 4:  # complexified
-            target_jet = target_jet[0]
-    elif (len(jet_gen.shape) == 3):  # real only
-        pass
-    else:
+    if ((len(jet_gen.shape) != 3)):
         assert ValueError(f"Invalid shape of jet_gen! Found: {jet_gen.shape=}")
 
     if device is None:
