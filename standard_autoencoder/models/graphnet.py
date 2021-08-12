@@ -122,7 +122,7 @@ class GraphNet(nn.Module):
 
         for i in range(self.num_mps):
             metric = _get_metric_func(self.metric if x.shape[-1] == 4 else 'cartesian')
-            A = self._getA(x, batch_size, self.input_edge_sizes[i], self.node_sizes[i][0], metric)
+            A = self._getA(x, batch_size, self.input_edge_sizes[i], hidden_node_size=self.node_sizes[i][0], metric=metric)
             A = self._edge_conv(A, i)
             x = self._aggregate(x, A, i, batch_size)
             x = x.view(batch_size, self.num_nodes, -1)
@@ -135,7 +135,7 @@ class GraphNet(nn.Module):
         Parameters
         ----------
         x: torch.Tensor
-            Node features with shape (batch_size, num_particles, 4)
+            Node features with shape (batch_size, num_particles, 4) or (batch_size, num_particles, 3)
         batch_size: int
             Batch size.
 
