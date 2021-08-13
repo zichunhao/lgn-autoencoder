@@ -28,8 +28,6 @@ def setup_argparse():
                         help='Multiplicity of scalars per particle in a jet. Default: 1 for the hls4ml 150p data.')
     parser.add_argument('--tau-jet-vectors', type=int, default=1, metavar='',
                         help='Multiplicity of 4-vectors per particle in the jet. Default: 1 for the hls4ml 150p data.')
-    parser.add_argument('--jet-features', type=get_bool, default=False,
-                        help='Whether to incorporate jet features in the message passing step. Default: True')
 
     parser.add_argument('--map-to-latent', type=str, default='mean', metavar='',
                         help="The method to map to latent space. Choice: ('sum', 'mix', 'mean')")
