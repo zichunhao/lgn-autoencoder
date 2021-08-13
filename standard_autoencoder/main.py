@@ -88,7 +88,11 @@ def initialize_models(args):
                                            map_location=args.device))
     # Create new model
     else:
+        import json
         outpath = create_model_folder(args)
+        args_dir = osp.join(outpath, "args_cache.json")
+        with open(args_dir, "w") as f:
+            json.dump({k: str(v) for k, v in vars(args).items()}, f)
 
     logging.info(f"{encoder=}")
     logging.info(f"{decoder=}")
