@@ -556,7 +556,7 @@ def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch, same_log_scale=True
         save_dir = make_dir(osp.join(save_dir, 'jet_image'))
     filename = f'{args.jet_type}_jet_image_epoch_{epoch+1}'
     if same_log_scale:
-        filename += 'samelog'
+        filename += '_samelog'
 
     plt.tight_layout()
     plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight", dpi=args.jet_image_dpi)
