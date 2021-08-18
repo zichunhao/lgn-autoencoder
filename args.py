@@ -109,7 +109,7 @@ def setup_argparse():
     parser.add_argument('--load-epoch', type=int, default=-1, metavar='',
                         help='Epoch number of the trained model to load. -1 for loading weights in the lastest model.')
 
-    ################################### Model evaluation options ###################################
+    ######################################## Plot options ########################################
     parser.add_argument('--unit', type=str, default='TeV',
                         help="The unit of momenta. Choices: ('GeV', 'TeV'). Default: TeV. ")
     parser.add_argument('--polar-max', nargs="+", type=float, default=[200, 2, np.pi], metavar='',
@@ -126,6 +126,11 @@ def setup_argparse():
                         help='Cutoff value of (3-)momenta magnitude to be included in the historgram. Default: 1e-7.')
     parser.add_argument('--fill', default=False, action='store_true',
                         help='Whether to plot filled histograms as well. True only if called in the command line.')
+
+    parser.add_argument('--jet-image-npix', type=int, default=64,
+                        help='The number of pixels for the jet image')
+    parser.add_argument('--jet-image-dpi', type=int, default=1024,
+                        help='dpi for jet image')
 
     ################################## Equivariance test options ##################################
     parser.add_argument('--equivariance-test', default=False, action='store_true',
