@@ -459,7 +459,7 @@ def pixelate(p_polar, npix=64):
 def get_average_jet_image(p4, num_particles=30, mean=True, npix=64, cutoff=0):
     pt, eta, phi = get_p_polar(p4, cutoff=cutoff)
 
-    pt = np.reshape(np.expand_dims(pt, axis=-1), (-1, num_particles, 1))
+    pt = np.reshape(np.expand_dims(pt, axis=-1), (-1, num_particles, 1)) / 1000  # Convert back to TeV
     eta = np.reshape(np.expand_dims(eta, axis=-1), (-1, num_particles, 1))
     phi = np.reshape(np.expand_dims(phi, axis=-1), (-1, num_particles, 1))
     p_polar = np.concatenate((pt, eta, phi), axis=-1)
