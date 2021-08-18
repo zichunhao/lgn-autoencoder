@@ -18,7 +18,7 @@ elif [[ "$#" -eq 4 ]]; then
 else
     output_path="./autoencoder-trained-models-test"
     num_epochs=10
-    train_fraction=256
+    train_fraction=10
     num_valid=10
 fi
 

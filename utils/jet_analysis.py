@@ -8,7 +8,7 @@ from utils.utils import make_dir
 # Figure sizes
 PARTICLE_FEATURE_FIGSIZE = (12, 4)
 JET_FEATURE_FIGSIZE = (16, 4)
-JET_IMAGE_FIGSIZE = (12, 3)
+JET_IMAGE_FIGSIZE = (7.5, 3)
 
 
 def plot_p(args, target_data, gen_data, save_dir, polar_max=(200, 2, np.pi), cartesian_max=(100, 100, 100),
@@ -172,7 +172,7 @@ def plot_jet_p_cartesian(args, target_data, gen_data, save_dir, max_val=[200, 20
     jet_features_target = get_jet_feature_cartesian(target_data)
     jet_features_gen = get_jet_feature_cartesian(gen_data)
 
-    fig, axs = plt.subplots(1, 4, figsize=(16, 4), sharey=False)
+    fig, axs = plt.subplots(1, 4, figsize=JET_FEATURE_FIGSIZE, sharey=False)
     if type(max_val) in [tuple, list]:
         if len(max_val) == 4:
             m_max, px_max, py_max, pz_max = max_val
@@ -363,7 +363,7 @@ def plot_jet_p_polar(args, target_data, gen_data, save_dir, max_val=(30000, 2000
     jet_features_target = get_jet_feature_polar(target_data)
     jet_features_gen = get_jet_feature_polar(gen_data)
 
-    fig, axs = plt.subplots(1, 4, figsize=JET_IMAGE_FIGSIZE, sharey=False)
+    fig, axs = plt.subplots(1, 4, figsize=JET_FEATURE_FIGSIZE, sharey=False)
 
     if type(max_val) in [tuple, list]:
         if len(max_val) == 4:
@@ -439,9 +439,10 @@ def get_p_cartesian(jet_data, cutoff=1e-6):
     pz = jet_data[:, 3].copy()
 
     p = get_magnitude(jet_data)  # |p| of 3-momenta
-    px[p < cutoff] = np.nan
-    py[p < cutoff] = np.nan
-    pz[p < cutoff] = np.nan
+    if cutoff > 0:
+        px[p < cutoff] = np.nan
+        py[p < cutoff] = np.nan
+        pz[p < cutoff] = np.nan
 
     return px, py, pz
 
@@ -455,20 +456,15 @@ def pixelate(p_polar, npix=64):
     return p_polar_pix
 
 
-def get_average_jet_image(p4, num_particles=30, mean=True, npix=64, cutoff=1e-6):
+def get_average_jet_image(p4, num_particles=30, mean=True, npix=64, cutoff=0):
     pt, eta, phi = get_p_polar(p4, cutoff=cutoff)
 
     pt = np.reshape(np.expand_dims(pt, axis=-1), (-1, num_particles, 1))
     eta = np.reshape(np.expand_dims(eta, axis=-1), (-1, num_particles, 1))
     phi = np.reshape(np.expand_dims(phi, axis=-1), (-1, num_particles, 1))
     p_polar = np.concatenate((pt, eta, phi), axis=-1)
-    pix = []
-    for i in range(len(p_polar)):
-        pix.append(pixelate(p_polar[i], npix=npix))
-        try:
-            pix.append(pixelate(p_polar[i], npix=npix))
-        except FloatingPointError:
-            pass
+
+    pix = [pixelate(p_polar[i], npix=npix) for i in range(p_polar.shape[0])]
     pix = list(filter(lambda x: x is not None, pix))
     pix = np.stack(pix, axis=0)
     if mean:
@@ -478,33 +474,35 @@ def get_average_jet_image(p4, num_particles=30, mean=True, npix=64, cutoff=1e-6)
 
 def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch, same_log_scale=True):
     target_pix = get_average_jet_image(p4_target, num_particles=args.num_jet_particles,
-                                       npix=args.jet_image_npix, cutoff=-1)  # Not removing cutoff
+                                       npix=args.jet_image_npix, cutoff=-1)  # Removing cutoff
     gen_pix = get_average_jet_image(p4_gen, num_particles=args.num_jet_particles,
                                     npix=args.jet_image_npix, cutoff=-1)
 
     from matplotlib.colors import LogNorm
-    # Target jet image
     fig, axs = plt.subplots(1, 2, figsize=JET_IMAGE_FIGSIZE)
+
+    # Target jet image
     if same_log_scale:
-        target = axs[0].imshow(np.mean(target_pix, axis=0), origin='lower', norm=LogNorm())
+        target = axs[0].imshow(target_pix, origin='lower', norm=LogNorm(), vmin=1e-11, vmax=1)
     else:
-        target = axs[0].imshow(np.mean(target_pix, axis=0), origin='lower', norm=LogNorm(vmin=1e-11, vmax=1))
+        target = axs[0].imshow(target_pix, origin='lower', norm=LogNorm(vmin=1e-11, vmax=1), vmin=1e-11, vmax=1)
     axs[0].title.set_text('Average Target Jet')
     fig.colorbar(target, ax=axs[0])
 
     # Generated/reconstructed jet image
     if same_log_scale:
-        gen = axs[1].imshow(np.mean(gen_pix, axis=0), origin='lower', norm=LogNorm(), aspect=1)
+        gen = axs[1].imshow(gen_pix, origin='lower', norm=LogNorm(), vmin=1e-11, vmax=1)
     else:
-        gen = axs[1].imshow(np.mean(gen_pix, axis=0), origin='lower', norm=LogNorm(vmin=1e-11, vmax=1))
+        gen = axs[1].imshow(gen_pix, origin='lower', norm=LogNorm(vmin=1e-11, vmax=1), vmin=1e-11, vmax=1)
     axs[1].title.set_text('Average Reconstructed Jet')
     fig.colorbar(gen, ax=axs[1])
 
+    # Set labels
     for i in range(2):
         axs[i].set_xlabel(r"$\Delta\eta$ cell")
         axs[i].set_ylabel(r"$\Delta\phi$ cell")
-    plt.tight_layout()
 
+    # Save figure
     if same_log_scale:
         save_dir = make_dir(osp.join(save_dir, 'jet_image_samelog'))
     else:
