@@ -39,11 +39,10 @@ def plot_p(args, target_data, gen_data, save_dir, polar_max=(200, 2, np.pi), car
 
 def plot_p_cartesian(args, target_data, gen_data, save_dir, max_val=[100, 100, 100],
                      num_bins=201, cutoff=1e-6, epoch=None, density=False, fill=False, show=False):
-    """
-    Plot p distribution in Cartesian coordinates.
+    """Plot p distribution in Cartesian coordinates.
 
-    Parameters
-    ----------
+    Args
+    ----
     target_data : `numpy.Array`
         The target jet data, with shape (num_particles, 4).
     gen_data : `numpy.Array`
@@ -133,11 +132,10 @@ def plot_p_cartesian(args, target_data, gen_data, save_dir, max_val=[100, 100, 1
 
 def plot_jet_p_cartesian(args, target_data, gen_data, save_dir, max_val=[200, 2000, 2000, 4000],
                          num_bins=81, epoch=None, density=False, fill=True, show=False):
-    """
-    Plot jet features (m, px, py, pz) distribution.
+    """Plot jet features (m, px, py, pz) distribution.
 
-    Parameters
-    ----------
+    Args
+    ----
     target_data : `numpy.Array`
         The target jet data, with shape (num_particles, 4).
     gen_data : `numpy.Array`
@@ -165,9 +163,6 @@ def plot_jet_p_cartesian(args, target_data, gen_data, save_dir, max_val=[200, 20
         Whether to show plot.
         Optional, default: `False`
     """
-    save_dir = make_dir(osp.join(save_dir, 'jet_cartesian'))
-    if fill:
-        save_dir = osp.join(save_dir, 'filled')
 
     jet_features_target = get_jet_feature_cartesian(target_data)
     jet_features_gen = get_jet_feature_cartesian(gen_data)
@@ -211,6 +206,10 @@ def plot_jet_p_cartesian(args, target_data, gen_data, save_dir, max_val=[200, 20
     jet_name = get_jet_name(args)
     fig.suptitle(fr'Distribution of target and reconstructed jet $m$, $p_x$, $p_y$, and $p_z$ of {jet_name} jet', y=1.03)
 
+    save_dir = make_dir(osp.join(save_dir, 'jet_cartesian'))
+    if fill:
+        save_dir = osp.join(save_dir, 'filled')
+
     filename = f'jet_features_cartesian_{args.jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
@@ -224,11 +223,10 @@ def plot_jet_p_cartesian(args, target_data, gen_data, save_dir, max_val=[200, 20
 
 def plot_p_polar(args, target_data, gen_data, save_dir, max_val=(200, 2, np.pi),
                  num_bins=201, cutoff=1e-6, epoch=None, density=False, fill=True, show=False):
-    """
-    Plot p distribution in polar coordinates (pt, eta, phi)
+    """Plot p distribution in polar coordinates (pt, eta, phi)
 
-    Parameters
-    ----------
+    Args
+    ----
     target_data : `numpy.Array`
         The target jet data, with shape (num_particles, 4).
     gen_data : `numpy.Array`
@@ -257,9 +255,7 @@ def plot_p_polar(args, target_data, gen_data, save_dir, max_val=(200, 2, np.pi),
         Whether to show plot.
         Optional, default: `False`
     """
-    if fill:
-        save_dir = osp.join(save_dir, 'filled')
-    save_dir = make_dir(osp.join(save_dir, 'polar'))
+
     pt_target, eta_target, phi_target = get_p_polar(target_data, cutoff=cutoff)
     pt_gen, eta_gen, phi_gen = get_p_polar(gen_data, cutoff=cutoff)
 
@@ -310,6 +306,10 @@ def plot_p_polar(args, target_data, gen_data, save_dir, max_val=(200, 2, np.pi),
     fig.suptitle(r'Distribution of target and reconstructed particle $p_\mathrm{T}$, $\eta$, and $\phi$ ' +
                  f'of {jet_name} jets', y=1.03)
 
+    if fill:
+        save_dir = osp.join(save_dir, 'filled')
+    save_dir = make_dir(osp.join(save_dir, 'polar'))
+
     filename = f'p_polar_{args.jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
@@ -323,11 +323,10 @@ def plot_p_polar(args, target_data, gen_data, save_dir, max_val=(200, 2, np.pi),
 
 def plot_jet_p_polar(args, target_data, gen_data, save_dir, max_val=(30000, 2000, 2, np.pi),
                      num_bins=201, epoch=None, density=False, fill=True, show=False):
-    """
-    Plot jet features (m, pt, eta, phi) distribution.
+    """Plot jet features (m, pt, eta, phi) distribution.
 
-    Parameters
-    ----------
+    Args
+    ----
     target_data : `numpy.Array`
         The target jet data, with shape (num_particles, 4).
     gen_data : `numpy.Array`
@@ -423,15 +422,18 @@ def plot_jet_p_polar(args, target_data, gen_data, save_dir, max_val=(30000, 2000
 
 
 def get_p_cartesian(jet_data, cutoff=1e-6):
-    """
-    Get (px, py, pz) from the jet data and filter out values that are too small.
+    """Get (px, py, pz) from the jet data and filter out values that are too small.
 
-    Input
-    -----
+    Args
+    ----
     jet_data : `numpy.Array`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
     cutoff : `float`
         The cutoff value of 3-momenta.
+
+    Return
+    ------
+    A tuple (px, py, pz)
     """
     jet_data = np.copy(jet_data).reshape(-1, 4)
     px = jet_data[:, 1].copy()
@@ -448,6 +450,21 @@ def get_p_cartesian(jet_data, cutoff=1e-6):
 
 
 def pixelate(p_polar, npix=64):
+    """Pixelate the jet using energyflow. More on https://energyflow.network/docs/utils/
+
+    Args
+    ---
+    p_polar : np.Array
+        The momentum of a jet in polar coordinates (pt, eta, phi).
+        Note that pt should be below O(100). Otherwise, the pixelate of energyflow will break down.
+        Shape: (num_particles, 3)
+    npix : int
+        The number of pixels generated. This is an argument of the energyflow method.
+
+    Return
+    ------
+    Pixelated jet with shape (npix, npix, 1).
+    """
     p_polar = np.concatenate((p_polar, np.ones((p_polar.shape[0], 1))), axis=-1).transpose()
     try:
         p_polar_pix = energyflow.utils.pixelate(p_polar, npix=npix)
@@ -456,8 +473,22 @@ def pixelate(p_polar, npix=64):
     return p_polar_pix
 
 
-def get_average_jet_image(p4, num_particles=30, mean=True, npix=64, cutoff=0):
-    pt, eta, phi = get_p_polar(p4, cutoff=cutoff)
+def get_average_jet_image(p4, num_particles=30, npix=64):
+    """Get an average jet image over the whole dataset.
+    Args
+    ---
+    p4 : np.Array
+        The 4-momenta of jets in the whole dataset.
+    num_particles : int
+        Number of particles per jet
+    npix : int
+        The number of pixels generated. This is an argument of the energyflow method.
+
+    Return
+    ------
+    An average jet image with shape (npix, npix, 1).
+    """
+    pt, eta, phi = get_p_polar(p4, cutoff=-1)  # Remove any cutoff
 
     pt = np.reshape(np.expand_dims(pt, axis=-1), (-1, num_particles, 1)) / 1000  # Convert back to TeV
     eta = np.reshape(np.expand_dims(eta, axis=-1), (-1, num_particles, 1))
@@ -467,16 +498,32 @@ def get_average_jet_image(p4, num_particles=30, mean=True, npix=64, cutoff=0):
     pix = [pixelate(p_polar[i], npix=npix) for i in range(p_polar.shape[0])]
     pix = list(filter(lambda x: x is not None, pix))
     pix = np.stack(pix, axis=0)
-    if mean:
-        pix = np.mean(pix, axis=0)  # Get average
+    pix = np.mean(pix, axis=0)  # Get average
     return pix
 
 
 def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch, same_log_scale=True):
-    target_pix = get_average_jet_image(p4_target, num_particles=args.num_jet_particles,
-                                       npix=args.jet_image_npix, cutoff=-1)  # Removing cutoff
-    gen_pix = get_average_jet_image(p4_gen, num_particles=args.num_jet_particles,
-                                    npix=args.jet_image_npix, cutoff=-1)
+    """Plot jet image, one for target jets and one for generated/reconstructed jets.
+
+    Args
+    ---
+    p4_target : np.Array
+        Target jets.
+        Shape : (num_jets, num_particles, 4)
+    p4_gen : np.Array
+        Generated/reconstructed jets by the model.
+        Shape : (num_jets, num_particles, 4)
+    save_dir : str
+        Parent directory for plots.
+    epoch : int
+        The current epoch.
+    same_log_scale : bool
+        Whether to use the same log scale for the two images.
+        Default: True
+    """
+
+    target_pix = get_average_jet_image(p4_target, num_particles=args.num_jet_particles, npix=args.jet_image_npix)  # Removing cutoff
+    gen_pix = get_average_jet_image(p4_gen, num_particles=args.num_jet_particles, npix=args.jet_image_npix)
 
     from matplotlib.colors import LogNorm
     fig, axs = plt.subplots(1, 2, figsize=JET_IMAGE_FIGSIZE)
@@ -485,7 +532,7 @@ def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch, same_log_scale=True
     if same_log_scale:
         target = axs[0].imshow(target_pix, origin='lower', norm=LogNorm(), vmin=1e-11, vmax=1)
     else:
-        target = axs[0].imshow(target_pix, origin='lower', norm=LogNorm(vmin=1e-11, vmax=1), vmin=1e-11, vmax=1)
+        target = axs[0].imshow(target_pix, origin='lower', norm=LogNorm(vmin=1e-11, vmax=1))
     axs[0].title.set_text('Average Target Jet')
     fig.colorbar(target, ax=axs[0])
 
@@ -493,7 +540,7 @@ def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch, same_log_scale=True
     if same_log_scale:
         gen = axs[1].imshow(gen_pix, origin='lower', norm=LogNorm(), vmin=1e-11, vmax=1)
     else:
-        gen = axs[1].imshow(gen_pix, origin='lower', norm=LogNorm(vmin=1e-11, vmax=1), vmin=1e-11, vmax=1)
+        gen = axs[1].imshow(gen_pix, origin='lower', norm=LogNorm(vmin=1e-11, vmax=1))
     axs[1].title.set_text('Average Reconstructed Jet')
     fig.colorbar(gen, ax=axs[1])
 
@@ -524,11 +571,12 @@ def get_p_polar(jet_data, cutoff=1e-6):
     """
     Get (pt, eta, phi) from the jet data.
 
-    Input
-    -----
+    Args
+    ----
     jet_data : `numpy.Array`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
     """
+
     px, py, pz = get_p_cartesian(jet_data, cutoff=cutoff)
 
     pt = np.sqrt(px ** 2 + py ** 2)
@@ -542,11 +590,12 @@ def get_jet_feature_cartesian(p4):
     """
     Get jet (m, pt, eta, phi) from the jet data.
 
-    Input
-    -----
+    Args
+    ----
     jet_data : `numpy.Array`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
     """
+
     jet_p4 = np.sum(p4, axis=-2)
     msq = jet_p4[:, 0] ** 2 - np.sum(np.power(jet_p4, 2)[:, 1:], axis=-1)
     jet_mass = np.sqrt(np.abs(msq)) * np.sign(msq)
@@ -561,11 +610,12 @@ def get_jet_feature_polar(p4):
     """
     Get jet (m, pt, eta, phi) from the jet data.
 
-    Input
-    -----
+    Args
+    ----
     jet_data : `numpy.Array`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
     """
+
     m, px, py, pz = get_jet_feature_cartesian(p4)
 
     pt = np.sqrt(px ** 2 + py ** 2)
