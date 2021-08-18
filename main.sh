@@ -4,7 +4,7 @@ if [ "$#" -eq 1 ]; then
     output_path=$1
     num_epochs=10
     train_fraction=10
-    num_valid=10
+    num_valid=100
 elif [[ "$#" -eq 2 ]]; then
     output_path=$1
     num_epochs=$2
@@ -18,13 +18,13 @@ elif [[ "$#" -eq 4 ]]; then
 else
     output_path="./autoencoder-trained-models-test"
     num_epochs=10
-    train_fraction=10
+    train_fraction=256
     num_valid=10
 fi
 
 mkdir -p "$output_path"/autoencoder;
 python main.py \
--b 2 \
+-b 16 \
 -j g \
 -e 10 \
 --train-fraction "$train_fraction" \
