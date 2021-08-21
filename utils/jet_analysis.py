@@ -94,7 +94,7 @@ def plot_p(args, p4_target, p4_gen, save_dir,
                      num_bins=num_bins, epoch=epoch, density=False, fill=False, show=show)
     plot_jet_p_cartesian(args, jet_target_cartesian, jet_gen_cartesian, save_dir, max_val=jet_cartesian_max,
                          num_bins=81, epoch=epoch, density=False, fill=False, show=show)
-    plot_jet_image(args, jets_target, jets_gen, save_dir, epoch, show=show)
+    plot_jet_image(args, jets_target, jets_gen, save_dir, epoch, vmin=args.jet_image_vmin, show=show)
 
     if args.fill:  # Plot filled histograms in addition to unfilled histograms
         plot_p_polar(args, p_target_polar, p_gen_polar, save_dir, max_val=polar_max, num_bins=num_bins,
@@ -587,7 +587,7 @@ def get_average_jet_image(jets, maxR=0.5, npix=64, abs_coord=True):
     return jet_image
 
 
-def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch, show=False):
+def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch, vmin=1e-10, show=False):
     """Plot jet image, one for target jets and one for generated/reconstructed jets.
 
     Args
@@ -611,9 +611,9 @@ def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch, show=False):
 
     # # Auto log scale
     # fig, axs = plt.subplots(1, 2, figsize=JET_IMAGE_FIGSIZE)
-    # target = axs[0].imshow(target_pix, origin='lower', norm=LogNorm(), vmin=1e-11, vmax=1)
+    # target = axs[0].imshow(target_pix, origin='lower', norm=LogNorm(), vmin=vmin, vmax=1)
     # fig.colorbar(target, ax=axs[0])
-    # gen = axs[1].imshow(gen_pix, origin='lower', norm=LogNorm(), vmin=1e-11, vmax=1)
+    # gen = axs[1].imshow(gen_pix, origin='lower', norm=LogNorm(), vmin=vmin, vmax=1)
     # fig.colorbar(gen, ax=axs[1])
     # # Set labels
     # for i in range(2):
@@ -628,9 +628,9 @@ def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch, show=False):
 
     # Same log scale
     fig, axs = plt.subplots(1, 2, figsize=JET_IMAGE_FIGSIZE)
-    target = axs[0].pcolor(target_pix, norm=LogNorm(vmin=1e-10, vmax=1))
+    target = axs[0].pcolor(target_pix, norm=LogNorm(vmin=vmin, vmax=1))
     fig.colorbar(target, ax=axs[0])
-    gen = axs[1].pcolor(gen_pix, norm=LogNorm(vmin=1e-10, vmax=1))
+    gen = axs[1].pcolor(gen_pix, norm=LogNorm(vmin=vmin, vmax=1))
     fig.colorbar(gen, ax=axs[1])
     # Set labels
     for i in range(2):

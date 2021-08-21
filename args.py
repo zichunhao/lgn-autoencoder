@@ -129,6 +129,8 @@ def setup_argparse():
 
     parser.add_argument('--jet-image-npix', type=int, default=64,
                         help='The number of pixels for the jet image')
+    parser.add_argument('--jet-image-vmin', type=float, default=1e-10,
+                        help='vmin for LogNorm')
 
     ################################## Equivariance test options ##################################
     parser.add_argument('--equivariance-test', default=False, action='store_true',
