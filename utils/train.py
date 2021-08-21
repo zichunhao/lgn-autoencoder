@@ -71,8 +71,8 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
                 torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
                 torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
 
-    generated_data = torch.cat(generated_data, dim=0).numpy()
-    target_data = torch.cat(target_data, dim=0).numpy()
+    generated_data = torch.cat(generated_data, dim=0)
+    target_data = torch.cat(target_data, dim=0)
 
     epoch_avg_loss = epoch_total_loss / len(loader)
     save_data(data=epoch_avg_loss, data_name='loss',
@@ -122,8 +122,8 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
         valid_avg_loss, valid_gen, valid_target = validate(args, valid_loader, encoder, decoder,
                                                            epoch, outpath, device=device)
 
-        dt = time.time() - start
-        save_data(data=dt, data_name='dts', is_train=None, outpath=outpath, epoch=epoch)
+        train_end = time.time()
+        save_data(data=train_end - start, data_name='dts', is_train=None, outpath=outpath, epoch=epoch)
         save_data(data=train_avg_loss, data_name='losses', is_train=True,
                   outpath=outpath, epoch=epoch)
         save_data(data=valid_avg_loss, data_name='losses', is_train=False,
@@ -138,17 +138,19 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
         for target, gen, dir in zip((train_target, valid_target),
                                     (train_gen, valid_gen),
                                     (outpath_train_jet_plots, outpath_valid_jet_plots)):
-            plot_p(args, target_data=target, gen_data=gen, save_dir=dir,
+            plot_p(args, target, gen, save_dir=dir,
                    polar_max=args.polar_max, cartesian_max=args.cartesian_max,
                    jet_polar_max=args.jet_polar_max, jet_cartesian_max=args.jet_cartesian_max,
                    num_bins=args.num_bins, cutoff=args.cutoff, epoch=epoch)
 
-        dts.append(dt)
+        dts.append(train_end-start)
         train_avg_losses.append(train_avg_loss)
         valid_avg_losses.append(valid_avg_loss)
 
+        plot_end = time.time()
+
         logging.info(f'epoch={epoch+1}/{args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch}, '
-                     f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, dt={dt}')
+                     f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, dt_train={train_end-start}s, dt_plot={plot_end-train_end}s, dt={plot_end-start}s')
 
         if (epoch > 0) and ((epoch + 1) % 10 == 0):
             plot_eval_results(args, data=(train_avg_losses[-10:], valid_avg_losses[-10:]), data_name=f"losses from {epoch + 1 - 10} to {epoch + 1}",
@@ -164,6 +166,6 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
 
     plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
                       data_name='Losses', outpath=outpath)
-    plot_eval_results(args, data=dts, data_name='Time durations', outpath=outpath)
+    plot_eval_results(args, data=dts, data_name='Durations', outpath=outpath)
 
     return train_avg_losses, valid_avg_losses, dts
