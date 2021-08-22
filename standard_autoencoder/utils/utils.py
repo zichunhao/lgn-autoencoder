@@ -120,7 +120,7 @@ def plot_eval_results(args, data, data_name, outpath, start=None):
         plt.legend()
     # only one type of data (e.g. dt)
     else:
-        x = [start + i for i in range(len(train))]
+        x = [start + i for i in range(len(data))]
         if isinstance(data, torch.Tensor):
             data = data.detach().cpu().numpy()
         plt.plot(x, data)
