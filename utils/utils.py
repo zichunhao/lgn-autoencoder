@@ -18,6 +18,8 @@ def get_model_fname(args):
     for i in range(len(args.decoder_num_channels)):
         decoder_cg += str(args.decoder_num_channels[i])
     model_fname = f"LGNAutoencoder_{args.jet_type}Jet_{args.map_to_latent}_tauLS{args.tau_latent_scalars}_tauLV{args.tau_latent_vectors}_encoder{encoder_cg}_decoder{decoder_cg}"
+    if args.custom_suffix is not None:
+        model_fname += f'_{args.custom_suffix}'
     return model_fname
 
 
