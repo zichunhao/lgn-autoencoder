@@ -51,7 +51,7 @@ def norm_sq_p3(p3):
 def normsq_cplx(p4):
     """
     Compute the norm squared p4^2 for complex p4 and then the take the norm of the complex number.
-    1. Loretnz norm is computed, resulting in a complex number.
+    1. Lorentz norm is computed, resulting in a complex number.
     Shape: `(2, OTHER_DIMENSIONS)`
     2. Norm of the complex number is taken.
     Shape: `(OTHER_DIMENSIONS)`
@@ -133,7 +133,7 @@ def normsq_p3(p4, im=True):
 def normsq_polar(p, q, im=True):
     """
     Calculate the norm square of the 3-momentum in polar coordinates.
-    This is useful when particle mass is neglible.
+    This is useful when particle mass is negligible.
     q is the target.
     1. Norm of p4 is taken so that it only contains real components.
     Shape: `(OTHER_DIMENSIONS, 4)`
