@@ -74,7 +74,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
     generated_data = torch.cat(generated_data, dim=0)
     target_data = torch.cat(target_data, dim=0)
 
-    epoch_avg_loss = epoch_total_loss / len(loader)
+    epoch_avg_loss = epoch_total_loss.cpu().item() / len(loader)
     save_data(data=epoch_avg_loss, data_name='loss',
               is_train=is_train, outpath=outpath, epoch=epoch)
 
