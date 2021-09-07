@@ -186,7 +186,7 @@ def plot_p_cartesian(args, p_target, p_gen, save_dir, max_val=[100, 100, 100],
 
     if fill:
         save_dir = osp.join(save_dir, 'filled')
-    save_dir = make_dir(osp.join(save_dir, 'cartesian'))
+    save_dir = make_dir(osp.join(save_dir, 'particle_cartesian'))
 
     filename = f'p_cartesian_{args.jet_type}_jet'
     if epoch is not None:
@@ -369,7 +369,7 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir, max_val=(200, 2, n
 
     if fill:
         save_dir = osp.join(save_dir, 'filled')
-    save_dir = make_dir(osp.join(save_dir, 'polar'))
+    save_dir = make_dir(osp.join(save_dir, 'particle_polar'))
 
     filename = f'p_polar_{args.jet_type}_jet'
     if epoch is not None:
