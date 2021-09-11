@@ -200,6 +200,25 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_m
                      for key in perm_test_all_epochs[0].keys()}
     lgn_test_results['perm_dev_output'] = perm_test_avg
 
+    logging.info("-" * 25)
+
+    logging.info("Boost equivariance test result:")
+    logging.info(f"Gammas: {lgn_test_results['gammas']}")
+    logging.info(f"Output relative error: {lgn_test_results['boost_dev_output']}")
+    logging.info(f"Internal features relative error: {lgn_test_results['boost_dev_internal']}")
+
+    logging.info("-" * 25)
+
+    logging.info("Rotation equivariance test result:")
+    logging.info(f"Thetas: {lgn_test_results['thetas']}")
+    logging.info(f"Output relative error: {lgn_test_results['rot_dev_output']}:")
+    logging.info(f"Internal features relative error: {lgn_test_results['rot_dev_internal']}")
+
+    logging.info("-" * 25)
+
     logging.info(f"Permutation invariance test result: {lgn_test_results['perm_dev_output']}")
+
+    logging.info("-" * 25)
+
 
     return lgn_test_results
