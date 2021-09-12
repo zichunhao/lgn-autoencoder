@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 from utils.jet_analysis import plot_p
 from utils.utils import make_dir, save_data, plot_eval_results, eps
 from utils.chamfer_loss import ChamferLoss
@@ -144,6 +145,9 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
         dts.append(train_end-start)
         train_avg_losses.append(train_avg_loss)
         valid_avg_losses.append(valid_avg_loss)
+
+        np.savetxt(osp.join(outpath, 'losses_training.txt'), train_avg_losses)
+        np.savetxt(osp.join(outpath, 'losses_validation.txt'), valid_avg_losses)
 
         plot_end = time.time()
 
