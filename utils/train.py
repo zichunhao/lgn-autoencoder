@@ -1,9 +1,9 @@
 import logging
 import numpy as np
-from utils.jet_analysis import plot_p
+from utils.jet_analysis.plot import plot_p
 from utils.utils import make_dir, save_data, plot_eval_results, eps
 from utils.chamfer_loss import ChamferLoss
-from utils.emd_loss import emd_loss
+from utils.emd_loss.emd_loss import emd_loss
 import time
 import os.path as osp
 import warnings

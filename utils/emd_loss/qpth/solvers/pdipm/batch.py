@@ -2,7 +2,7 @@ import torch
 from enum import Enum
 # from block import block
 
-from utils.qpth.util import get_sizes, bdiag
+from utils.emd_loss.qpth.util import get_sizes, bdiag
 
 
 def lu_hack(x):
