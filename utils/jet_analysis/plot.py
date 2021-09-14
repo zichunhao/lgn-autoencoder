@@ -3,7 +3,7 @@ from utils.jet_analysis.jet_features import plot_jet_p_cartesian, plot_jet_p_pol
 from utils.jet_analysis.particle_features import plot_p_cartesian, plot_p_polar
 from utils.jet_analysis.jet_images import plot_jet_image
 from utils.jet_analysis.utils import get_p_polar, get_p_cartesian, get_jet_feature_polar, get_jet_feature_cartesian, get_p_polar_tensor
-from utils.utils import eps
+from utils.utils import get_eps
 
 
 def plot_p(args, p4_target, p4_gen, save_dir,
@@ -63,7 +63,7 @@ def plot_p(args, p4_target, p4_gen, save_dir,
         Default: False
     """
 
-    EPS = eps(args)
+    EPS = get_eps(args)
 
     # tuples
     p_target_polar = get_p_polar(p4_target, cutoff=cutoff, eps=EPS)

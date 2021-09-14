@@ -28,7 +28,7 @@ Boost and rotational equivariance tests were done on the model. The rotation ang
 - R. Sexl and H. Urbantke, "Relativity, Groups, Particles: Special Relativity and Relativistic Symmetry in Field and Particle Physics". Springer, 2001, doi: [10.1007/978-3-7091-6234-7](https://doi.org/10.1007/978-3-7091-6234-7). ISBN 9783709162347.
 - Tung Wu-Ki, "Group Theory in Physics". World Scientific, 1985, doi: [doi:10.1142/0097](https://doi.org/10.1142/0097).
 
-#### The deep connection between group theory and particle physics
+#### The connection between group theory and particle physics
 - E. Wigner, "On Unitary Representations of the Inhomogeneous Lorentz Group", Annals of Mathematics **40** (1939), no. 1, 149-204, doi: [10.2307/1968551](https://doi.org/10.2307/1968551).
 - M. Schwartz, ["Quantum Field Theory and the Standard Model"](https://www.cambridge.org/us/academic/subjects/physics/theoretical-physics-and-mathematical-physics/quantum-field-theory-and-standard-model). Cambridge University Press, 2013. ISBN 9781107034730.
 - S. Weinberg. "The Quantum Theory of Fields, Volume 1: Foundations". Cambridge University Press, 1995, doi: [10.1017/CBO9781139644167](https://doi.org/10.1017/CBO9781139644167).

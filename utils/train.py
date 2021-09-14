@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 from utils.jet_analysis.plot import plot_p
-from utils.utils import make_dir, save_data, plot_eval_results, eps
+from utils.utils import make_dir, save_data, plot_eval_results, get_eps
 from utils.chamfer_loss import ChamferLoss
 from utils.emd_loss.emd_loss import emd_loss
 import time
@@ -47,13 +47,13 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice, im=args.im)
             batch_loss = chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features)  # output, target
         elif args.loss_choice.lower() in ['emd', 'emdloss', 'emd_loss']:
-            batch_loss = emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)  # true, output
+            batch_loss = emd_loss(p4_target, p4_gen, eps=get_eps(args), device=args.device)  # true, output
         elif args.loss_choice.lower() in ['mse', 'mseloss', 'mse_loss']:
             mseloss = nn.MSELoss()
             batch_loss = mseloss(p4_gen[0], p4_target)  # output, target
         elif args.loss_choice.lower() in ['hybrid', 'combined', 'mix']:
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
-            batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features) + emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)
+            batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features) + emd_loss(p4_target, p4_gen, eps=get_eps(args), device=args.device)
 
         epoch_total_loss += batch_loss.item()
 

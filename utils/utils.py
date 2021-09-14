@@ -92,7 +92,7 @@ def plot_eval_results(args, data, data_name, outpath, start=None):
     plt.close()
 
 
-def eps(args):
+def get_eps(args):
     if args.dtype in [torch.float64, torch.double]:
         return 1e-16
     else:

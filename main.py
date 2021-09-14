@@ -1,58 +1,14 @@
 from args import setup_argparse
-from utils.make_data import initialize_data, initialize_test_data
-from utils.utils import create_model_folder, eps, latest_epoch
+from utils.utils import create_model_folder, latest_epoch
 from utils.train import train_loop
-from lgn.models.lgn_encoder import LGNEncoder
-from lgn.models.lgn_decoder import LGNDecoder
+from utils.initialize import initialize_autoencoder, initialize_data, initialize_test_data, initialize_optimizers
+
 from lgn.models.autotest.lgn_tests import lgn_tests
 from lgn.models.autotest.utils import plot_all_dev
 
 import torch
 import os.path as osp
 import logging
-
-
-def initialize_autoencoder(args):
-    encoder = LGNEncoder(num_input_particles=args.num_jet_particles,
-                         tau_input_scalars=args.tau_jet_scalars,
-                         tau_input_vectors=args.tau_jet_vectors,
-                         map_to_latent=args.map_to_latent,
-                         tau_latent_scalars=args.tau_latent_scalars,
-                         tau_latent_vectors=args.tau_latent_vectors,
-                         maxdim=args.maxdim, max_zf=[1],
-                         num_channels=args.encoder_num_channels,
-                         weight_init=args.weight_init, level_gain=args.level_gain,
-                         num_basis_fn=args.num_basis_fn, activation=args.activation, scale=args.scale,
-                         mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
-                         device=args.device, dtype=args.dtype)
-    decoder = LGNDecoder(tau_latent_scalars=args.tau_latent_scalars,
-                         tau_latent_vectors=args.tau_latent_vectors,
-                         num_output_particles=args.num_jet_particles,
-                         tau_output_scalars=args.tau_jet_scalars,
-                         tau_output_vectors=args.tau_jet_vectors,
-                         maxdim=args.maxdim, max_zf=[1],
-                         num_channels=args.decoder_num_channels,
-                         weight_init=args.weight_init, level_gain=args.level_gain,
-                         num_basis_fn=args.num_basis_fn, activation=args.activation,
-                         mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
-                         cg_dict=encoder.cg_dict, device=args.device, dtype=args.dtype)
-    logging.info(f"{encoder=}")
-    logging.info(f"{decoder=}")
-
-    return encoder, decoder
-
-
-def initialize_optimizers(args, encoder, decoder):
-    if args.optimizer.lower() == 'adam':
-        optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.lr)
-        optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.lr)
-    elif args.optimizer.lower() == 'rmsprop':
-        optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
-        optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.lr, eps=eps(args), momentum=0.9)
-    else:
-        raise NotImplementedError("Other choices of optimizer are not implemented. "
-                                  f"Available choices are 'Adam' and 'RMSprop'. Found: {args.optimizer}.")
-    return optimizer_encoder, optimizer_decoder
 
 
 def main(args):
@@ -72,6 +28,7 @@ def main(args):
     """Initializations"""
     encoder, decoder = initialize_autoencoder(args)
 
+    # Training and equivariance test
     if not args.equivariance_test_only:
         optimizer_encoder, optimizer_decoder = initialize_optimizers(args, encoder, decoder)
 
