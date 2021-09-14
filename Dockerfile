@@ -8,6 +8,9 @@ RUN sudo apt-get install -y wget
 
 RUN pip install numpy
 RUN pip install scikit-learn
+RUN pip install cvxpy
+RUN pip install coffea
+RUN pip install awkward
 
 RUN sudo apt-get update
 

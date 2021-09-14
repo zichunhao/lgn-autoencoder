@@ -67,7 +67,7 @@ def plot_eval_results(args, data, data_name, outpath, start=None):
     else:
         start = 1 if start is None else start
     # (train, label)
-    if type(data) in [tuple, list] and len(data) == 2:
+    if (type(data) in [tuple, list]) and (len(data) == 2) and (type(data[0]) in [tuple, list]) and (type(data[1]) in [tuple, list]):
         train, valid = data
         x = [start + i for i in range(len(train))]
         if isinstance(train, torch.Tensor):

@@ -1,8 +1,9 @@
 import logging
-from utils.jet_analysis import plot_p
+import numpy as np
+from utils.jet_analysis.plot import plot_p
 from utils.utils import make_dir, save_data, plot_eval_results, eps
 from utils.chamfer_loss import ChamferLoss
-from utils.emd_loss import emd_loss
+from utils.emd_loss.emd_loss import emd_loss
 import time
 import os.path as osp
 import warnings
@@ -45,18 +46,16 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice, im=args.im)
             batch_loss = chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features)  # output, target
-            epoch_total_loss += batch_loss.item()
         elif args.loss_choice.lower() in ['emd', 'emdloss', 'emd_loss']:
             batch_loss = emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)  # true, output
-            epoch_total_loss += batch_loss.item()
         elif args.loss_choice.lower() in ['mse', 'mseloss', 'mse_loss']:
             mseloss = nn.MSELoss()
             batch_loss = mseloss(p4_gen[0], p4_target)  # output, target
-            epoch_total_loss += batch_loss
         elif args.loss_choice.lower() in ['hybrid', 'combined', 'mix']:
             chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
             batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features) + emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)
-            epoch_total_loss += batch_loss.item()
+
+        epoch_total_loss += batch_loss.item()
 
         # Backward propagation
         if is_train:
@@ -74,7 +73,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
     generated_data = torch.cat(generated_data, dim=0)
     target_data = torch.cat(target_data, dim=0)
 
-    epoch_avg_loss = epoch_total_loss.cpu().item() / len(loader)
+    epoch_avg_loss = epoch_total_loss / len(loader)
     save_data(data=epoch_avg_loss, data_name='loss',
               is_train=is_train, outpath=outpath, epoch=epoch)
 
@@ -146,6 +145,9 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
         dts.append(train_end-start)
         train_avg_losses.append(train_avg_loss)
         valid_avg_losses.append(valid_avg_loss)
+
+        np.savetxt(osp.join(outpath, 'losses_training.txt'), train_avg_losses)
+        np.savetxt(osp.join(outpath, 'losses_validation.txt'), valid_avg_losses)
 
         plot_end = time.time()
 

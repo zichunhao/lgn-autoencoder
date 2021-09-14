@@ -127,10 +127,12 @@ def setup_argparse():
     parser.add_argument('--fill', default=False, action='store_true',
                         help='Whether to plot filled histograms as well. True only if called in the command line.')
 
-    parser.add_argument('--jet-image-npix', type=int, default=64,
+    parser.add_argument('--jet-image-npix', type=int, default=24,
                         help='The number of pixels for the jet image')
     parser.add_argument('--jet-image-vmin', type=float, default=1e-10,
                         help='vmin for LogNorm')
+    parser.add_argument('--num-jet-images', type=int, default=15,
+                        help='Number of one-to-one jet images to plot.')
 
     ################################## Equivariance test options ##################################
     parser.add_argument('--equivariance-test', default=False, action='store_true',

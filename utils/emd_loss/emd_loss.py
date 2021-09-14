@@ -2,8 +2,9 @@
 Slightly adapted from Raghav Kansal's code (https://github.com/rkansal47/emd_loss)
 """
 import torch
-from utils.qpth.qp import QPFunction
+from utils.emd_loss.qpth.qp import QPFunction
 from utils.utils import get_p_polar
+
 
 # derived from https://github.com/icoz69/DeepEMD/blob/master/Models/models/emd_utils.py
 def emd_inference_qpth(distance_matrix, weight1, weight2, device, form='QP', l2_strength=0.0001, add_energy_diff=True, eps=1e-12):
