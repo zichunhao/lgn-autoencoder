@@ -110,6 +110,8 @@ def setup_argparse():
                         help='Epoch number of the trained model to load. -1 for loading weights in the lastest model.')
 
     ######################################## Plot options ########################################
+    parser.add_argument('--plot-freq', type=int, default=10, metavar='',
+                        help='How frequent to plot. Used when --loss-choice is not EMD. Default: 10.')
     parser.add_argument('--unit', type=str, default='TeV',
                         help="The unit of momenta. Choices: ('GeV', 'TeV'). Default: TeV. ")
     parser.add_argument('--polar-max', nargs="+", type=float, default=[200, 2, np.pi], metavar='',
