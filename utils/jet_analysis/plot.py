@@ -107,5 +107,6 @@ def plot_p(args, p4_target, p4_gen, save_dir,
 
     if particle_recon_err:
         plot_particle_recon_err(args, p4_target[..., 1:], p4_gen[..., 1:], save_dir=save_dir, epoch=epoch)
+
     plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target_polar, jet_gen_polar,
                        save_dir, epoch=epoch)

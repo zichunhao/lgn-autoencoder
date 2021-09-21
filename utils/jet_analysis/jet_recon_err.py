@@ -20,10 +20,13 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
     res_polar = [get_rel_err(jet_target_polar[i], jet_target_polar[i], eps) for i in range(4)]
     ranges = get_bins(args.num_bins)
 
-    fig, axs = plt.subplots(1, 4, figsize=FIGSIZE, sharey=False)
-    for res, labels, coordinate, bin_tuple in zip((res_cartesian, res_polar), LABELS, COORDINATES, ranges):
-        for ax, res, bins, label in zip(axs, res, bin_tuple, labels):
-            ax.hist(res, bins=bins, label=get_legend(res), histtype='step', stacked=True)
+    for rel_err_coordinate, labels, coordinate, bin_tuple in zip((res_cartesian, res_polar), LABELS, COORDINATES, ranges):
+        fig, axs = plt.subplots(1, 4, figsize=FIGSIZE, sharey=False)
+        for ax, rel_err, bins, label in zip(axs, rel_err_coordinate, bin_tuple, labels):
+            if COORDINATES == 'polar':
+                import logging
+                logging.info(f'{rel_err=}')
+            ax.hist(rel_err, bins=bins, label=get_legend(rel_err), histtype='step', stacked=True)
             ax.set_xlabel(fr'$\delta${label}')
             ax.set_ylabel('Number of Jets')
             ax.legend()
@@ -36,6 +39,7 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
                 plt.savefig(osp.join(path, 'jet_reconstruction_errors.pdf'))
         if show:
             plt.show()
+        plt.close()
 
 
 def default_get_rel_err(p_target, p_gen, eps, alpha=0.01):

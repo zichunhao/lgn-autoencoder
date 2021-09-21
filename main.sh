@@ -38,6 +38,7 @@ python main.py \
 --tau-latent-vectors 1 \
 --file-suffix jets_30p_p4 \
 --num-test-batch 200 \
+--plot-freq 1 \
 --equivariance-test \
 --encoder-num-channels 4 5 4 4 \
 --decoder-num-channels 4 5 4 4 \
