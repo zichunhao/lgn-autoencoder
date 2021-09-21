@@ -157,20 +157,20 @@ def rot_equivariance(encoder, decoder, data, theta_range, axis, device, dtype, c
 
 
 def get_rotation(theta, axis):
-    if axis.lower == 'x':
+    if axis.lower() == 'x':
         return (theta, 0, 0)
-    if axis.lower == 'y':
+    if axis.lower() == 'y':
         return (0, theta, 0)
-    if axis.lower == 'z':
+    if axis.lower() == 'z':
         return (0, 0, theta)
 
 
 def get_boost(alpha, axis):
-    if axis.lower == 'x':
+    if axis.lower() == 'x':
         return (alpha*1j, 0, 0)
-    if axis.lower == 'y':
+    if axis.lower() == 'y':
         return (0, alpha*1j, 0)
-    if axis.lower == 'z':
+    if axis.lower() == 'z':
         return (0, 0, alpha*1j)
 
 
