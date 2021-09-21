@@ -13,19 +13,19 @@ class RadPolyTrig(nn.Module):
 
     Parameters
     ----------
-    max_zf : `int`
+    max_zf : int
         Maximum weight to use for the spherical harmonics.
-    num_basis_fn : `int`
+    num_basis_fn : int
         The number of basis function to use.
-    num_channels : `int`
+    num_channels : int
         The number of channels of features.
-    mix: `bool` or `str`
+    mix: bool or str
         Optional, default: True
         The rule to mix radial components.
-        If type is `bool`,
+        If type is bool,
             if True, the channel will be mixed to complex shapes; and
             if False, the channel will be mixed to real shapes.
-        If type is `str`,
+        If type is str,
             the choices are 'cplx' for mixing the radial components to complex shapes,
             'real' for mixing the radial components to real shapes, and
             'None' for not mixing the radial components.

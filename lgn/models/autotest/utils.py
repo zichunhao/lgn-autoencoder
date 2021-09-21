@@ -37,18 +37,18 @@ def get_avg_output_dev(covariance_results, test_name):
 
     Parameter
     ---------
-    covariance_results : `list` of `dict`
+    covariance_results : list of `dict`
         The covariance test results for each epoch. Depending on the test name, the keys of results can be
             - ['gammas', 'boost_dev_output', 'boost_dev_internal']
             - ['thetas', 'rot_dev_output', 'rot_dev_internal']
         We are interested in dicts with the key 'boost_dev_output' or 'rot_dev_output',
         which stores the output relative deviation by epoch by a 2d-list of `dict` with "shape" (num_epochs, num_gammas).
-    test_name : `str`
+    test_name : str
         The name of the covariance test. Choices are 'rot' and 'boost'
 
     Return
     ------
-    avg_output_dev_by_alpha : `list` of `dict`
+    avg_output_dev_by_alpha : list of `dict`
         The average output relative deviation of all epochs for all irreps for each alpha (gamma for boost and theta for rotation).
     """
 
@@ -72,18 +72,18 @@ def get_avg_internal_dev(covariance_results, test_name):
 
     Parameter
     ---------
-    covariance_results : `list` of `dict`
+    covariance_results : list of `dict`
         The covariance test results for each epoch. Depending on the test name, the keys of results can be
             - ['gammas', 'boost_dev_output', 'boost_dev_internal']
             - ['thetas', 'rot_dev_output', 'rot_dev_internal']
         We are interested in dicts with the key 'boost_dev_internal' or 'rot_dev_internal',
         which stores the output relative deviation by epoch by a 3d-list of `dict` with "shape" (num_epochs, num_gammas, num_model_layers).
-    test_name : `str`
+    test_name : str
         The name of the covariance test. Choices are 'rot' and 'boost'
 
     Return
     ------
-    avg_output_dev_by_alpha : `list` of `dict`
+    avg_output_dev_by_alpha : list of `dict`
         The average internal features relative deviation of all epochs for all irreps
         for each alpha (gamma for boost and theta for rotation) in each layer.
     """
@@ -141,17 +141,17 @@ def plot_internal_dev(dev_internal, alphas, transform_type, weight, save_path, s
 
     Input
     -----
-    dev_internal : `list` of `list` of `dict`
+    dev_internal : list of list of `dict`
             Relative deviations of layers as alpha varies.
             2D-list shape: [len(alphas), num_layers]
             Dict keys: (0,0) and (1,1)
-    alphas : `list`
+    alphas : list
             If transform_type is 'boost', this is the list of Lorentz (boost) factor gammas.
             If transform_type is 'rotation', this is the list of rotation angles.
-    transform_type : `str`
+    transform_type : str
             The type of transformation corresponding to the data.
             Choices: ('boost', 'rotation')
-    weight : `tuple`
+    weight : tuple
             The weight of the irrep.
             Choices: ((0,0), (1,1))
     show_all : 'bool'

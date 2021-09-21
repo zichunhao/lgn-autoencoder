@@ -4,19 +4,19 @@ import torch
 def adapt_var_list(var, num_cg_levels):
     """
     Adapt variables to a list of length num_cg_levels.
-    - If type(var) is `float` or `int`, adapt it to [var] * num_cg_levels.
-    - If type(var) is `list`, adapt the length to num_cg_levels.
+    - If type(var) is float or int, adapt it to [var] * num_cg_levels.
+    - If type(var) is list, adapt the length to num_cg_levels.
 
     Inputs
     -----
-    var : `list`, `int`, or `float`
+    var : list, int, or float
         The variables
-    num_cg_levels : `int`
+    num_cg_levels : int
         Number of cg levels to use.
 
     Outputs
     ------
-    var_list : `list`
+    var_list : list
         The list of variables. The length will be num_cg_levels.
     """
     if type(var) == list:

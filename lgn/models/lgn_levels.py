@@ -11,19 +11,19 @@ class LGNNodeLevel(nn.Module):
     """
     The message passing step in LGNCG layers.
 
-    Parameters
+    Attributes
     ----------
     tau_in : `GTau`
         The multiplicity of the input features.
-    tau_pos : `list` of `GTau` (or compatible)
+    tau_pos : list of `GTau` (or compatible)
         The multiplicity of the relative position vectors.
-    maxdim : `int`
+    maxdim : int
         The maximum weight of irreps to be accounted.
-    num_channels : `list` of `int`
+    num_channels : list of int
         The number of channels in the LGNNodeLevel.
-    level_gain : `list` of `floats`
+    level_gain : list of `floats`
         The gain at each level. (args.level_gain = [1.])
-    weight_init :  `str`
+    weight_init :  str
         The type of weight initialization. The choices are 'randn' and 'rand'.
     device : `torch.device`
         Optional, default: None, in which case we will use
@@ -77,8 +77,8 @@ class LGNNodeLevel(nn.Module):
         torch.Tensor with data type torch.byte
             Batch mask for node representations. Shape is (N_batch, N_node).
 
-        Return
-        ----------
+        Returns
+        -------
         node_feature_out: GVec
             The updated node features.
         """
@@ -100,11 +100,11 @@ class CGMLP(nn.Module):
     ----------
     tau : `GTau`
         The multiplicity of the input (scalar) features.
-    num_hidden : `int`
+    num_hidden : int
         The number of hidden layers.
-    layer_width_mul : `int`
+    layer_width_mul : int
         The ratio between the layer width and num_scalars.
-    activation : `str`
+    activation : str
         Optional, default: 'sigmoid'
         The type of activation function to use.
         Options are ‘leakyrelu’(for nn.LeakyReLU()), ‘relu’(for nn.ReLU()),
@@ -164,8 +164,8 @@ class CGMLP(nn.Module):
         mask : `torch.Tensor` with data type `torch.byte`
             Batch mask for node representations. Shape is (N_batch, N_node).
 
-        Return
-        ----------
+        Returns
+        -------
         node_feature_out : `GVec`
             Output node features.
         """
@@ -193,9 +193,9 @@ class CGMLP(nn.Module):
         """
         The scaling function for weights in the standard MLP.
 
-        Parameter
+        Parameters
         ----------
-        scale : `float`
+        scale : float
             Scaling parameter
         """
 

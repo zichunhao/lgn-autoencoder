@@ -9,22 +9,22 @@ def pixelate(jet, mask=None, npix=64, maxR=1.0):
     """Pixelate the jet with Raghav Kansal's method.
     Reference: https://github.com/rkansal47/mnist_graph_gan/blob/neurips21/jets/final_plots.py#L191-L204
 
-    Args
-    ----
+    Parameters
+    ----------
     jet : np.ndarray
         Momenta in polar coordinates with shape (num_jets, 3, num_jet_particles)
-    mask : np.ndarray
+    mask : np.ndarray, optional
         Mask of data.
         Default: None
-    npix : int
+    npix : int, optional
         Number of pixels of the jet image.
         Default: 64
-    maxR : int
+    maxR : int, optional
         Maximum radius of the jet image.
         Default: 1.0
 
-    Return
-    ------
+    Returns
+    -------
     Pixelated jet with shape (npix, npix).
     """
     bins = np.linspace(-maxR, maxR, npix + 1)
@@ -46,13 +46,13 @@ def pixelate(jet, mask=None, npix=64, maxR=1.0):
 def get_jet_rel(jets):
     """Get jet momenta in relative coordinates (ptrel, etarel, phirel).
 
-    Args
-    ----
+    Parameters
+    ----------
     jets : `numpy.ndarray` or `torch.Tensor`
         The jets in absolute polar coordinates.
 
-    Return
-    ------
+    Returns
+    -------
     jets : `numpy.ndarray`
         The jet momenta in relative coordinates.
     """
@@ -87,22 +87,22 @@ def get_jet_rel(jets):
 def get_average_jet_image(jets, maxR=0.5, npix=64, abs_coord=True):
     """Get the average jet image from a collection of jets.
 
-    Args
-    ----
+    Parameters
+    ----------
     jets : `numpy.ndarray` or `torch.Tensor`
         A collection of jets in polar coordinates.
-    maxR : `float`
+    maxR : float
         Maximum radius.
         Default: 0.5
-    npix : `int`
+    npix : int
         Number of pixels.
         Default: 64
-    abs_coord : `bool`
+    abs_coord : bool
         Whether jets are in absolute coordinates.
         Default: True
 
-    Return
-    ------
+    Returns
+    -------
     jet_image : `numpy.ndarray`
         The average jet image over the collection.
     """
@@ -119,24 +119,24 @@ def get_average_jet_image(jets, maxR=0.5, npix=64, abs_coord=True):
 def get_n_jet_images(jets, num_jets=15, maxR=0.5, npix=24, abs_coord=True):
     """Get the first num_jets jet images from a collection of jets.
 
-    Args
-    ----
+    Parameters
+    ----------
     jets : `numpy.ndarray` or `torch.Tensor`
         A collection of jets in polar coordinates.
-    num_jets : `int`
+    num_jets : int
         The number of jet images to produce.
-    maxR : `float`
+    maxR : float
         Maximum radius.
         Default: 0.5
-    npix : `int`
+    npix : int
         Number of pixels.
         Default: 64
-    abs_coord : `bool`
+    abs_coord : bool
         Whether jets are in absolute coordinates.
         Default: True
 
-    Return
-    ------
+    Returns
+    -------
     jet_image : `numpy.ndarray`
         The first num_jets jet images.
     """
@@ -152,8 +152,8 @@ def get_n_jet_images(jets, num_jets=15, maxR=0.5, npix=24, abs_coord=True):
 def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch, maxR=0.5, vmin=1e-8, show=False):
     """Plot average jet image and one-to-one jet image
 
-    Args
-    ---
+    Parameters
+    ----------
     p4_target : np.ndarray
         Target jets in polar coordinates (pt, eta, phi).
         Shape : (num_jets, num_particles, 3)
@@ -229,4 +229,5 @@ def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch, maxR=0.5, vmin=1e-8
 
 
 def get_one_to_one_jet_image_figsize(num_jets=15):
+    """Returns the figure size of one-to-one jet images"""
     return (7.5, 3*num_jets)

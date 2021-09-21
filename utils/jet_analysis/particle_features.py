@@ -4,39 +4,39 @@ import os.path as osp
 import numpy as np
 import matplotlib.pyplot as plt
 
-PARTICLE_FEATURE_FIGSIZE = (12, 4)
+FIGSIZE = (12, 4)
 
 
 def plot_p_cartesian(args, p_target, p_gen, save_dir, max_val=[100, 100, 100],
                      num_bins=201, epoch=None, density=False, fill=False, show=False):
     """Plot p distribution in Cartesian coordinates.
 
-    Args
-    ----
+    Parameters
+    ----------
     p_target : `numpy.ndarray`
         The target jet data, with shape (num_particles, 4).
     p_gen : `numpy.ndarray`
         The reconstructed jet data, with shape (num_particles, 4).
-    save_dir : `str`
+    save_dir : str
         The directory to save the figure.
-    max_val :  `list`, `tuple`, or `int`
+    max_val :  list, tuple, or int
         The maximum values of (px, py, pz) in the plot.
         Optional, default: `201`
-    num_bins : `int`
+    num_bins : int
         The number of bins in the histogram.
         Optional, default: `(0.02, 0.02, 0.02)`
-    num_bins : `int`
+    num_bins : int
         The number of bins in the histogram.
-    epoch : `int`
+    epoch : int
         The epoch number of the evaluated model.
         Optional, default: `None`
-    density : `bool`
+    density : bool
         Whether to plot distribution density instead of absolute number.
         Optional, default: `False`
-    fill : `bool`
+    fill : bool
         Whether bins are filled.
         Optional, default: `False`
-    show : `bool`
+    show : bool
         Whether to show plot.
         Optional, default: `False`
     """
@@ -44,7 +44,7 @@ def plot_p_cartesian(args, p_target, p_gen, save_dir, max_val=[100, 100, 100],
     px_target, py_target, pz_target = p_target
     px_gen, py_gen, pz_gen = p_gen
 
-    fig, axs = plt.subplots(1, 3, figsize=PARTICLE_FEATURE_FIGSIZE, sharey=False)
+    fig, axs = plt.subplots(1, 3, figsize=FIGSIZE, sharey=False)
     if type(max_val) in [tuple, list]:
         if len(max_val) == 3:
             px_max, py_max, pz_max = max_val
@@ -103,30 +103,30 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir, max_val=(200, 2, n
                  num_bins=201, epoch=None, density=False, fill=True, show=False):
     """Plot p distribution in polar coordinates (pt, eta, phi)
 
-    Args
-    ----
+    Parameters
+    ----------
     p_polar_target : tuple of 3 `numpy.ndarray`
         The target jet data in polar coordinates (pt, eta, phi).
     p_polar_gen : tuple of 3 `numpy.ndarray`
         The reconstructed jet data in polar coordinates (pt, eta, phi).
-    save_dir : `str`
+    save_dir : str
         The directory to save the figure.
-    max_val : `list`, `tuple`, or `float`
+    max_val : list, tuple, or float
         The maximum values of (pt, eta, phi) in the plot.
         Optional, default: `(0.15, np.pi, np.pi)`
-    num_bins : `int`
+    num_bins : int
         The number of bins in the histogram.
         Optional, default: `201`
-    epoch : `int`
+    epoch : int
         The epoch number of the evaluated model.
         Optional, default: `None`
-    density : `bool`
+    density : bool
         Whether to plot distribution density instead of absolute number.
         Optional, default: `False`
-    fill : `bool`
+    fill : bool
         Whether bins are filled.
         Optional, default: `False`
-    show : `bool`
+    show : bool
         Whether to show plot.
         Optional, default: `False`
     """
@@ -134,7 +134,7 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir, max_val=(200, 2, n
     pt_target, eta_target, phi_target = p_polar_target
     pt_gen, eta_gen, phi_gen = p_polar_gen
 
-    fig, axs = plt.subplots(1, 3, figsize=PARTICLE_FEATURE_FIGSIZE, sharey=False)
+    fig, axs = plt.subplots(1, 3, figsize=FIGSIZE, sharey=False)
 
     if type(max_val) in [tuple, list]:
         if len(max_val) == 3:

@@ -9,7 +9,7 @@ class GTau():
 
     Parameters
     ----------
-    tau : `list` of `int`, `GTau`, or class with `.tau` property.
+    tau : list of int, `GTau`, or class with `.tau` property.
         Multiplicity of an G vector.
     """
 
@@ -82,7 +82,7 @@ class GTau():
 
         Parameters
         ----------
-        tau_list : `list` of `GTau` or `list` of `int`s
+        tau_list : list of `GTau` or list of ints
             List of multiplicites of input `GTensor`
 
         Return
@@ -128,7 +128,7 @@ class GTau():
 
         Parameters
         ----------
-        rep : `GTensor` `list` of `torch.Tensors`
+        rep : `GTensor` list of `torch.Tensors`
             Input representation.
 
         """

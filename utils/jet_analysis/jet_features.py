@@ -4,44 +4,44 @@ import os.path as osp
 import numpy as np
 import matplotlib.pyplot as plt
 
-JET_FEATURE_FIGSIZE = (16, 4)
+FIGSIZE = (16, 4)
 
 
 def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir, max_val=[200, 2000, 2000, 4000],
                          num_bins=81, epoch=None, density=False, fill=True, show=False):
     """Plot jet features (m, px, py, pz) distribution.
 
-    Args
-    ----
+    Parameters
+    ----------
     jet_features_target : `numpy.ndarray`
         The target jet momenta, with shape (num_jets, 4).
     jet_features_gen : `numpy.ndarray`
         The generated/reconstructed jet momenta, with shape (num_jets, 4).
-    save_dir : `str`
+    save_dir : str
         The directory to save the figure.
-    max_val :  `list`, `tuple`, or `int`
+    max_val :  list, tuple, or int
         The maximum values of (px, py, pz) in the plot.
         Optional, default: `201`
-    num_bins : `int`
+    num_bins : int
         The number of bins in the histogram.
         Optional, default: `(0.02, 0.02, 0.02)`
-    num_bins : `int`
+    num_bins : int
         The number of bins in the histogram.
-    epoch : `int`
+    epoch : int
         The epoch number of the evaluated model.
         Optional, default: `None`
-    density : `bool`
+    density : bool
         Whether to plot distribution density instead of absolute number.
         Optional, default: `False`
-    fill : `bool`
+    fill : bool
         Whether bins are filled.
         Optional, default: `False`
-    show : `bool`
+    show : bool
         Whether to show plot.
         Optional, default: `False`
     """
 
-    fig, axs = plt.subplots(1, 4, figsize=JET_FEATURE_FIGSIZE, sharey=False)
+    fig, axs = plt.subplots(1, 4, figsize=FIGSIZE, sharey=False)
     if type(max_val) in [tuple, list]:
         if len(max_val) == 4:
             m_max, px_max, py_max, pz_max = max_val
@@ -99,30 +99,30 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir, max_
                      num_bins=201, epoch=None, density=False, fill=True, show=False):
     """Plot jet features (m, pt, eta, phi) distribution.
 
-    Args
-    ----
+    Parameters
+    ----------
     jet_features_target : `numpy.ndarray`
         The target jet data, with shape (num_particles, 4).
     jet_features_gen : `numpy.ndarray`
         The reconstructed jet data, with shape (num_particles, 4).
-    save_dir : `str`
+    save_dir : str
         The directory to save the figure.
-    max_val : `list`, `tuple`, or `float`
+    max_val : list, tuple, or float
         The maximum values of (pt, eta, phi) in the plot.
         Optional, default: `(0.15, np.pi, np.pi)`
-    num_bins : `int`
+    num_bins : int
         The number of bins in the histogram.
         Optional, default: `201`
-    epoch : `int`
+    epoch : int
         The epoch number of the evaluated model.
         Optional, default: `None`
-    density : `bool`
+    density : bool
         Whether to plot distribution density instead of absolute number.
         Optional, default: `False`
-    fill : `bool`
+    fill : bool
         Whether bins are filled.
         Optional, default: `False`
-    show : `bool`
+    show : bool
         Whether to show plot.
         Optional, default: `False`
     """
@@ -130,7 +130,7 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir, max_
         save_dir = osp.join(save_dir, 'filled')
     save_dir = make_dir(osp.join(save_dir, 'jet_polar'))
 
-    fig, axs = plt.subplots(1, 4, figsize=JET_FEATURE_FIGSIZE, sharey=False)
+    fig, axs = plt.subplots(1, 4, figsize=FIGSIZE, sharey=False)
 
     if type(max_val) in [tuple, list]:
         if len(max_val) == 4:

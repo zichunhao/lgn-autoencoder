@@ -86,7 +86,7 @@ def emd_loss(target_jet, jet_gen, eps=1e-12, form='L2', l2_strength=0.0001,
     jet_gen : `torch.Tensor`
         output momenta
         4-momenta of `(2, batch_size, num_particles, 4)` if complexified
-    return_flow : `bool`
+    return_flow : bool
         Optional, default: False
         Whether to the flow as well as the EMD score
 

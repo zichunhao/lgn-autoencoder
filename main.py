@@ -68,8 +68,8 @@ def main(args):
                                                map_location=args.test_device))
             decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.num_epochs}_decoder_weights.pth'),
                                                map_location=args.test_device))
-            dev = lgn_tests(encoder, decoder, test_loader, args, alpha_max=args.alpha_max,
-                            theta_max=args.theta_max, epoch=args.num_epochs, cg_dict=encoder.cg_dict)
+            dev = lgn_tests(args, encoder, decoder, test_loader, alpha_max=args.alpha_max, theta_max=args.theta_max,
+                            cg_dict=encoder.cg_dict, unit=args.unit)
             plot_all_dev(dev, osp.join(outpath, 'model_evaluations/equivariance_tests'))
 
         logging.info("Training completed!")
@@ -86,8 +86,8 @@ def main(args):
         decoder.load_state_dict(torch.load(osp.join(loadpath, f'weights_decoder/epoch_{load_epoch}_decoder_weights.pth'),
                                            map_location=args.test_device))
 
-        dev = lgn_tests(encoder, decoder, test_loader, args, alpha_max=args.alpha_max,
-                        theta_max=args.theta_max, epoch=args.num_epochs, cg_dict=encoder.cg_dict, unit=args.unit)
+        dev = lgn_tests(args, encoder, decoder, test_loader, alpha_max=args.alpha_max, theta_max=args.theta_max,
+                        cg_dict=encoder.cg_dict, unit=args.unit)
         plot_all_dev(dev, osp.join(loadpath, 'model_evaluations/equivariance_tests'))
 
         logging.info("Done!")

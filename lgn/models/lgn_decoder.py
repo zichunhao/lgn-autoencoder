@@ -16,48 +16,48 @@ class LGNDecoder(CGModule):
     """
     The encoder of the LGN autoencoder.
 
-    Parameters
+    Attributes
     ----------
-    tau_latent_scalar : `int`
+    tau_latent_scalar : int
         The multiplicity of scalars per particle in the latent space.
-    tau_latent_vector : `int`
+    tau_latent_vector : int
         The multiplicity of vectors per particle in the latent space.
-    num_output_particles : `int`
+    num_output_particles : int
         The number of particles of jets in the latent space.
         For the hls4ml 150-p jet data, this should be 150.
-    tau_output_scalars : `int`
+    tau_output_scalars : int
         Multiplicity of Lorentz scalars (0,0) in the latent_space.
         For the hls4ml 150-p jet data, it should be 1 (namely the particle invariant mass -p^2).
-    tau_output_vectors : `int`
+    tau_output_vectors : int
         Multiplicity of Lorentz 4-vectors (1,1) in the latent_space.
         For the hls4ml 150-p jet data, it should be 1 (namely the particle 4-momentum).
-    maxdim : `list` of `int`
+    maxdim : list of int
         Maximum weight in the output of CG products, expanded or truncated to list of
         length len(num_channels) - 1.
-    num_basis_fn : `int`
+    num_basis_fn : int
         The number of basis function to use.
-    num_channels : `list` of `int`
+    num_channels : list of int
         Number of channels that the outputs of each CG layer are mixed to.
-    max_zf : `list` of `int`
+    max_zf : list of int
         Maximum weight in the output of the spherical harmonics, expanded or truncated to list of
         length len(num_channels) - 1.
-    weight_init : `str`
+    weight_init : str
         The type of weight initialization. The choices are 'randn' and 'rand'.
-    level_gain : `list` of `floats`
+    level_gain : list of `floats`
         The gain at each level. (args.level_gain = [1.])
-    activation : `str`
+    activation : str
         Optional, default: 'leakyrelu'
         The activation function for lgn.LGNCG
-    scale : `float` or `int`
+    scale : float or int
         Optional, default: 1.
         Scaling parameter for input node features.
-    mlp : `bool`
+    mlp : bool
         Optional, default: True
         Whether to include the extra MLP layer on scalar features in nodes.
-    mlp_depth : `int`
+    mlp_depth : int
         Optional, default: None
         The number of hidden layers in CGMLP.
-    mlp_width : `list` of `int`
+    mlp_width : list of int
         Optional, default: None
         The number of perceptrons in each CGMLP layer
     device : `torch.device`
@@ -154,12 +154,12 @@ class LGNDecoder(CGModule):
         ----------
         node_features : `dict`
             The dictionary of node_features from the encoder. The keys are (0,0) (scalar) and (1,1) (vector)
-        covariance_test : `bool`
+        covariance_test : bool
             Optional, default: False
             If False, return prediction (scalar reps) only.
             If True, return both generated output and full node features, where the full node features
             will be used to test Lorentz covariance.
-        nodes_all : `list` of GVec
+        nodes_all : list of GVec
             Optional, default: None
             The full node features in the encoder.
 
@@ -168,7 +168,7 @@ class LGNDecoder(CGModule):
         node_features : `dict`
             The dictionary that stores all relevant irreps.
         If covariance_test is True, also:
-            nodes_all : `list` of GVec
+            nodes_all : list of GVec
                 The full node features in both encoder and decoder.
         '''
         if covariance_test and (nodes_all is None):
@@ -217,27 +217,27 @@ class LGNDecoder(CGModule):
             nodes_all.append(generated_features)
             return generated_features, nodes_all
 
-    """
-    Extract input from data.
-
-    Parameters
-    ----------
-    data : `dict`
-        The jet data.
-
-    Returns
-    -------
-    scalars : `torch.Tensor`
-        Tensor of scalars for each node.
-    node_ps: : `torch.Tensor`
-        Momenta of the nodes
-    node_mask : `torch.Tensor`
-        Node mask used for batching data.
-    edge_mask: `torch.Tensor`
-        Edge mask used for batching data.
-    """
 
     def _prepare_input(self, latent_features):
+        """
+        Extract input from data.
+
+        Parameters
+        ----------
+        data : `dict`
+            The jet data.
+
+        Returns
+        -------
+        scalars : `torch.Tensor`
+            Tensor of scalars for each node.
+        node_ps: : `torch.Tensor`
+            Momenta of the nodes
+        node_mask : `torch.Tensor`
+            Node mask used for batching data.
+        edge_mask: `torch.Tensor`
+            Edge mask used for batching data.
+        """
         node_features = self.latent_to_graph(latent_features)
         node_features = {weight: value.squeeze(-3) for weight, value in node_features.items()}
         node_ps = node_features[(1, 1)].to(device=self.device)

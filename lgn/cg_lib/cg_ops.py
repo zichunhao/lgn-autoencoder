@@ -30,13 +30,13 @@ class CGProduct(CGModule):
 
     Parameters
     ----------
-    tau : `list` of `int`, `GTau`, or object with `.tau` property.
+    tau : list of int, `GTau`, or object with `.tau` property.
         Multiplicity of the first G vector.
-    tau : `list` of `int`, `GTau`, or object with `.tau` property.
+    tau : list of int, `GTau`, or object with `.tau` property.
         Multiplicity of the second G vector.
-    maxdim : `int`, optional
+    maxdim : int, optional
         Maximum weight to include in CG Product
-    aggregate : `bool`, optional
+    aggregate : bool, optional
         Apply an "aggregation" operation, or a pointwise convolution
         with a `GVec` as a filter.
     cg_dict : `CGDict`, optional
@@ -124,15 +124,15 @@ def cg_product(cg_dict, rep1, rep2, maxdim=inf, aggregate=False, ignore_check=Fa
         First `GVector` in the CG product
     rep2 : list of `torch.Tensors`
         First `GVector` in the CG product
-    maxdim : `int`, optional
+    maxdim : int, optional
         Minimum weight to include in CG Product
-    aggregate : `bool`, optional
+    aggregate : bool, optional
         Apply an "aggregation" operation, or a pointwise convolution
         with a `GVector` as a filter.
     cg_dict : `CGDict`, optional
         Specify a Clebsch-Gordan dictionary. If not specified, one will be
         generated automatically at runtime based upon maxdim.
-    ignore_check : `bool`
+    ignore_check : bool
         Ignore GVec initialization check. Necessary for current implementation
         of `zonal_functions`. Use with caution.
     """
@@ -197,7 +197,7 @@ def complex_kron_product(z1, z2, aggregate=False):
         The last dimension is the complex dimension.
     z1 : `torch.Tensor`
         Tensor of shape batch2 x M2 x N2 x 2.
-    aggregate: `bool`
+    aggregate: bool
         Apply aggregation/point-wise convolutional filter. Must have batch1 = B x A x A, batch2 = B x A
 
     Returns
