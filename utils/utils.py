@@ -24,8 +24,7 @@ def get_model_fname(args):
 
 
 def make_dir(path):
-    if not osp.isdir(path):
-        os.makedirs(path)
+    os.makedirs(path, exist_ok=True)
     return path
 
 
