@@ -31,6 +31,7 @@ python main.py \
 --num-valid "$num_valid" \
 --maxdim 2 \
 --unit TeV \
+--loss-choice mse \
 --loss-norm-choice p3 \
 --im False \
 --tau-latent-scalars 1 \

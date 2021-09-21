@@ -16,57 +16,57 @@ class LGNEncoder(CGModule):
     """
     The encoder of the LGN autoencoder.
 
-    Parameters
+    Attributes
     ----------
-    num_input_particles : `int`
+    num_input_particles : int
         The number of input particles.
-    tau_input_scalars : `int`
+    tau_input_scalars : int
         The multiplicity of scalars per particle.
         For the hls4ml 150-p jet data, it should be 1 (namely the particle invariant mass -p^2).
-    tau_input_vectors : `int`
+    tau_input_vectors : int
         The multiplicity of vectors per particle.
         For the hls4ml 150-p jet data, it should be 1 (namely the particle 4-momentum).
-    tau_latent_scalars : `int`
+    tau_latent_scalars : int
         Multiplicity of Lorentz scalars (0,0) in the latent_space.
-    tau_latent_vectors : `int`
+    tau_latent_vectors : int
         Multiplicity of Lorentz 4-vectors (1,1) in the latent_space.
-    maxdim : `list` of `int`
+    maxdim : list of int
         Maximum weight in the output of CG products, expanded or truncated to list of
         length len(num_channels) - 1.
-    num_basis_fn : `int`
+    num_basis_fn : int
         The number of basis function to use.
-    num_channels : `list` of `int`
+    num_channels : list of int
         Number of channels that the outputs of each CG layer are mixed to.
-    max_zf : `list` of `int`
+    max_zf : list of int
         Maximum weight in the output of the spherical harmonics, expanded or truncated to list of
         length len(num_channels) - 1.
-    weight_init : `str`
+    weight_init : str
         The type of weight initialization. The choices are 'randn' and 'rand'.
-    level_gain : `list` of `floats`
+    level_gain : list of `floats`
         The gain at each level. (args.level_gain = [1.])
-    jet_features : `bool`
+    jet_features : bool
         Optional, default: False
         Whether to incorporate jet momenta into the model.
-    map_to_latent : `str`
+    map_to_latent : str
         Optional, default: 'mean'
         The way of mapping the graph to latent space.
         Choices:
             - 'sum': sum over all nodes.
             - 'mix': linearly mix each isotypic component of node features.
             - 'mean': taking the mean over all nodes.
-    activation : `str`
+    activation : str
         Optional, default: 'leakyrelu'
         The activation function for lgn.LGNCG
-    scale : `float` or `int`
+    scale : float or int
         Optional, default: 1.
         Scaling parameter for input node features.
-    mlp : `bool`
+    mlp : bool
         Optional, default: True
         Whether to include the extra MLP layer on scalar features in nodes.
-    mlp_depth : `int`
+    mlp_depth : int
         Optional, default: None
         The number of hidden layers in CGMLP.
-    mlp_width : `list` of `int`
+    mlp_width : list of int
         Optional, default: None
         The number of perceptrons in each CGMLP layer
     device : `torch.device`
@@ -179,7 +179,7 @@ class LGNEncoder(CGModule):
         ----------
         data : `dict`
             The dictionary that stores the hls4ml data, with relevant keys 'p4', 'node_mask', and 'edge_mask'.
-        covariance_test : `bool`
+        covariance_test : bool
             Optional, default: False
             If False, return prediction (scalar reps) only.
             If True, return both generated output and full node features, where the full node features
@@ -194,7 +194,7 @@ class LGNEncoder(CGModule):
         edge_mask : `torch.Tensor`
             The mask of edge features. (Unchanged)
         If covariance_test is True, also:
-            nodes_all : `list` of `GVec`
+            nodes_all : list of `GVec`
                 The full node features in the encoder.
         '''
         # Extract node features and masks

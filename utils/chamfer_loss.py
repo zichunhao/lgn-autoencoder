@@ -7,7 +7,7 @@ class ChamferLoss(nn.Module):
     """
     Parameters
     ----------
-    loss_norm_choice : `str`
+    loss_norm_choice : str
         The choice to compute the norm squared of the complex 4-vector.
         Optional, default: `'p3'`
         Options:

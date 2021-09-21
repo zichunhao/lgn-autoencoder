@@ -75,7 +75,7 @@ def mul_zscalar_zscalar(scalar1, scalar2, zdim=0):
         First tensor of scalars to multiply.
     scalar2 : `torch.Tensor`
         Second tensor of scalars to multiply.
-    zdim : `int`
+    zdim : int
         Dimension for which complex multiplication is defined.
 
 

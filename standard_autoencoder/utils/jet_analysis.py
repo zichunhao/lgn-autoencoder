@@ -19,53 +19,53 @@ def plot_p(args, p_target, p, save_dir,
            num_bins=201, cutoff=1e-6, epoch=None, show=False):
     """Plot particle features, jet features, and jet images.
 
-    Args
-    ----
+    Parameters
+    ----------
     p_target :  `torch.Tensor`
         The target jets.
         Shape: (num_jets, num_particles, 4)
     p :  `torch.Tensor`
         The generated/reconstructed jets by model.
         Shape: (num_jets, num_particles, 4)
-    save_dir : `str`
+    save_dir : str
         The saving directories for figures.
-    cartesian_max : `tuple`
+    cartesian_max : tuple
         The maximum values, (px_max, py_max, pz_max), for particle feature plots in cartesian coordinates.
             - px will range from -px_max to px_max.
             - py will range from -py_max to py_max.
             - pz will range from -pz_max to pz_max.
         Default: (100, 100, 100)
-    polar_max : `tuple`
+    polar_max : tuple
         The maximum values, (pt_max, eta_max, phi_max), for particle feature plots in polar coordinates.
             - pt will range from 0 to pt_max.
             - eta will range from -eta_max to eta_max.
             - phi will range from -phi_max to phi_max.
         Default: (200, 2, np.pi)
-    jet_cartesian_max : `tuple`
+    jet_cartesian_max : tuple
         The maximum values, (m_max, pt_max, eta_max, phi_max), for jet feature plots in polar coordinates.
             - jet mass (m) will range from 0 to m_max.
             - pt will range from 0 to pt_max.
             - eta will range from -eta_max to eta_max.
             - phi will range from -phi_max to phi_max.
         Default: (200, 2000, 2000, 4000)
-    jet_polar_max : `tuple`
+    jet_polar_max : tuple
         The maximum values, (pt_max, eta_max, phi_max), for jet feature plots in polar coordinates.
             - jet mass (m) will range from 0 to m_max.
             - pt will range from 0 to pt_max.
             - eta will range from -eta_max to eta_max.
             - phi will range from -phi_max to phi_max.
         Default: (200, 4000, 2, np.pi)
-    num_bins : `int`
+    num_bins : int
         Number of bins for histograms of particle and jet features.
         Default: 201
-    cutoff : `float`
+    cutoff : float
         The cutoff value for |p| = sqrt(px^2 + py^2 + pz^2).
         Particle momentum lower than `cutoff` will be considered padded particles and thus dropped.
         Default: 1e-6
-    epoch : `int`
+    epoch : int
         The epoch number.
         Default: None
-    show : `bool`
+    show : bool
         Whether to show plots.
         Default: False
     """
@@ -111,32 +111,32 @@ def plot_p_cartesian(args, p_target, p_gen, save_dir, max_val=[100, 100, 100],
                      num_bins=201, epoch=None, density=False, fill=False, show=False):
     """Plot p distribution in Cartesian coordinates.
 
-    Args
-    ----
+    Parameters
+    ----------
     p_target : `numpy.ndarray`
         The target jet data, with shape (num_particles, 4).
     p_gen : `numpy.ndarray`
         The reconstructed jet data, with shape (num_particles, 4).
-    save_dir : `str`
+    save_dir : str
         The directory to save the figure.
-    max_val :  `list`, `tuple`, or `int`
+    max_val :  list, tuple, or int
         The maximum values of (px, py, pz) in the plot.
         Optional, default: `201`
-    num_bins : `int`
+    num_bins : int
         The number of bins in the histogram.
         Optional, default: `(0.02, 0.02, 0.02)`
-    num_bins : `int`
+    num_bins : int
         The number of bins in the histogram.
-    epoch : `int`
+    epoch : int
         The epoch number of the evaluated model.
         Optional, default: `None`
-    density : `bool`
+    density : bool
         Whether to plot distribution density instead of absolute number.
         Optional, default: `False`
-    fill : `bool`
+    fill : bool
         Whether bins are filled.
         Optional, default: `False`
-    show : `bool`
+    show : bool
         Whether to show plot.
         Optional, default: `False`
     """
@@ -203,32 +203,32 @@ def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir, 
                          num_bins=81, epoch=None, density=False, fill=True, show=False):
     """Plot jet features (m, px, py, pz) distribution.
 
-    Args
-    ----
+    Parameters
+    ----------
     jet_features_target : `numpy.ndarray`
         The target jet momenta, with shape (num_jets, 4).
     jet_features_gen : `numpy.ndarray`
         The generated/reconstructed jet momenta, with shape (num_jets, 4).
-    save_dir : `str`
+    save_dir : str
         The directory to save the figure.
-    max_val :  `list`, `tuple`, or `int`
+    max_val :  list, tuple, or int
         The maximum values of (px, py, pz) in the plot.
         Optional, default: `201`
-    num_bins : `int`
+    num_bins : int
         The number of bins in the histogram.
         Optional, default: `(0.02, 0.02, 0.02)`
-    num_bins : `int`
+    num_bins : int
         The number of bins in the histogram.
-    epoch : `int`
+    epoch : int
         The epoch number of the evaluated model.
         Optional, default: `None`
-    density : `bool`
+    density : bool
         Whether to plot distribution density instead of absolute number.
         Optional, default: `False`
-    fill : `bool`
+    fill : bool
         Whether bins are filled.
         Optional, default: `False`
-    show : `bool`
+    show : bool
         Whether to show plot.
         Optional, default: `False`
     """
@@ -291,30 +291,30 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir, max_val=(200, 2, n
                  num_bins=201, epoch=None, density=False, fill=True, show=False):
     """Plot p distribution in polar coordinates (pt, eta, phi)
 
-    Args
-    ----
+    Parameters
+    ----------
     p_polar_target : tuple of 3 `numpy.ndarray`
         The target jet data in polar coordinates (pt, eta, phi).
     p_polar_gen : tuple of 3 `numpy.ndarray`
         The reconstructed jet data in polar coordinates (pt, eta, phi).
-    save_dir : `str`
+    save_dir : str
         The directory to save the figure.
-    max_val : `list`, `tuple`, or `float`
+    max_val : list, tuple, or float
         The maximum values of (pt, eta, phi) in the plot.
         Optional, default: `(0.15, np.pi, np.pi)`
-    num_bins : `int`
+    num_bins : int
         The number of bins in the histogram.
         Optional, default: `201`
-    epoch : `int`
+    epoch : int
         The epoch number of the evaluated model.
         Optional, default: `None`
-    density : `bool`
+    density : bool
         Whether to plot distribution density instead of absolute number.
         Optional, default: `False`
-    fill : `bool`
+    fill : bool
         Whether bins are filled.
         Optional, default: `False`
-    show : `bool`
+    show : bool
         Whether to show plot.
         Optional, default: `False`
     """
@@ -386,30 +386,30 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir, max_
                      num_bins=201, epoch=None, density=False, fill=True, show=False):
     """Plot jet features (m, pt, eta, phi) distribution.
 
-    Args
-    ----
+    Parameters
+    ----------
     jet_features_target : `numpy.ndarray`
         The target jet data, with shape (num_particles, 4).
     jet_features_gen : `numpy.ndarray`
         The reconstructed jet data, with shape (num_particles, 4).
-    save_dir : `str`
+    save_dir : str
         The directory to save the figure.
-    max_val : `list`, `tuple`, or `float`
+    max_val : list, tuple, or float
         The maximum values of (pt, eta, phi) in the plot.
         Optional, default: `(0.15, np.pi, np.pi)`
-    num_bins : `int`
+    num_bins : int
         The number of bins in the histogram.
         Optional, default: `201`
-    epoch : `int`
+    epoch : int
         The epoch number of the evaluated model.
         Optional, default: `None`
-    density : `bool`
+    density : bool
         Whether to plot distribution density instead of absolute number.
         Optional, default: `False`
-    fill : `bool`
+    fill : bool
         Whether bins are filled.
         Optional, default: `False`
-    show : `bool`
+    show : bool
         Whether to show plot.
         Optional, default: `False`
     """
@@ -480,8 +480,8 @@ def pixelate(jet, mask=None, npix=64, maxR=1.0):
     """Pixelate the jet with Raghav Kansal's method.
     Reference: https://github.com/rkansal47/mnist_graph_gan/blob/neurips21/jets/final_plots.py#L191-L204
 
-    Args
-    ----
+    Parameters
+    ----------
     jet : np.ndarray
         Momenta in polar coordinates with shape (num_jets, 3, num_jet_particles)
     mask : np.ndarray
@@ -494,8 +494,8 @@ def pixelate(jet, mask=None, npix=64, maxR=1.0):
         Maximum radius of the jet image.
         Default: 1.0
 
-    Return
-    ------
+    Returns
+    -------
     Pixelated jet with shape (npix, npix).
     """
     bins = np.linspace(-maxR, maxR, npix + 1)
@@ -517,13 +517,13 @@ def pixelate(jet, mask=None, npix=64, maxR=1.0):
 def get_jet_rel(jets):
     """Get jet momenta in relative coordinates (ptrel, etarel, phirel).
 
-    Args
-    ----
+    Parameters
+    ----------
     jets : `numpy.ndarray` or `torch.Tensor`
         The jets in absolute polar coordinates.
 
-    Return
-    ------
+    Returns
+    -------
     jets : `numpy.ndarray`
         The jet momenta in relative coordinates.
     """
@@ -558,22 +558,22 @@ def get_jet_rel(jets):
 def get_average_jet_image(jets, maxR=0.5, npix=64, abs_coord=True):
     """Get the average jet image from a collection of jets.
 
-    Args
-    ----
+    Parameters
+    ----------
     jets : `numpy.ndarray` or `torch.Tensor`
         A collection of jets in polar coordinates.
-    maxR : `float`
+    maxR : float
         Maximum radius.
         Default: 0.5
-    npix : `int`
+    npix : int
         Number of pixels.
         Default: 64
-    abs_coord : `bool`
+    abs_coord : bool
         Whether jets are in absolute coordinates.
         Default: True
 
-    Return
-    ------
+    Returns
+    -------
     jet_image : `numpy.ndarray`
         The average jet image over the collection.
     """
@@ -590,8 +590,8 @@ def get_average_jet_image(jets, maxR=0.5, npix=64, abs_coord=True):
 def plot_jet_image(args, p_target, p, save_dir, epoch, vmin=1e-10, show=False):
     """Plot jet image, one for target jets and one for generated/reconstructed jets.
 
-    Args
-    ---
+    Parameters
+    ----------
     p_target : np.ndarray
         Target jets in polar coordinates (pt, eta, phi).
         Shape : (num_jets, num_particles, 3)
@@ -648,14 +648,19 @@ def plot_jet_image(args, p_target, p, save_dir, epoch, vmin=1e-10, show=False):
 
 def get_magnitude(p, device='gpu'):
     """Get the momentum magnitude |p| of the 4-vector.
-    Args
-    ----
+    Parameters
+    ----------
     p : `numpy.ndarray` or `torch.Tensor`
         The 4-momentum.
 
-    Return
-    ------
+    Returns
+    -------
     |p| = sq
+
+    Raises
+    ------
+    ValueError
+        If p is not of tyoe numpy.ndarray or torch.Tensor.
     """
     if isinstance(p, np.ndarray):
         return np.sqrt(np.sum(np.power(p, 2)[..., 1:], axis=-1))
@@ -670,16 +675,21 @@ def get_magnitude(p, device='gpu'):
 def get_p_cartesian(jets, cutoff=1e-6):
     """Get (px, py, pz) from the jet data and filter out values that are too small.
 
-    Args
-    ----
+    Parameters
+    ----------
     jets : `numpy.ndarray`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
-    cutoff : `float`
+    cutoff : float
         The cutoff value of 3-momenta.
 
-    Return
-    ------
+    Returns
+    -------
     A tuple (px, py, pz). Each is a numpy.ndarray.
+
+    Raises
+    ------
+    ValueError
+        If the input is not of type numpy.ndarray or torch.Tensor
     """
     if isinstance(jets, np.ndarray):
         jets = np.copy(jets).reshape(-1, 4)
@@ -711,13 +721,13 @@ def get_p_polar(p4, cutoff=1e-6, eps=1e-12, device='gpu'):
     """
     Get (pt, eta, phi) from the jet data.
 
-    Args
-    ----
+    Parameters
+    ----------
     p4 : `torch.Tensor`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
 
-    Return
-    ------
+    Returns
+    -------
     Particle momenta in polar coordinates as a numpy.ndarray.
     """
     if isinstance(p4, np.ndarray):
@@ -767,10 +777,13 @@ def get_jet_feature_cartesian(p4, device='gpu'):
     """
     Get jet (m, pt, eta, phi) from the jet data.
 
-    Args
-    ----
-    jet_data : `numpy.ndarray` or `torch.Tensor`
+    Parameters
+    ----------
+    p4 : `numpy.ndarray` or `torch.Tensor`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
+    device : str, optional
+        The device for computations.
+        Used only if type(p4) is torch.tensor.
     """
 
     if isinstance(p4, np.ndarray):
@@ -799,10 +812,19 @@ def get_jet_feature_polar(p4, device='gpu', eps=1e-16):
     """
     Get jet (m, pt, eta, phi) from the jet data.
 
-    Args
-    ----
+    Parameters
+    ----------
     jet_data : `numpy.ndarray`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
+
+    Returns
+    -------
+    Jet (m, pt, eta, phi)
+
+    Raises
+    ------
+    ValueError
+        If the input is not of type numpy.ndarray or torch.Tensor.
     """
 
     m, px, py, pz = get_jet_feature_cartesian(p4)

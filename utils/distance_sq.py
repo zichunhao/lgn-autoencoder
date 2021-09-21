@@ -203,7 +203,7 @@ def pairwise_distance_sq_real(p, q, eps=1e-16, device=torch.device('cuda' if tor
     p, q: `torch.Tensor`
         The real 4-momenta of shape `(batch_size, num_particles, 4)`,
         where num_particles *could* be different for p and q.
-    norm_choice : `str`
+    norm_choice : str
         The choice of calculating the norm as distance.
         Options:
             - 'p4': Calculate the Minkowskian norm of the full momentum using the metric diag(1, -1, -1, -1)

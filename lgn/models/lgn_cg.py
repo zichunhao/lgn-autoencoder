@@ -9,34 +9,34 @@ class LGNCG(CGModule):
     """
     The initializer of the LGN CG layers.
 
-    Parameters
+    Attributes
     ----------
-    maxdim : `int`
+    maxdim : int
         The maximum weight of irreps to be accounted.
-    max_zf : `int`
+    max_zf : int
         The maximum weight of zonal functions
     tau_in : `GTau`
         The multiplicity of the input features.
-    tau_pos : `list` of `GTau` (or compatible)
+    tau_pos : list of `GTau` (or compatible)
         The multiplicity of the relative position vectors.
-    num_cg_levels : `int`
+    num_cg_levels : int
         The number of steps of message passing.
-    num_channels : `list` of `int`
+    num_channels : list of int
         The number of channels in the LGNNodeLevel.
-    level_gain : `list` of `floats`
+    level_gain : list of `floats`
         The gain at each level. (args.level_gain = [1.])
-    weight_init : `str`
+    weight_init : str
         The type of weight initialization. The choices are 'randn' and 'rand'.
-    mlp : `bool`
+    mlp : bool
         Optional, default: True
         Whether to include the extra MLP layer on scalar features in nodes.
-    mlp_depth : `int`
+    mlp_depth : int
         Optional, default: None
         The number of hidden layers in CGMLP.
-    mlp_width : list of `int`
+    mlp_width : list of int
         Optional, default: None
         The number of perceptrons in each CGMLP layer
-    activation : `str`
+    activation : str
         Optional, default: 'leakyrelu'
         The type of activation function to use.
         Options are ‘leakyrelu’(for nn.LeakyReLU()), ‘relu’(for nn.ReLU()),
@@ -102,7 +102,7 @@ class LGNCG(CGModule):
             Node features.
         node_mask : torch.Tensor with data type torch.byte
             Batch mask for node representations. Shape is (N_batch, N_node).
-        rad_funcs : `list` of `GScalars`
+        rad_funcs : list of `GScalars`
             The (possibly learnable) radial filters.
         edge_mask : `torch.Tensor`
             Matrix of the magnitudes of relative position vectors of pairs of nodes
@@ -113,13 +113,19 @@ class LGNCG(CGModule):
 
         Returns
         -------
-        nodes_features : `list` of `GVecs`
+        nodes_features : list of `GVecs`
             The concatenated list of the representations outputted at each round of message passing.
+
+        Raises
+        ------
+        ValueError
+            If len(self.node_levels) != len(rad_funcs).
         """
 
-        assert len(self.node_levels) == len(
-            rad_funcs), f'The number of layer {len(self.node_levels)} and the number of available radial functions {len(rad_funcs)} are not equal!'
-
+        if len(self.node_levels) != len(rad_funcs):
+            raise ValueError(f'The number of layer ({len(self.node_levels)}) and '
+                             f'the number of available radial functions ({len(rad_funcs)}) '
+                             'are not equal!')
         # message passing
         # node features in each round of message passing; to be concatenated
         nodes_features = [node_feature]

@@ -26,7 +26,7 @@ def _gen_rot(angles, maxdim, device=torch.device('cpu'), dtype=torch.float64, cg
     return D, R
 
 
-def covariance_test(encoder, decoder, data, test_type, alpha_max=None, cg_dict=None, unit='GeV'):
+def covariance_test(encoder, decoder, data, test_type, axis='z', alpha_max=None, cg_dict=None, unit='GeV'):
 
     if cg_dict is None:
         cg_dict = encoder.cg_dict
@@ -48,7 +48,8 @@ def covariance_test(encoder, decoder, data, test_type, alpha_max=None, cg_dict=N
         if alpha_max is None:
             alpha_max = 10.
         alpha_range = np.arange(0, alpha_max+.01, step=alpha_max/25.)
-        gammas, boost_dev_output, boost_dev_internal = boost_equivariance(encoder, decoder, data, alpha_range, device, dtype, cg_dict)
+        gammas, boost_dev_output, boost_dev_internal = boost_equivariance(encoder, decoder, data, alpha_range,
+                                                                          axis, device, dtype, cg_dict)
         covariance_test_result['gammas'] = gammas
         covariance_test_result['boost_dev_output'] = boost_dev_output
         covariance_test_result['boost_dev_internal'] = boost_dev_internal
@@ -57,7 +58,8 @@ def covariance_test(encoder, decoder, data, test_type, alpha_max=None, cg_dict=N
         if alpha_max is None:
             alpha_max = 2 * np.pi
         theta_range = np.arange(0, alpha_max+.01, step=alpha_max/25.)
-        theta_range, rot_dev_output, rot_dev_internal = rot_equivariance(encoder, decoder, data, theta_range, device, dtype, cg_dict)
+        theta_range, rot_dev_output, rot_dev_internal = rot_equivariance(encoder, decoder, data, theta_range,
+                                                                         axis, device, dtype, cg_dict)
         covariance_test_result['thetas'] = theta_range
         covariance_test_result['rot_dev_output'] = rot_dev_output
         covariance_test_result['rot_dev_internal'] = rot_dev_internal
@@ -93,14 +95,14 @@ def permutation_invariance_test(encoder, decoder, data, *ignore):
     return output_dev
 
 
-def boost_equivariance(encoder, decoder, data, alpha_range, device, dtype, cg_dict):
+def boost_equivariance(encoder, decoder, data, alpha_range, axis, device, dtype, cg_dict):
     gammas = list(cosh(x) for x in alpha_range)
     boost_input = []
     boost_output = []
     boost_input_nodes_all = []
     boost_output_nodes_all = []
     for alpha in alpha_range:
-        phi_x, phi_y, phi_z = 0, 0, alpha*1j
+        phi_x, phi_y, phi_z = get_boost(alpha, axis)
         # boost input
         Di, Ri = _gen_rot((phi_x, phi_y, phi_z), encoder.maxdim,
                           device=device, dtype=dtype, cg_dict=cg_dict)
@@ -125,20 +127,19 @@ def boost_equivariance(encoder, decoder, data, alpha_range, device, dtype, cg_di
     return gammas, dev_output, dev_internal
 
 
-def rot_equivariance(encoder, decoder, data, theta_range, device, dtype, cg_dict):
+def rot_equivariance(encoder, decoder, data, theta_range, axis, device, dtype, cg_dict):
     rot_input = []
     rot_output = []
     rot_input_nodes_all = []
     rot_output_nodes_all = []
     for theta in theta_range:
-        theta_x, theta_y, theta_z = 0, theta, 0
+        theta_x, theta_y, theta_z = get_rotation(theta, axis)
         # rotate input -> output
         Di, Ri = _gen_rot((theta_x, theta_y, theta_z), encoder.maxdim,
                           device=device, dtype=dtype, cg_dict=cg_dict)
         data_boost = data.copy()
         data_boost['p4'] = torch.einsum("...b, ba->...a", data['p4'], Ri)  # Rotate input
-        res_rot_input, internal_rot_input = get_output(
-            encoder, decoder, data_boost, covariance_test=True)
+        res_rot_input, internal_rot_input = get_output(encoder, decoder, data_boost, covariance_test=True)
         rot_input.append((res_rot_input))
         rot_input_nodes_all.append((internal_rot_input))
 
@@ -150,14 +151,43 @@ def rot_equivariance(encoder, decoder, data, theta_range, device, dtype, cg_dict
         rot_output.append((rot_res))
         rot_output_nodes_all.append((rot_internal))
 
-        dev_output, dev_internal = get_dev(
-            rot_input, rot_output, rot_input_nodes_all, rot_output_nodes_all)
+        dev_output, dev_internal = get_dev(rot_input, rot_output, rot_input_nodes_all, rot_output_nodes_all)
 
     return theta_range, dev_output, dev_internal
 
 
+def get_rotation(theta, axis):
+    if axis.lower == 'x':
+        return (theta, 0, 0)
+    if axis.lower == 'y':
+        return (0, theta, 0)
+    if axis.lower == 'z':
+        return (0, 0, theta)
+
+
+def get_boost(alpha, axis):
+    if axis.lower == 'x':
+        return (alpha*1j, 0, 0)
+    if axis.lower == 'y':
+        return (0, alpha*1j, 0)
+    if axis.lower == 'z':
+        return (0, 0, alpha*1j)
+
+
 @torch.no_grad()
-def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_max=None, cg_dict=None, unit='GeV'):
+def lgn_tests(args, encoder, decoder, dataloader, axis='z', alpha_max=None, theta_max=None, cg_dict=None, unit='GeV'):
+    """Covariance test on the autoencoder. Two tests will be done:
+        - Equivariance test on rotation and Lorentz boost.
+        - Permutation invariance test.
+
+    Parameters
+    ----------
+    encoder : LGNEncoder
+        The encoder of the autoencoder.
+    decoder : LGNDecoder
+        The decoder of the autoencoder.
+
+    """
 
     t0 = time.time()
 
@@ -184,7 +214,7 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_m
             break
 
     dt = time.time() - t0
-    logging.info(f"Covariance test completed! Time it took testing equivariance of epoch {epoch} is {round(dt/60, 2)} min")
+    logging.info(f"Covariance test completed! Time taken: {round(dt/60, 2)} min")
 
     lgn_test_results = dict()
 
@@ -219,6 +249,5 @@ def lgn_tests(encoder, decoder, dataloader, args, epoch, alpha_max=None, theta_m
     logging.info(f"Permutation invariance test result: {lgn_test_results['perm_dev_output']}")
 
     logging.info("-" * 25)
-
 
     return lgn_test_results

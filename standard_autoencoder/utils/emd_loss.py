@@ -89,7 +89,7 @@ def emd_loss(target_jet, jet_gen, eps=1e-12, form='L2', l2_strength=0.0001,
         4-momenta of shape `(batch_size, num_particles, 4)`
         or
         3-momenta of shape `(batch_size, num_particles, 3)`
-    return_flow : `bool`
+    return_flow : bool
         Optional, default: False
         Whether to the flow as well as the EMD score
 

@@ -10,13 +10,13 @@ def cg_product_tau(tau1, tau2, maxdim=inf):
 
     Parameters
     ----------
-    tau1 : `list` of `int`, `GTau`.
+    tau1 : list of int, `GTau`.
         Multiplicity of first representation.
 
-    tau2 : `list` of `int`, `GTau`.
+    tau2 : list of int, `GTau`.
         Multiplicity of second representation.
 
-    maxdim : `int`
+    maxdim : int
         Largest weight to include in CG Product.
 
     Return

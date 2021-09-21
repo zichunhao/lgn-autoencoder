@@ -140,6 +140,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
             plot_p(args, target, gen, save_dir=dir,
                    polar_max=args.polar_max, cartesian_max=args.cartesian_max,
                    jet_polar_max=args.jet_polar_max, jet_cartesian_max=args.jet_cartesian_max,
+                   particle_recon_err=('mse' in args.loss_choice.lower()),
                    num_bins=args.num_bins, cutoff=args.cutoff, epoch=epoch)
 
         dts.append(train_end-start)

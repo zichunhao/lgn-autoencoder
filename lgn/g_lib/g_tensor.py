@@ -110,7 +110,7 @@ class GTensor(ABC):
 
         Parameters
         ----------
-        maxdim : `int`
+        maxdim : int
             Maximum weight to truncate the representation to.
 
         Returns

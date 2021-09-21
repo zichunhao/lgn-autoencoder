@@ -171,11 +171,11 @@ def div(val1, val2):
 
 def cat(reps_list):
     """
-    Concatenate (direct sum) a `list` of `GTensor` representations (along the channel dimension).
+    Concatenate (direct sum) a list of `GTensor` representations (along the channel dimension).
 
     Parameters
     ----------
-    reps_list : `list` of `GTensor`
+    reps_list : list of `GTensor`
 
     Return
     ------
@@ -220,12 +220,12 @@ def mix(weights, rep):
 
 def cat_mix(weights, reps_list):
     """
-    First concatenate (direct sum) and then linearly mix a `list` of
+    First concatenate (direct sum) and then linearly mix a list of
     `GVec` objects with `GWeights` weights.
 
     Parameters
     ----------
-    reps_list : `list` of `GVec` or compatible
+    reps_list : list of `GVec` or compatible
     weights : `GWeights` or compatible
 
     Return

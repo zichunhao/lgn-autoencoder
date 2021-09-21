@@ -103,7 +103,7 @@ def get_p_polar(p, eps=1e-16, keep_p0=False):
     """
     (E, px, py, pz) -> (eta, phi, pt) or (E, eta, phi, pt)
 
-    keep_p0: `bool`
+    keep_p0: bool
         Whether to keep p0.
         Optional, default: False
     """

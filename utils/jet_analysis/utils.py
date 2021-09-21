@@ -7,14 +7,19 @@ GPU_STR = ['cuda', 'gpu']
 
 def get_magnitude(p, device='gpu'):
     """Get the momentum magnitude |p| of the 4-vector.
-    Args
-    ----
+    Parameters
+    ----------
     p : `numpy.ndarray` or `torch.Tensor`
         The 4-momentum.
 
-    Return
-    ------
+    Returns
+    -------
     |p| = sq
+
+    Raises
+    ------
+    ValueError
+        If p is not of type numpy.ndarray or torch.Tensor.
     """
     if isinstance(p, np.ndarray):
         return np.sqrt(np.sum(np.power(p, 2)[..., 1:], axis=-1))
@@ -29,16 +34,21 @@ def get_magnitude(p, device='gpu'):
 def get_p_cartesian(jets, cutoff=1e-6):
     """Get (px, py, pz) from the jet data and filter out values that are too small.
 
-    Args
-    ----
+    Parameters
+    ----------
     jets : `numpy.ndarray`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
-    cutoff : `float`
+    cutoff : float
         The cutoff value of 3-momenta.
 
-    Return
-    ------
+    Returns
+    -------
     A tuple (px, py, pz). Each is a numpy.ndarray.
+
+    Raises
+    ------
+    ValueError
+        If p is not of type numpy.ndarray or torch.Tensor.
     """
     if isinstance(jets, np.ndarray):
         jets = np.copy(jets).reshape(-1, 4)
@@ -70,13 +80,13 @@ def get_p_polar(p4, cutoff=1e-6, eps=1e-12, device='gpu'):
     """
     Get (pt, eta, phi) from the jet data.
 
-    Args
-    ----
+    Parameters
+    ----------
     p4 : `torch.Tensor`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
 
-    Return
-    ------
+    Returns
+    -------
     Particle momenta in polar coordinates as a numpy.ndarray.
     """
     if isinstance(p4, np.ndarray):
@@ -126,10 +136,18 @@ def get_jet_feature_cartesian(p4, device='gpu'):
     """
     Get jet (m, pt, eta, phi) from the jet data.
 
-    Args
-    ----
-    jet_data : `numpy.ndarray` or `torch.Tensor`
+    Parameters
+    ----------
+    p4 : `numpy.ndarray` or `torch.Tensor`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
+    device : str, optional
+        The device for computation when type(p4) is torch.Tensor.
+        Default: 'gpu'.
+
+    Raises
+    ------
+    ValueError
+        If p is not of type numpy.ndarray or torch.Tensor.
     """
 
     if isinstance(p4, np.ndarray):
@@ -158,10 +176,15 @@ def get_jet_feature_polar(p4, device='gpu', eps=1e-16):
     """
     Get jet (m, pt, eta, phi) from the jet data.
 
-    Args
-    ----
-    jet_data : `numpy.ndarray`
+    Parameters
+    ----------
+    p4 : `numpy.ndarray` or `torch.Tensor`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
+
+    Raises
+    ------
+    ValueError
+        If p4 is not of type numpy.ndarray or torch.Tensor.
     """
 
     m, px, py, pz = get_jet_feature_cartesian(p4)

@@ -27,7 +27,7 @@ class CGModule(nn.Module):
     ----------
     cg_dict : `CGDict`, optional
         Specify an input CGDict to use for Clebsch-Gordan operations.
-    maxdim : `int`, optional
+    maxdim : int, optional
         Maximum weight to initialize the Clebsch-Gordan dictionary.
     device : `torch.torch.device`, optional
         Device to initialize the module and Clebsch-Gordan dictionary to.

@@ -13,8 +13,8 @@ class ChamferLoss(nn.Module):
         """
         The forward pass to compute the chamfer loss of the point-cloud like jets.
 
-        Args
-        ----
+        Parameters
+        ----------
         p : `torch.Tensor`
             The **reconstructed** jets 4-momenta.
             Shape: `(batch_size, num_particles, 4)`
@@ -50,7 +50,7 @@ def pairwise_distance_sq(p, q, norm_choice='cartesian',
     p, q: `torch.Tensor`
         The 3- or 4-momenta of shape `(batch_size, num_particles, 3)` or `(batch_size, num_particles, 4)`,
         where num_particles *could* be different for p and q.
-    norm_choice : `str`
+    norm_choice : str
         The metric choice for distance.
         Option:
             - 'cartesian': (+, +, +, +) (mandatory for 3-momenta)

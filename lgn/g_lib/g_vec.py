@@ -71,7 +71,7 @@ class GVec(GTensor):
         ----------
         wigner_d : `GWignerD`
             The Wigner D matrix rotation to apply to `self`
-        dir : `str`
+        dir : str
             The direction to apply the Wigner-D matrices. Options are left/right.
 
         Returns

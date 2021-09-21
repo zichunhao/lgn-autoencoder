@@ -31,11 +31,11 @@ class CGDict():
 
     Parameters
     ----------
-    maxdim: `int`
+    maxdim: int
         Maximum weight for which to calculate the Clebsch-Gordan coefficients.
         This refers to the maximum weight for the ``input tensors``, not the
         output tensors.
-    transpose: `bool`, optional
+    transpose: bool, optional
         Transpose the CG coefficient matrix for each :math:`(\ell_1, \ell_2)`.
         This cannot be modified after instantiation.
     device: `torch.torch.device`, optional
@@ -83,7 +83,7 @@ class CGDict():
 
         Parameters
         ----------
-        new_maxdim: `int`
+        new_maxdim: int
             New maximum weight.
 
         Return
