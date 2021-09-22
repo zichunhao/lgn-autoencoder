@@ -139,11 +139,11 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir,
         Optional, default: `False`
     """
     if args.abs_coord:
-        ranges = RANGES_CARTESIAN_ABS_COORD
-        names = LABELS_CARTESIAN_ABS_COORD
+        ranges = RANGES_POLAR_ABS_COORD
+        names = LABELS_POLAR_ABS_COORD
     else:
-        ranges = RANGES_CARTESIAN_REL_COORD
-        names = LABELS_CARTESIAN_REL_COORD
+        ranges = RANGES_POLAR_REL_COORD
+        names = LABELS_POLAR_REL_COORD
 
     fig, axs = plt.subplots(1, 4, figsize=FIGSIZE, sharey=False)
     for ax, p_target, p_gen, bins, name in zip(axs, jet_features_target, jet_features_gen, ranges, names):
