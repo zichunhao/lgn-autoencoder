@@ -22,7 +22,7 @@ def cartesian(p_list):
         px = pt * np.cos(phi)
         py = pt * np.sin(phi)
         pz = pt * np.sinh(eta)
-        E = np.sqrt(2) * pt * np.cosh(eta)
+        E = pt * np.cosh(eta)
     else:  # padded data
         tag = 0
         px = py = pz = E = 0
