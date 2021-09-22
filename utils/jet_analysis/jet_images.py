@@ -5,6 +5,89 @@ import torch
 import matplotlib.pyplot as plt
 
 
+def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch, maxR=0.5, vmin=1e-8, show=False):
+    """Plot average jet image and one-to-one jet image
+
+    Parameters
+    ----------
+    p4_target : np.ndarray
+        Target jets in polar coordinates (pt, eta, phi).
+        Shape : (num_jets, num_particles, 3)
+    p4_gen : np.ndarray
+        Generated/reconstructed jets by the model in polar coordinates (pt, eta, phi).
+        Shape : (num_jets, num_particles, 3)
+    save_dir : str
+        Parent directory for plots.
+    epoch : int
+        The current epoch.
+    vmin : float
+        vmin for LogNorm of average jet image.
+        A positive number.
+        Default: 1e-8
+    show : bool
+        Whether to show jet images.
+
+    """
+
+    target_pix_average = get_average_jet_image(p4_target, npix=args.jet_image_npix,
+                                               abs_coord=args.abs_coord)
+    gen_pix_average = get_average_jet_image(p4_gen, npix=args.jet_image_npix,
+                                            abs_coord=args.abs_coord)
+
+    target_pix = get_n_jet_images(p4_target, num_jets=args.num_jet_images, npix=args.jet_image_npix,
+                                  maxR=maxR, abs_coord=args.abs_coord)
+    gen_pix = get_n_jet_images(p4_gen, num_jets=args.num_jet_images, npix=args.jet_image_npix,
+                               maxR=maxR, abs_coord=args.abs_coord)
+
+    # Same log scale
+    fig, axs = plt.subplots(
+        len(target_pix)+1, 2, figsize=get_one_to_one_jet_image_figsize(num_jets=len(target_pix))
+    )
+
+    from copy import copy
+    cm = copy(plt.cm.jet)
+    cm.set_under(color='white')
+
+    for i, axs_row in enumerate(axs):
+        if i == 0:
+            from matplotlib.colors import LogNorm
+            target = axs_row[0].imshow(target_pix_average, norm=LogNorm(vmin=vmin, vmax=1), origin='lower', cmap=cm,
+                                       interpolation='nearest', extent=[-maxR, maxR, -maxR, maxR])
+            axs_row[0].title.set_text('Average Target Jet')
+
+            gen = axs_row[1].imshow(gen_pix_average, norm=LogNorm(vmin=vmin, vmax=1), origin='lower', cmap=cm,
+                                    interpolation='nearest', extent=[-maxR, maxR, -maxR, maxR])
+            axs_row[1].title.set_text('Average Reconstructed Jet')
+
+            cbar_target = fig.colorbar(target, ax=axs_row[0])
+            cbar_gen = fig.colorbar(gen, ax=axs_row[1])
+        else:
+            target = axs_row[0].imshow(target_pix[i-1], origin='lower', cmap=cm, interpolation='nearest',
+                                       vmin=vmin, extent=[-maxR, maxR, -maxR, maxR], vmax=0.05)
+            axs_row[0].title.set_text('Target Jet')
+
+            gen = axs_row[1].imshow(gen_pix[i-1], origin='lower', cmap=cm, interpolation='nearest',
+                                    vmin=vmin, extent=[-maxR, maxR, -maxR, maxR], vmax=0.05)
+            axs_row[1].title.set_text('Reconstructed Jet')
+            cbar_target = fig.colorbar(target, ax=axs_row[0])
+            cbar_gen = fig.colorbar(gen, ax=axs_row[1])
+
+        for cbar in [cbar_target, cbar_gen]:
+            cbar.set_label(r'$p_\mathrm{T}$')
+
+        for j in range(len(axs_row)):
+            axs_row[j].set_xlabel(r"$\phi^\mathrm{rel}$")
+            axs_row[j].set_ylabel(r"$\eta^\mathrm{rel}$")
+
+    plt.tight_layout()
+    filename = f'{args.jet_type}_jet_images_epoch_{epoch+1}.pdf'
+    save_dir = make_dir(osp.join(save_dir, 'jet_images'))
+    plt.savefig(osp.join(save_dir, filename), bbox_inches="tight")
+    if show:
+        plt.show()
+    plt.close()
+
+
 def pixelate(jet, mask=None, npix=64, maxR=1.0):
     """Pixelate the jet with Raghav Kansal's method.
     Reference: https://github.com/rkansal47/mnist_graph_gan/blob/neurips21/jets/final_plots.py#L191-L204
@@ -147,85 +230,6 @@ def get_n_jet_images(jets, num_jets=15, maxR=0.5, npix=24, abs_coord=True):
                  for i in range(min(num_jets, len(jets)))]
     jet_image = np.stack(jet_image, axis=0)
     return jet_image
-
-
-def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch, maxR=0.5, vmin=1e-8, show=False):
-    """Plot average jet image and one-to-one jet image
-
-    Parameters
-    ----------
-    p4_target : np.ndarray
-        Target jets in polar coordinates (pt, eta, phi).
-        Shape : (num_jets, num_particles, 3)
-    p4_gen : np.ndarray
-        Generated/reconstructed jets by the model in polar coordinates (pt, eta, phi).
-        Shape : (num_jets, num_particles, 3)
-    save_dir : str
-        Parent directory for plots.
-    epoch : int
-        The current epoch.
-    vmin : float
-        vmin for LogNorm of average jet image.
-        A positive number.
-        Default: 1e-8
-    show : bool
-        Whether to show jet images.
-
-    """
-
-    target_pix_average = get_average_jet_image(p4_target, npix=args.jet_image_npix)
-    gen_pix_average = get_average_jet_image(p4_gen, npix=args.jet_image_npix)
-
-    target_pix = get_n_jet_images(p4_target, num_jets=args.num_jet_images, npix=args.jet_image_npix, maxR=maxR)
-    gen_pix = get_n_jet_images(p4_gen, num_jets=args.num_jet_images, npix=args.jet_image_npix, maxR=maxR)
-
-    # Same log scale
-    fig, axs = plt.subplots(
-        len(target_pix)+1, 2, figsize=get_one_to_one_jet_image_figsize(num_jets=len(target_pix))
-    )
-
-    from copy import copy
-    cm = copy(plt.cm.jet)
-    cm.set_under(color='white')
-
-    for i, axs_row in enumerate(axs):
-        if i == 0:
-            from matplotlib.colors import LogNorm
-            target = axs_row[0].imshow(target_pix_average, norm=LogNorm(vmin=vmin, vmax=1), origin='lower', cmap=cm,
-                                       interpolation='nearest', extent=[-maxR, maxR, -maxR, maxR])
-            axs_row[0].title.set_text('Average Target Jet')
-
-            gen = axs_row[1].imshow(gen_pix_average, norm=LogNorm(vmin=vmin, vmax=1), origin='lower', cmap=cm,
-                                    interpolation='nearest', extent=[-maxR, maxR, -maxR, maxR])
-            axs_row[1].title.set_text('Average Reconstructed Jet')
-
-            cbar_target = fig.colorbar(target, ax=axs_row[0])
-            cbar_gen = fig.colorbar(gen, ax=axs_row[1])
-        else:
-            target = axs_row[0].imshow(target_pix[i-1], origin='lower', cmap=cm, interpolation='nearest',
-                                       vmin=vmin, extent=[-maxR, maxR, -maxR, maxR], vmax=0.05)
-            axs_row[0].title.set_text('Target Jet')
-
-            gen = axs_row[1].imshow(gen_pix[i-1], origin='lower', cmap=cm, interpolation='nearest',
-                                    vmin=vmin, extent=[-maxR, maxR, -maxR, maxR], vmax=0.05)
-            axs_row[1].title.set_text('Reconstructed Jet')
-            cbar_target = fig.colorbar(target, ax=axs_row[0])
-            cbar_gen = fig.colorbar(gen, ax=axs_row[1])
-
-        for cbar in [cbar_target, cbar_gen]:
-            cbar.set_label(r'$p_\mathrm{T}$')
-
-        for j in range(len(axs_row)):
-            axs_row[j].set_xlabel(r"$\phi^\mathrm{rel}$")
-            axs_row[j].set_ylabel(r"$\eta^\mathrm{rel}$")
-
-    plt.tight_layout()
-    filename = f'{args.jet_type}_jet_images_epoch_{epoch+1}.pdf'
-    save_dir = make_dir(osp.join(save_dir, 'jet_images'))
-    plt.savefig(osp.join(save_dir, filename), bbox_inches="tight")
-    if show:
-        plt.show()
-    plt.close()
 
 
 def get_one_to_one_jet_image_figsize(num_jets=15):

@@ -20,6 +20,8 @@ def setup_argparse():
                         'Useful for test runs.')
     parser.add_argument('--scale', type=float, default=1., metavar='',
                         help='The rescaling factor of the input 4-momenta. Default: 1.')
+    parser.add_argument('--abs-coord', type=get_bool, default=True, metavar='',
+                        help='Whether the data is in absolute coordinates. False when relative coordinates are used.')
 
     ######################################## Model options ########################################
     parser.add_argument('--num-jet-particles', type=int, default=30, metavar='',
@@ -114,16 +116,6 @@ def setup_argparse():
                         help='How frequent to plot. Used when --loss-choice is not EMD. Default: 10.')
     parser.add_argument('--unit', type=str, default='TeV',
                         help="The unit of momenta. Choices: ('GeV', 'TeV'). Default: TeV. ")
-    parser.add_argument('--polar-max', nargs="+", type=float, default=[200, 2, np.pi], metavar='',
-                        help='List of maximum values of (pt, eta, phi) in the histogram. Default: [200, np.pi, 2].')
-    parser.add_argument('--cartesian-max', nargs="+", type=float, default=[100, 100, 100], metavar='',
-                        help='List of maximum values of (px, py, pz) in the histogram. Default: [100, 100, 100].')
-    parser.add_argument('--jet-polar-max', nargs="+", type=float, default=[250, 4000, 2, np.pi], metavar='',
-                        help='List of maximum values of jet features (m, pt, eta, phi) in the histogram. Default: [200, 4000, 2, np.pi].')
-    parser.add_argument('--jet-cartesian-max', nargs="+", type=float, default=[250, 2000, 2000, 4000], metavar='',
-                        help='List of maximum values of jet features (m, px, py, pz) in the histogram. Default: [200, 2000, 2000, 4000].')
-    parser.add_argument('--num_bins', type=int, default=81, metavar='',
-                        help='Number of bins in the histogram Default: 81.')
     parser.add_argument('--cutoff', type=float, default=1e-7, metavar='',
                         help='Cutoff value of (3-)momenta magnitude to be included in the historgram. Default: 1e-7.')
     parser.add_argument('--fill', default=False, action='store_true',

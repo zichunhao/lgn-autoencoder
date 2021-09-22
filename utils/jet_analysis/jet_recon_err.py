@@ -2,12 +2,16 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from utils.utils import make_dir
+from utils.jet_analysis.utils import NUM_BINS
 import os.path as osp
 
 FIGSIZE = (16, 4)
-LABELS_CARTESIAN = (r'$M$', r'$P_x$', r'$P_y$', r'$P_z$')
-LABELS_POLAR = (r'$M$', r'$P_\mathrm{T}$', r'$\eta$', r'$\phi$')
-LABELS = (LABELS_CARTESIAN, LABELS_POLAR)
+LABELS_CARTESIAN_ABS_COORD = (r'$M$', r'$P_x$', r'$P_y$', r'$P_z$')
+LABELS_POLAR_ABS_COORD = (r'$M$', r'$P_\mathrm{T}$', r'$\eta$', r'$\phi$')
+LABELS_ABS_COORD = (LABELS_CARTESIAN_ABS_COORD, LABELS_POLAR_ABS_COORD)
+LABELS_CARTESIAN_REL_COORD = (r'$M^\mathrm{rel}$', r'$P_x^\mathrm{rel}$', r'$P_y^\mathrm{rel}$', r'$P_z^\mathrm{rel}$')
+LABELS_POLAR_REL_COORD = (r'$M^\mathrm{rel}$', r'$P_\mathrm{T}^\mathrm{rel}$', r'$\eta^\mathrm{rel}$', r'$\phi^\mathrm{rel}$')
+LABELS_REL_COORD = (LABELS_CARTESIAN_REL_COORD, LABELS_POLAR_REL_COORD)
 COORDINATES = ('cartesian', 'polar')
 
 
@@ -18,14 +22,12 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
     """Plot reconstruction errors for jet."""
     res_cartesian = [get_rel_err(jet_gen_cartesian[i], jet_target_cartesian[i], eps) for i in range(4)]
     res_polar = [get_rel_err(jet_target_polar[i], jet_target_polar[i], eps) for i in range(4)]
-    ranges = get_bins(args.num_bins)
+    ranges = get_bins(NUM_BINS)
 
+    LABELS = LABELS_ABS_COORD if args.abs_coord else LABELS_REL_COORD
     for rel_err_coordinate, labels, coordinate, bin_tuple in zip((res_cartesian, res_polar), LABELS, COORDINATES, ranges):
         fig, axs = plt.subplots(1, 4, figsize=FIGSIZE, sharey=False)
         for ax, rel_err, bins, label in zip(axs, rel_err_coordinate, bin_tuple, labels):
-            if COORDINATES == 'polar':
-                import logging
-                logging.info(f'{rel_err=}')
             ax.hist(rel_err, bins=bins, label=get_legend(rel_err), histtype='step', stacked=True)
             ax.set_xlabel(fr'$\delta${label}')
             ax.set_ylabel('Number of Jets')

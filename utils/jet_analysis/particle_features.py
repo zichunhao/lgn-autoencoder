@@ -3,30 +3,48 @@ from utils.utils import make_dir
 import os.path as osp
 import numpy as np
 import matplotlib.pyplot as plt
+from utils.jet_analysis.utils import NUM_BINS
 
 FIGSIZE = (12, 4)
+LABELS_CARTESIAN_ABS_COORD = (r'$p_x$  (GeV)', r'$p_y$  (GeV)', r'$p_z$  (GeV)')
+LABELS_CARTESIAN_REL_COORD = (r'$p_x^\mathrm{rel}$', r'$p_y^\mathrm{rel}$', r'$p_z^\mathrm{rel}$')
+LABELS_POLAR_ABS_COORD = (r'$p_\mathrm{T}$ (GeV)', r'$\eta$', r'$\phi$')
+LABELS_POLAR_REL_COORD = (r'$p_\mathrm{T}^\mathrm{rel}$', r'$\eta^\mathrm{rel}$', r'$\phi^\mathrm{rel}$')
+
+RANGES_CARTESIAN_ABS_COORD = (
+    np.linspace(-100, 100, NUM_BINS),  # px
+    np.linspace(-100, 100, NUM_BINS),  # py
+    np.linspace(-100, 100, NUM_BINS)   # pz
+)
+RANGES_CARTESIAN_REL_COORD = (
+    np.linspace(0, 0.3, NUM_BINS),       # px_rel
+    np.linspace(-0.01, 0.01, NUM_BINS),  # py_rel
+    np.linspace(-0.01, 0.01, NUM_BINS)   # pz_rel
+)
+RANGES_POLAR_ABS_COORD = (
+    np.linspace(0, 200, NUM_BINS),        # pt
+    np.linspace(-2, 2, NUM_BINS),         # eta
+    np.linspace(-np.pi, np.pi, NUM_BINS)  # phi
+)
+RANGES_POLAR_REL_COORD = (
+    np.linspace(0, 0.3, NUM_BINS),     # pt_rel
+    np.linspace(-0.5, 0.5, NUM_BINS),  # eta_rel
+    np.linspace(-0.5, 0.5, NUM_BINS)   # phi_rel
+)
 
 
-def plot_p_cartesian(args, p_target, p_gen, save_dir, max_val=[100, 100, 100],
-                     num_bins=201, epoch=None, density=False, fill=False, show=False):
+def plot_p_cartesian(args, p_targets, p_gens, save_dir, epoch=None,
+                     density=False, fill=False, show=False):
     """Plot p distribution in Cartesian coordinates.
 
     Parameters
     ----------
-    p_target : `numpy.ndarray`
-        The target jet data, with shape (num_particles, 4).
-    p_gen : `numpy.ndarray`
-        The reconstructed jet data, with shape (num_particles, 4).
+    p_targets : iterbale of `numpy.ndarray`
+        The target jet momentum compoenents, each with shape (num_particles, 4).
+    p_gens : iterbale of `numpy.ndarray`
+        The reconstructed jet momentum compoenents, each with shape (num_particles, 4).
     save_dir : str
         The directory to save the figure.
-    max_val :  list, tuple, or int
-        The maximum values of (px, py, pz) in the plot.
-        Optional, default: `201`
-    num_bins : int
-        The number of bins in the histogram.
-        Optional, default: `(0.02, 0.02, 0.02)`
-    num_bins : int
-        The number of bins in the histogram.
     epoch : int
         The epoch number of the evaluated model.
         Optional, default: `None`
@@ -41,27 +59,15 @@ def plot_p_cartesian(args, p_target, p_gen, save_dir, max_val=[100, 100, 100],
         Optional, default: `False`
     """
 
-    px_target, py_target, pz_target = p_target
-    px_gen, py_gen, pz_gen = p_gen
+    if args.abs_coord:
+        ranges = RANGES_CARTESIAN_ABS_COORD
+        labels = LABELS_CARTESIAN_ABS_COORD
+    else:
+        ranges = RANGES_CARTESIAN_REL_COORD
+        labels = LABELS_CARTESIAN_REL_COORD
 
     fig, axs = plt.subplots(1, 3, figsize=FIGSIZE, sharey=False)
-    if type(max_val) in [tuple, list]:
-        if len(max_val) == 3:
-            px_max, py_max, pz_max = max_val
-        else:
-            px_max, py_max, pz_max = max_val[0]
-    elif type(max_val) in [float, int]:
-        px_max = py_max = pz_max = float(max_val)
-    else:
-        px_max = py_max = pz_max = max_val = 0.02
-
-    p_targets = [px_target, py_target, pz_target]
-    p_gens = [px_gen, py_gen, pz_gen]
-    ranges = [np.linspace(-px_max, px_max, num_bins),
-              np.linspace(-py_max, py_max, num_bins),
-              np.linspace(-pz_max, pz_max, num_bins)]
-    names = [r'$p_x$', r'$p_y$', r'$p_z$']
-    for ax, p_target, p_gen, bins, name in zip(axs, p_targets, p_gens, ranges, names):
+    for ax, p_target, p_gen, bins, name in zip(axs, p_targets, p_gens, ranges, labels):
         if not fill:
             ax.hist(p_gen.flatten(), bins=bins, histtype='step', stacked=True,
                     fill=False, label='reconstructed', density=density)
@@ -70,7 +76,8 @@ def plot_p_cartesian(args, p_target, p_gen, save_dir, max_val=[100, 100, 100],
         else:
             ax.hist(p_gen.flatten(), bins=bins, alpha=0.6, label='reconstructed', density=density)
             ax.hist(p_target.flatten(), bins=bins, alpha=0.6, label='target', density=density)
-        ax.set_xlabel(f'Particle {name} (GeV)')
+
+        ax.set_xlabel(f'Particle {name}')
         ax.set_ylabel('Number of particles')
         ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
@@ -99,8 +106,8 @@ def plot_p_cartesian(args, p_target, p_gen, save_dir, max_val=[100, 100, 100],
     plt.close()
 
 
-def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir, max_val=(200, 2, np.pi),
-                 num_bins=201, epoch=None, density=False, fill=True, show=False):
+def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir,
+                 epoch=None, density=False, fill=True, show=False):
     """Plot p distribution in polar coordinates (pt, eta, phi)
 
     Parameters
@@ -111,12 +118,6 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir, max_val=(200, 2, n
         The reconstructed jet data in polar coordinates (pt, eta, phi).
     save_dir : str
         The directory to save the figure.
-    max_val : list, tuple, or float
-        The maximum values of (pt, eta, phi) in the plot.
-        Optional, default: `(0.15, np.pi, np.pi)`
-    num_bins : int
-        The number of bins in the histogram.
-        Optional, default: `201`
     epoch : int
         The epoch number of the evaluated model.
         Optional, default: `None`
@@ -136,24 +137,14 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir, max_val=(200, 2, n
 
     fig, axs = plt.subplots(1, 3, figsize=FIGSIZE, sharey=False)
 
-    if type(max_val) in [tuple, list]:
-        if len(max_val) == 3:
-            pt_max, eta_max, phi_max = max_val
-        elif len(max_val) == 2:
-            pt_max = max_val[0]
-            eta_max = phi_max = max_val[1]
-    elif type(max_val) in [float, int]:
-        pt_max = eta_max = phi_max = float(max_val)
+    if args.abs_coord:
+        ranges = RANGES_POLAR_ABS_COORD
+        labels = LABELS_POLAR_ABS_COORD
     else:
-        pt_max = 200
-        eta_max = 2
-        phi_max = np.pi
+        ranges = RANGES_POLAR_REL_COORD
+        labels = LABELS_POLAR_REL_COORD
 
-    ranges = [np.linspace(0, pt_max, num_bins),
-              np.linspace(-eta_max, eta_max, num_bins),
-              np.linspace(-phi_max, phi_max, num_bins)]
-    names = [r'$p_\mathrm{T}$', r'$\eta$', r'$\phi$']
-    for ax, p_target, p_gen, bins, name in zip(axs, p_polar_target, p_polar_gen, ranges, names):
+    for ax, p_target, p_gen, bins, name in zip(axs, p_polar_target, p_polar_gen, ranges, labels):
         if not fill:
             ax.hist(p_gen.flatten(), bins=bins, histtype='step', stacked=True,
                     fill=False, label='reconstructed', density=density)
@@ -163,8 +154,6 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir, max_val=(200, 2, n
             ax.hist(p_gen.flatten(), bins=bins, alpha=0.6, label='reconstructed', density=density)
             ax.hist(p_target.flatten(), bins=bins, alpha=0.6, label='target', density=density)
         ax.set_xlabel(f'Particle {name}')
-        if name == r'$p_\mathrm{T}$':
-            ax.set_xlabel(f'Particle {name} (GeV)')
         ax.set_ylabel('Number of particles')
         ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
@@ -176,8 +165,12 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir, max_val=(200, 2, n
     fig.tight_layout()
 
     jet_name = get_jet_name(args)
-    fig.suptitle(r'Distribution of target and reconstructed particle $p_\mathrm{T}$, $\eta$, and $\phi$ ' +
-                 f'of {jet_name} jets', y=1.03)
+    if args.abs_coord:
+        fig.suptitle(r'Distribution of target and reconstructed particle $p_\mathrm{T}$, $\eta$, and $\phi$ ' +
+                     f'of {jet_name} jets', y=1.03)
+    else:
+        fig.suptitle(r'Distribution of target and reconstructed particle $p_\mathrm{T}^\mathrm{rel}$, $\eta^\mathrm{rel}$, and $\phi^\mathrm{rel}$ ' +
+                     f'of {jet_name} jets', y=1.03)
 
     if fill:
         save_dir = osp.join(save_dir, 'filled')
@@ -188,7 +181,7 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir, max_val=(200, 2, n
         filename = f'{filename}_epoch_{epoch+1}'
     if density:
         filename = f'{filename}_density'
-    plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight", transparent=True)
+    plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight")
     if show:
         plt.show()
     plt.close()

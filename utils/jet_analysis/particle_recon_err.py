@@ -3,9 +3,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os.path as osp
 from utils.utils import make_dir
+from utils.jet_analysis.utils import NUM_BINS
 
 FIGSIZE = (12, 8)
-LABELS = ((r'$p_x$', r'$p_y$', r'$p_z$'), (r'$p_\mathrm{T}$', r'$\eta$', r'$\phi$'))
+LABELS_ABS_COORD = ((r'$p_x$', r'$p_y$', r'$p_z$'), (r'$p_\mathrm{T}$', r'$\eta$', r'$\phi$'))
+LABELS_REL_COORD = ((r'$p_x^\mathrm{rel}$', r'$p_y^\mathrm{rel}$', r'$p_z^\mathrm{rel}$'),
+                    (r'$p_\mathrm{T}^\mathrm{rel}$', r'$\eta^\mathrm{rel}$', r'$\phi^\mathrm{rel}$'))
 
 
 def plot_particle_recon_err(args, p_target, p_gen,
@@ -54,9 +57,10 @@ def plot_particle_recon_err(args, p_target, p_gen,
     p_padded_gen_target = convert_to_polar(p_padded_gen_cartesian, eps)
 
     if ranges is None:
-        ranges = get_bins(args.num_bins)
+        ranges = get_bins(NUM_BINS)
 
     # Plot both Cartesian and polar coordinates
+    LABELS = LABELS_ABS_COORD if args.abs_coord else LABELS_REL_COORD
     for p_real_gen, p_real_target, p_padded_gen, coordinate, bin_tuple, labels in zip(
         (p_real_target_cartesian, p_real_target_polar),
         (p_real_gen_cartesian, p_real_gen_polar),
