@@ -34,7 +34,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
     generated_data = []
     epoch_total_loss = 0
 
-    for i, batch in tqdm(enumerate(loader)):
+    for i, batch in enumerate(tqdm(loader)):
         latent_features = encoder(batch, covariance_test=False)
         p4_gen = decoder(latent_features, covariance_test=False)
         generated_data.append(p4_gen[0].cpu().detach())
