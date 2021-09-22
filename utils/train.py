@@ -127,7 +127,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
                   outpath=outpath, epoch=epoch)
         save_data(data=valid_avg_loss, data_name='losses', is_train=False,
                   outpath=outpath, epoch=epoch)
-        if args.unit.lower() == 'tev':
+        if args.abs_coord and (args.unit.lower() == 'tev'):
             # Convert to GeV for plotting
             train_target *= 1000
             train_gen *= 1000
