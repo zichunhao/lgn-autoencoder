@@ -43,18 +43,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             p4_target = p4_target.to(device=device)
         target_data.append(p4_target.cpu().detach())
 
-        if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
-            chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice, im=args.im)
-            batch_loss = chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features)  # output, target
-        elif args.loss_choice.lower() in ['emd', 'emdloss', 'emd_loss']:
-            batch_loss = emd_loss(p4_target, p4_gen, eps=get_eps(args), device=args.device)  # true, output
-        elif args.loss_choice.lower() in ['mse', 'mseloss', 'mse_loss']:
-            mseloss = nn.MSELoss()
-            batch_loss = mseloss(p4_gen[0], p4_target)  # output, target
-        elif args.loss_choice.lower() in ['hybrid', 'combined', 'mix']:
-            chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
-            batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features) + emd_loss(p4_target, p4_gen, eps=get_eps(args), device=args.device)
-
+        batch_loss = get_loss(args, p4_gen, p4_target)
         epoch_total_loss += batch_loss.item()
 
         # Backward propagation
@@ -99,7 +88,9 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
     if device is None:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    assert (args.save_dir is not None), "Please specify directory of saving the models!"
+    if args.save_dir is None:
+        raise ValueError('Please specify directory of saving the models!')
+
     make_dir(args.save_dir)
 
     train_avg_losses = []
@@ -123,10 +114,9 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
 
         train_end = time.time()
         save_data(data=train_end - start, data_name='dts', is_train=None, outpath=outpath, epoch=epoch)
-        save_data(data=train_avg_loss, data_name='losses', is_train=True,
-                  outpath=outpath, epoch=epoch)
-        save_data(data=valid_avg_loss, data_name='losses', is_train=False,
-                  outpath=outpath, epoch=epoch)
+        save_data(data=train_avg_loss, data_name='losses', is_train=True, outpath=outpath, epoch=epoch)
+        save_data(data=valid_avg_loss, data_name='losses', is_train=False, outpath=outpath, epoch=epoch)
+
         if args.abs_coord and (args.unit.lower() == 'tev'):
             # Convert to GeV for plotting
             train_target *= 1000
@@ -155,8 +145,8 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
                      f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, dt_train={train_end-start}s, dt_plot={plot_end-train_end}s, dt={plot_end-start}s')
 
         if (epoch > 0) and ((epoch + 1) % 10 == 0):
-            plot_eval_results(args, data=(train_avg_losses[-10:], valid_avg_losses[-10:]), data_name=f"losses from {epoch + 1 - 10} to {epoch + 1}",
-                              outpath=outpath)
+            plot_eval_results(args, data=(train_avg_losses[-10:], valid_avg_losses[-10:]),
+                              data_name=f"losses from {epoch + 1 - 10} to {epoch + 1}", outpath=outpath)
         if (epoch > 0) and ((epoch + 1) % 500 == 0):
             plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
                               data_name='Losses', outpath=outpath)
@@ -166,8 +156,24 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
     save_data(data=valid_avg_losses, data_name='losses', is_train=False, outpath=outpath, epoch=-1)
     save_data(data=dts, data_name='dts', is_train=None, outpath=outpath, epoch=-1)
 
-    plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
-                      data_name='Losses', outpath=outpath)
+    plot_eval_results(args, data=(train_avg_losses, valid_avg_losses), data_name='Losses', outpath=outpath)
     plot_eval_results(args, data=dts, data_name='Durations', outpath=outpath)
 
     return train_avg_losses, valid_avg_losses, dts
+
+
+def get_loss(args, p4_gen, p4_target):
+    if 'chamfer' in args.loss_choice.lower():
+        chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice, im=args.im)
+        batch_loss = chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features)  # output, target
+    elif 'emd' in args.loss_choice.lower():
+        batch_loss = emd_loss(p4_target, p4_gen, eps=get_eps(args), device=args.device)  # true, output
+    elif 'mse' in args.loss_choice.lower():
+        mseloss = nn.MSELoss()
+        batch_loss = mseloss(p4_gen[0], p4_target)  # output, target
+    elif args.loss_choice.lower() in ['hybrid', 'combined', 'mix']:
+        chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
+        batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features)
+        batch_loss += emd_loss(p4_target, p4_gen, eps=get_eps(args), device=args.device)
+
+    return batch_loss
