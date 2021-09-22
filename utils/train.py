@@ -10,6 +10,7 @@ import warnings
 import torch
 import torch.nn as nn
 import sys
+from tqdm import tqdm
 sys.path.insert(1, 'utils/')
 sys.path.insert(1, 'lgn/')
 if not sys.warnoptions:
@@ -33,7 +34,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
     generated_data = []
     epoch_total_loss = 0
 
-    for i, batch in enumerate(loader):
+    for i, batch in tqdm(enumerate(loader)):
         latent_features = encoder(batch, covariance_test=False)
         p4_gen = decoder(latent_features, covariance_test=False)
         generated_data.append(p4_gen[0].cpu().detach())
