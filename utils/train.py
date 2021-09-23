@@ -55,7 +55,6 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
                 batch_loss.backward()
             except RuntimeError as e:
                 import os
-                logging.error()
                 error_path = osp.join(outpath, 'errors')
                 os.make_dir(error_path, exist_ok=True)
                 torch.save(p4_gen, osp.join(error_path, 'p4_gen.pt'))
