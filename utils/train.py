@@ -136,7 +136,8 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
             valid_target *= 1000
             valid_gen *= 1000
 
-        if 'emd' not in args.loss_choice.lower() and ((epoch + 1) % args.plot_freq == 0):
+        to_plot = ('emd' in args.loss_choice.lower()) or ('emd' not in args.loss_choice.lower() and ((epoch + 1) % args.plot_freq == 0))
+        if to_plot:
             for target, gen, dir in zip((train_target, valid_target),
                                         (train_gen, valid_gen),
                                         (outpath_train_jet_plots, outpath_valid_jet_plots)):
