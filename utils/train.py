@@ -17,84 +17,8 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
 
-def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
-          epoch, outpath, is_train=True, device=None):
-
-    if is_train:
-        assert (optimizer_encoder is not None) and (optimizer_decoder is not None), "Please specify the optimizers."
-        encoder.train()
-        decoder.train()
-        encoder_weight_path = make_dir(osp.join(outpath, "weights_encoder"))
-        decoder_weight_path = make_dir(osp.join(outpath, "weights_decoder"))
-    else:
-        encoder.eval()
-        decoder.eval()
-
-    target_data = []
-    generated_data = []
-    epoch_total_loss = 0
-
-    for i, batch in enumerate(tqdm(loader)):
-        latent_features = encoder(batch, covariance_test=False)
-        p4_gen = decoder(latent_features, covariance_test=False)
-        generated_data.append(p4_gen[0].cpu().detach())
-
-        p4_target = batch['p4']
-        if device is not None:
-            p4_target = p4_target.to(device=device)
-        target_data.append(p4_target.cpu().detach())
-
-        batch_loss = get_loss(args, p4_gen, p4_target)
-        epoch_total_loss += batch_loss.item()
-
-        # Backward propagation
-        if is_train:
-            optimizer_encoder.zero_grad()
-            optimizer_decoder.zero_grad()
-            try:
-                batch_loss.backward()
-            except RuntimeError as e:
-                import os
-                error_path = osp.join(outpath, 'errors')
-                os.mkdir(error_path, exist_ok=True)
-                torch.save(p4_gen, osp.join(error_path, 'p4_gen.pt'))
-                torch.save(p4_target, osp.join(error_path, 'p4_target.pt'))
-                torch.save(encoder.state_dict(), osp.join(error_path, 'encoder_weights.pt'))
-                torch.save(decoder.state_dict(), osp.join(error_path, 'decoder_weights.pt'))
-                raise e
-            optimizer_encoder.step()
-            optimizer_decoder.step()
-
-            # save model
-            if ((i % args.save_freq) == 0 and i > 0):
-                torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
-                torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
-
-    generated_data = torch.cat(generated_data, dim=0)
-    target_data = torch.cat(target_data, dim=0)
-
-    epoch_avg_loss = epoch_total_loss / len(loader)
-    save_data(data=epoch_avg_loss, data_name='loss',
-              is_train=is_train, outpath=outpath, epoch=epoch)
-
-    # Save weights
-    if is_train:
-        torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
-        torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
-
-    return epoch_avg_loss, generated_data, target_data
-
-
-@torch.no_grad()
-def validate(args, loader, encoder, decoder, epoch, outpath, device):
-    with torch.no_grad():
-        epoch_avg_loss, generated_data, target_data = train(args, loader=loader, encoder=encoder, decoder=decoder,
-                                                            optimizer_encoder=None, optimizer_decoder=None,
-                                                            epoch=epoch, outpath=outpath, is_train=False, device=device)
-    return epoch_avg_loss, generated_data, target_data
-
-
-def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_encoder, optimizer_decoder, outpath, device=None):
+def train_loop(args, train_loader, valid_loader, encoder, decoder,
+               optimizer_encoder, optimizer_decoder, outpath, device=None):
 
     if device is None:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -135,6 +59,8 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
             valid_target *= 1000
             valid_gen *= 1000
 
+        # EMD: Plot every epoch because model trains slowly with the EMD loss.
+        # Others (MSE and chamfer losses): Plot every args.plot_freq epoch.
         to_plot = ('emd' in args.loss_choice.lower()) or ('emd' not in args.loss_choice.lower() and ((epoch + 1) % args.plot_freq == 0))
         if to_plot:
             for target, gen, dir in zip((train_target, valid_target),
@@ -174,6 +100,83 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_enc
     return train_avg_losses, valid_avg_losses, dts
 
 
+def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
+          epoch, outpath, is_train=True, device=None):
+
+    if is_train:
+        assert (optimizer_encoder is not None) and (optimizer_decoder is not None), "Please specify the optimizers."
+        encoder.train()
+        decoder.train()
+        encoder_weight_path = make_dir(osp.join(outpath, "weights_encoder"))
+        decoder_weight_path = make_dir(osp.join(outpath, "weights_decoder"))
+    else:
+        encoder.eval()
+        decoder.eval()
+
+    target_data = []
+    generated_data = []
+    epoch_total_loss = 0
+
+    for i, batch in enumerate(tqdm(loader)):
+        latent_features = encoder(batch, covariance_test=False)
+        p4_gen = decoder(latent_features, covariance_test=False)
+        generated_data.append(p4_gen[0].cpu().detach())
+
+        p4_target = batch['p4']
+        if device is not None:
+            p4_target = p4_target.to(device=device)
+        target_data.append(p4_target.cpu().detach())
+
+        batch_loss = get_loss(args, p4_gen, p4_target)
+        epoch_total_loss += batch_loss.item()
+
+        # Backward propagation
+        if is_train:
+            optimizer_encoder.zero_grad()
+            optimizer_decoder.zero_grad()
+            try:
+                batch_loss.backward()
+            except RuntimeError as e:
+                import os
+                error_path = osp.join(outpath, 'errors')
+                os.makedirs(error_path, exist_ok=True)
+                torch.save(p4_gen, osp.join(error_path, 'p4_gen.pt'))
+                torch.save(p4_target, osp.join(error_path, 'p4_target.pt'))
+                torch.save(encoder.state_dict(), osp.join(error_path, 'encoder_weights.pt'))
+                torch.save(decoder.state_dict(), osp.join(error_path, 'decoder_weights.pt'))
+                raise e
+            optimizer_encoder.step()
+            optimizer_decoder.step()
+
+            # save model
+            if ((i % args.save_freq) == 0 and i > 0):
+                torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
+                torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
+
+    generated_data = torch.cat(generated_data, dim=0)
+    target_data = torch.cat(target_data, dim=0)
+
+    epoch_avg_loss = epoch_total_loss / len(loader)
+    save_data(data=epoch_avg_loss, data_name='loss',
+              is_train=is_train, outpath=outpath, epoch=epoch)
+
+    # Save weights
+    if is_train:
+        torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
+        torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
+
+    return epoch_avg_loss, generated_data, target_data
+
+
+@torch.no_grad()
+def validate(args, loader, encoder, decoder, epoch, outpath, device):
+    with torch.no_grad():
+        epoch_avg_loss, generated_data, target_data = train(args, loader=loader, encoder=encoder, decoder=decoder,
+                                                            optimizer_encoder=None, optimizer_decoder=None,
+                                                            epoch=epoch, outpath=outpath, is_train=False, device=device)
+    return epoch_avg_loss, generated_data, target_data
+
+
 def get_loss(args, p4_gen, p4_target):
     if 'chamfer' in args.loss_choice.lower():
         chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice, im=args.im)
@@ -183,9 +186,12 @@ def get_loss(args, p4_gen, p4_target):
     elif 'mse' in args.loss_choice.lower():
         mseloss = nn.MSELoss()
         batch_loss = mseloss(p4_gen[0], p4_target)  # output, target
-    elif args.loss_choice.lower() in ['hybrid', 'combined', 'mix']:
+    elif args.loss_choice.lower() in ('hybrid', 'combined', 'mix'):
         chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
         batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features)
         batch_loss += emd_loss(p4_target, p4_gen, eps=get_eps(args), device=args.device)
-
+    else:
+        err_msg = f'Current loss choice ({args.loss_choice}) is not implemented. '
+        err_msg += "The current available options are ('chamfer', 'emd', 'mse', 'hybrid')"
+        raise NotImplementedError(err_msg)
     return batch_loss
