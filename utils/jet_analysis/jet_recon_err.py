@@ -19,7 +19,7 @@ MAX_BIN_RANGE = 10
 
 def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target_polar, jet_gen_polar,
                        save_dir, epoch=None, eps=1e-16,
-                       get_rel_err=(lambda p_target, p_gen, eps: (p_target-p_gen)/(p_target+0.01*np.median(p_target)+eps)),
+                       get_rel_err=(lambda p_target, p_gen, eps: (p_target-p_gen)/(p_target+eps)),
                        show=False):
     """Plot reconstruction errors for jet."""
     rel_err_cartesian = [get_rel_err(jet_gen_cartesian[i], jet_target_cartesian[i], eps) for i in range(4)]
