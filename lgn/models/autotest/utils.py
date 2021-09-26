@@ -33,7 +33,7 @@ def get_dev(transform_input, transform_output, transform_input_nodes_all, transf
 
 def get_avg_output_dev(covariance_results, test_name):
     """
-    Get average relative deviation of output features for each alpha in tests of all epochs.
+    Get average relative error of output features for each alpha in tests of all epochs.
 
     Parameter
     ---------
@@ -42,14 +42,14 @@ def get_avg_output_dev(covariance_results, test_name):
             - ['gammas', 'boost_dev_output', 'boost_dev_internal']
             - ['thetas', 'rot_dev_output', 'rot_dev_internal']
         We are interested in dicts with the key 'boost_dev_output' or 'rot_dev_output',
-        which stores the output relative deviation by epoch by a 2d-list of `dict` with "shape" (num_epochs, num_gammas).
+        which stores the output relative error by epoch by a 2d-list of `dict` with "shape" (num_epochs, num_gammas).
     test_name : str
         The name of the covariance test. Choices are 'rot' and 'boost'
 
     Return
     ------
     avg_output_dev_by_alpha : list of `dict`
-        The average output relative deviation of all epochs for all irreps for each alpha (gamma for boost and theta for rotation).
+        The average output relative error of all epochs for all irreps for each alpha (gamma for boost and theta for rotation).
     """
 
     if test_name.lower() in ['rotation', 'rotations']:
@@ -68,7 +68,7 @@ def get_avg_output_dev(covariance_results, test_name):
 
 def get_avg_internal_dev(covariance_results, test_name):
     """
-    Get average relative deviation of internal features for each alpha in tests of all epochs.
+    Get average relative error of internal features for each alpha in tests of all epochs.
 
     Parameter
     ---------
@@ -77,14 +77,14 @@ def get_avg_internal_dev(covariance_results, test_name):
             - ['gammas', 'boost_dev_output', 'boost_dev_internal']
             - ['thetas', 'rot_dev_output', 'rot_dev_internal']
         We are interested in dicts with the key 'boost_dev_internal' or 'rot_dev_internal',
-        which stores the output relative deviation by epoch by a 3d-list of `dict` with "shape" (num_epochs, num_gammas, num_model_layers).
+        which stores the output relative error by epoch by a 3d-list of `dict` with "shape" (num_epochs, num_gammas, num_model_layers).
     test_name : str
         The name of the covariance test. Choices are 'rot' and 'boost'
 
     Return
     ------
     avg_output_dev_by_alpha : list of `dict`
-        The average internal features relative deviation of all epochs for all irreps
+        The average internal features relative error of all epochs for all irreps
         for each alpha (gamma for boost and theta for rotation) in each layer.
     """
 
@@ -106,7 +106,7 @@ def get_avg_internal_dev(covariance_results, test_name):
 
 def get_internal_dev_stats(dev_internal):
     """
-    Get mean and max of relative deviation of all layers
+    Get mean and max of relative error of all layers
     as well as the deviation in each layer as gamma increases
     """
     dev_layers = {key: np.array([[dev_internal[i][j][key]
@@ -142,7 +142,7 @@ def plot_internal_dev(dev_internal, alphas, transform_type, weight, save_path, s
     Input
     -----
     dev_internal : list of list of `dict`
-            Relative deviations of layers as alpha varies.
+            relative errors of layers as alpha varies.
             2D-list shape: [len(alphas), num_layers]
             Dict keys: (0,0) and (1,1)
     alphas : list
@@ -176,7 +176,7 @@ def plot_internal_dev(dev_internal, alphas, transform_type, weight, save_path, s
         plt.plot(alphas, dev_internal_mean[weight], label="layers mean")
         plt.plot(alphas, dev_internal_max[weight], label="layers max")
 
-    plt.ylabel('relative deviation')
+    plt.ylabel(r'$\delta_p$')
     plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
 
     if show_all:
@@ -232,7 +232,7 @@ def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
         plt.title(title, y=1.05)
         plt.xlabel(r'Rotation angle $\theta$ (rad)')
 
-    plt.ylabel('Relative deviation')
+    plt.ylabel(r'$\delta_p$')
     plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
 
     plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_reconstructed_{irrep_str}.pdf"),
