@@ -178,7 +178,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
     target_data = torch.cat(target_data, dim=0)
     if latent:
         latent_dict = {
-            k: torch.cat([latent_spaces[i][k] for i in range(len(latent_spaces))], dim=0)
+            k: [latent_spaces[i][k] for i in range(len(latent_spaces))]
             for k in latent_features.keys()
         }
 
