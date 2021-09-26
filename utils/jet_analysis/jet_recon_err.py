@@ -13,6 +13,8 @@ LABELS_CARTESIAN_REL_COORD = (r'$M^\mathrm{rel}$', r'$P_x^\mathrm{rel}$', r'$P_y
 LABELS_POLAR_REL_COORD = (r'$M^\mathrm{rel}$', r'$P_\mathrm{T}^\mathrm{rel}$', r'$\eta^\mathrm{rel}$', r'$\phi^\mathrm{rel}$')
 LABELS_REL_COORD = (LABELS_CARTESIAN_REL_COORD, LABELS_POLAR_REL_COORD)
 COORDINATES = ('cartesian', 'polar')
+DEFAULT_BIN_RANGE = 2
+MAX_BIN_RANGE = 10
 
 
 def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target_polar, jet_gen_polar,
@@ -55,21 +57,21 @@ def default_get_rel_err(p_target, p_gen, eps, alpha=0.01):
 def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None):
     """Get bins for jet reconstruction error plots."""
     if rel_err_cartesian is None:
-        cartesian_min_max = ((-1, 10), (-10, 10), (-10, 10), (-10, 10))
+        cartesian_min_max = ((-1, 10), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE))
     else:
-        mass_min_max = (-1, -1 + 1.5 * np.std(rel_err_cartesian[0]))
-        px_min_max = (-min(1.5 * np.std(rel_err_cartesian[1]), 15), min(1.5 * np.std(rel_err_cartesian[1]), 15))
-        py_min_max = (-min(1.5 * np.std(rel_err_cartesian[2]), 15), min(1.5 * np.std(rel_err_cartesian[2]), 15))
-        pz_min_max = (-min(1.5 * np.std(rel_err_cartesian[3]), 15), min(1.5 * np.std(rel_err_cartesian[3]), 15))
+        mass_min_max = (-1, min(2 * np.std(rel_err_cartesian[0]), MAX_BIN_RANGE))
+        px_min_max = (-min(1.5 * np.std(rel_err_cartesian[1]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_cartesian[1]), MAX_BIN_RANGE))
+        py_min_max = (-min(1.5 * np.std(rel_err_cartesian[2]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_cartesian[2]), MAX_BIN_RANGE))
+        pz_min_max = (-min(1.5 * np.std(rel_err_cartesian[3]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_cartesian[3]), MAX_BIN_RANGE))
         cartesian_min_max = (mass_min_max, px_min_max, py_min_max, pz_min_max)
 
     if rel_err_polar is None:
-        polar_min_max = ((-1, 10), (-1, 1.5), (-15, 15), (-15, 15))
+        polar_min_max = ((-1, DEFAULT_BIN_RANGE), (-1, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE))
     else:
-        mass_min_max = (-1, -1 + 1.5 * np.std(rel_err_polar[0]))
-        pt_min_max = (-1, min(1.5 * np.std(rel_err_polar[1]), 15))
-        eta_min_max = (-min(1.5 * np.std(rel_err_polar[2]), 15), min(1.5 * np.std(rel_err_polar[2]), 15))
-        phi_min_max = (-min(1.5 * np.std(rel_err_polar[3]), 15), min(1.5 * np.std(rel_err_polar[3]), 15))
+        mass_min_max = (-1, min(2 * np.std(rel_err_polar[0]), MAX_BIN_RANGE))
+        pt_min_max = (-1, min(1.5 * np.std(rel_err_polar[1]), MAX_BIN_RANGE))
+        eta_min_max = (-min(1.5 * np.std(rel_err_polar[2]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_polar[2]), MAX_BIN_RANGE))
+        phi_min_max = (-min(1.5 * np.std(rel_err_polar[3]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_polar[3]), MAX_BIN_RANGE))
         polar_min_max = (mass_min_max, pt_min_max, eta_min_max, phi_min_max)
 
     ranges_cartesian = tuple([
@@ -89,6 +91,6 @@ def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None):
 def get_legend(res):
     """Get legend for plots of jet reconstruction."""
     legend = r'$\mu$: ' + f'{np.mean(res) :.4f},\n'
-    legend += r'$\sigma$: ' + f'{np.std(res) :.4f},\n'
-    legend += r'$\mathrm{Med}$: ' + f'{np.median(res) :.4f}'
+    legend += r'$\sigma$: ' + f'{np.std(res) :.4f}'
+    # legend += r'$\mathrm{Med}$: ' + f'{np.median(res) :.4f}'
     return legend
