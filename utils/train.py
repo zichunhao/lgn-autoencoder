@@ -85,7 +85,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         if (epoch > 0) and ((epoch + 1) % 10 == 0):
             plot_eval_results(args, data=(train_avg_losses[-10:], valid_avg_losses[-10:]),
                               data_name=f"losses from {epoch + 1 - 10} to {epoch + 1}", outpath=outpath)
-        if (epoch > 0) and ((epoch + 1) % 500 == 0):
+        if (epoch > 0) and ((epoch + 1) % 100 == 0):
             plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
                               data_name='Losses', outpath=outpath)
 

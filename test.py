@@ -4,6 +4,7 @@ import logging
 import torch
 from utils.argparse_utils import get_bool, get_device, get_dtype
 from utils.argparse_utils import parse_model_settings, parse_plot_settings, parse_covariance_test_settings, parse_data_settings
+from utils.jet_analysis.plot import plot_p
 from lgn.models.autotest.lgn_tests import lgn_tests
 from lgn.models.autotest.utils import plot_all_dev
 from utils.initialize import initialize_autoencoder, initialize_test_data
@@ -31,6 +32,9 @@ def test(args):
     torch.save(recons, osp.join(test_path, 'reconstructed.pt'))
     torch.save(latent, osp.join(test_path, 'latent.pt'))
     logging.info(f'Data saved exported to {test_path}.')
+
+    fig_path = make_dir(osp.join(test_path, 'jet_plots'))
+    plot_p(args, target, recons, fig_path, particle_recon_err=args.particle_recon_err)
 
     if args.equivariance_test:
         dev = lgn_tests(args, encoder, decoder, test_loader, alpha_max=args.alpha_max, theta_max=args.theta_max,
@@ -79,6 +83,8 @@ def setup_argparse():
 
     # Plots
     parse_plot_settings(parser)
+    parser.add_argument('--particle-recon-err', type=get_bool, default=False, metavar='',
+                        help='Whether to plot reconstruction errors of particle momenta. Used only if a one-to-one mapping is clear.')
 
     # Convariance tests
     parse_covariance_test_settings(parser)

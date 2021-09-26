@@ -94,11 +94,11 @@ def plot_particle_recon_err(args, p_target, p_gen,
         plt.tight_layout()
 
         if save_dir:
-            path = make_dir(osp.join(save_dir, f'particle_reconstruction_errors/{coordinate}'))
             if epoch is not None:
+                path = make_dir(osp.join(save_dir, f'particle_reconstruction_errors/{coordinate}'))
                 plt.savefig(osp.join(path, f'particle_reconstruction_errors_epoch_{epoch+1}.pdf'))
-            else:
-                plt.savefig(osp.join(path, 'particle_reconstruction_errors.pdf'))
+            else:  # Save without creating a subdirectory
+                plt.savefig(osp.join(save_dir, f'particle_reconstruction_errors_{coordinate}.pdf'))
         if show:
             plt.show()
         plt.close()

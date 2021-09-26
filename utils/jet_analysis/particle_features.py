@@ -91,16 +91,22 @@ def plot_p_cartesian(args, p_targets, p_gens, save_dir, epoch=None,
     jet_name = get_jet_name(args)
     fig.suptitle(fr'Distribution of target and reconstructed particle $p_x$, $p_y$, and $p_z$ of {jet_name} jets', y=1.03)
 
-    if fill:
-        save_dir = osp.join(save_dir, 'filled')
-    save_dir = make_dir(osp.join(save_dir, 'particle_cartesian'))
+    if epoch is not None:
+        if fill:
+            save_dir = osp.join(save_dir, 'filled')
+        save_dir = make_dir(osp.join(save_dir, 'particle_cartesian'))
+    else:
+        pass  # Save without creating a subdirectory
 
     filename = f'p_cartesian_{args.jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
     if density:
         filename = f'{filename}_density'
+    if fill:
+        filename = f'{filename}_filled'
     plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight")
+
     if show:
         plt.show()
     plt.close()
@@ -172,16 +178,22 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir,
         fig.suptitle(r'Distribution of target and reconstructed particle $p_\mathrm{T}^\mathrm{rel}$, $\eta^\mathrm{rel}$, and $\phi^\mathrm{rel}$ ' +
                      f'of {jet_name} jets', y=1.03)
 
-    if fill:
-        save_dir = osp.join(save_dir, 'filled')
-    save_dir = make_dir(osp.join(save_dir, 'particle_polar'))
+    if epoch is not None:
+        if fill:
+            save_dir = osp.join(save_dir, 'filled')
+        save_dir = make_dir(osp.join(save_dir, 'particle_polar'))
+    else:
+        pass  # Save without creating a subdirectory
 
     filename = f'p_polar_{args.jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
     if density:
         filename = f'{filename}_density'
+    if fill:
+        filename = f'{filename}_filled'
     plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight")
+
     if show:
         plt.show()
     plt.close()

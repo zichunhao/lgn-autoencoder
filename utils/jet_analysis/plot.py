@@ -1,4 +1,3 @@
-import numpy as np
 from utils.jet_analysis.jet_features import plot_jet_p_cartesian, plot_jet_p_polar
 from utils.jet_analysis.particle_features import plot_p_cartesian, plot_p_polar
 from utils.jet_analysis.jet_images import plot_jet_image
@@ -66,7 +65,8 @@ def plot_p(args, p4_target, p4_gen, save_dir, particle_recon_err=False, cutoff=1
         plot_jet_p_polar(args, jet_target_polar, jet_gen_polar, save_dir, epoch=epoch, density=False, fill=True, show=show)
         plot_jet_p_cartesian(args, jet_gen_cartesian, jet_gen_cartesian, save_dir, epoch=epoch, density=False, fill=True, show=show)
 
-    plot_jet_image(args, jets_target, jets_gen, save_dir, epoch, maxR=0.5, vmin=args.jet_image_vmin, show=show)
+    for same_norm in (True, False):
+        plot_jet_image(args, jets_target, jets_gen, save_dir, epoch, same_norm=same_norm, maxR=0.5, vmin=args.jet_image_vmin, show=show)
 
     if particle_recon_err:
         plot_particle_recon_err(args, p4_target[..., 1:], p4_gen[..., 1:], save_dir=save_dir, epoch=epoch)

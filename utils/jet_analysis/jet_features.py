@@ -98,15 +98,20 @@ def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir,
                      r'$M^\mathrm{rel}$, $P_x^\mathrm{rel}$, $P_y^\mathrm{rel}$, and $P_z^\mathrm{rel}$ of ' +
                      f'{jet_name} jet', y=1.03)
 
-    save_dir = make_dir(osp.join(save_dir, 'jet_cartesian'))
-    if fill:
-        save_dir = osp.join(save_dir, 'filled')
+    if epoch is not None:
+        save_dir = make_dir(osp.join(save_dir, 'jet_cartesian'))
+        if fill:
+            save_dir = osp.join(save_dir, 'filled')
+    else:
+        pass  # Save without creating a subdirectory
 
     filename = f'jet_features_cartesian_{args.jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
     if density:
         filename = f'{filename}_density'
+    if fill:
+        filename = f'{filename}_fill'
     plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight")
     if show:
         plt.show()
@@ -175,15 +180,20 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir,
         fig.suptitle(r'Distribution of target and reconstructed jet $m^\mathrm{rel}$, $p_\mathrm{T}^\mathrm{rel}$, $\eta^\mathrm{rel}$, and $\phi^\mathrm{rel}$ ' +
                      f'of {jet_name} jets', y=1.03)
 
-    if fill:
-        save_dir = osp.join(save_dir, 'filled')
-    save_dir = make_dir(osp.join(save_dir, 'jet_polar'))
+    if epoch is not None:
+        save_dir = make_dir(osp.join(save_dir, 'jet_polar'))
+        if fill:
+            save_dir = osp.join(save_dir, 'filled')
+    else:
+        pass  # Save without creating a subdirectory
 
     filename = f'jet_features_polar_{args.jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
     if density:
         filename = f'{filename}_density'
+    if fill:
+        filename = f'{filename}_fill'
     plt.savefig(osp.join(save_dir, f'{filename}.pdf'), bbox_inches="tight")
     if show:
         plt.show()
