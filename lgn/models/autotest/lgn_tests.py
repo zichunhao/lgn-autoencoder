@@ -6,7 +6,9 @@ from math import sqrt, cosh
 import logging
 
 from lgn.g_lib import rotations as rot
-from lgn.models.autotest.utils import get_output, get_dev, get_avg_output_dev, get_avg_internal_dev, get_node_dev
+from lgn.models.autotest.utils import get_output, get_dev, get_avg_output_dev, get_avg_internal_dev, get_node_dev, display_err
+
+SEPARATOR = '=' * 50
 
 
 def _gen_rot(angles, maxdim, device=torch.device('cpu'), dtype=torch.float64, cg_dict=None):
@@ -214,7 +216,7 @@ def lgn_tests(args, encoder, decoder, dataloader, axis='z', alpha_max=None, thet
             break
 
     dt = time.time() - t0
-    logging.info(f"Covariance test completed! Time taken: {round(dt/60, 2)} min")
+    print(f"Covariance test completed! Time taken: {round(dt/60, 2)} min")
 
     lgn_test_results = dict()
 
@@ -230,24 +232,20 @@ def lgn_tests(args, encoder, decoder, dataloader, axis='z', alpha_max=None, thet
                      for key in perm_test_all_epochs[0].keys()}
     lgn_test_results['perm_dev_output'] = perm_test_avg
 
-    logging.info("-" * 25)
+    print(SEPARATOR)
 
-    logging.info("Boost equivariance test result:")
-    logging.info(f"Gammas: {lgn_test_results['gammas']}")
-    logging.info(f"Output relative error: {lgn_test_results['boost_dev_output']}")
-    logging.info(f"Internal features relative error: {lgn_test_results['boost_dev_internal']}")
+    print("Boost equivariance test result")
+    display_err(lgn_test_results['gammas'], lgn_test_results['boost_dev_output'], alpha_name='gamma', caption='Output relative error')
 
-    logging.info("-" * 25)
+    print(SEPARATOR)
 
-    logging.info("Rotation equivariance test result:")
-    logging.info(f"Thetas: {lgn_test_results['thetas']}")
-    logging.info(f"Output relative error: {lgn_test_results['rot_dev_output']}:")
-    logging.info(f"Internal features relative error: {lgn_test_results['rot_dev_internal']}")
+    print("Rotation equivariance test result")
+    display_err(lgn_test_results['thetas'], lgn_test_results['rot_dev_output'], alpha_name='theta', caption='Output relative error')
 
-    logging.info("-" * 25)
+    print(SEPARATOR)
 
-    logging.info(f"Permutation invariance test result: {lgn_test_results['perm_dev_output']}")
+    print(f"Permutation invariance test result: {lgn_test_results['perm_dev_output']}")
 
-    logging.info("-" * 25)
+    print(SEPARATOR)
 
     return lgn_test_results

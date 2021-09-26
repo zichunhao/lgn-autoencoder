@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import torch
 import os
 import os.path as osp
-import logging
+import pandas as pd
 
 
 def get_output(encoder, decoder, data, covariance_test=True):
@@ -263,3 +263,14 @@ def make_dir(path):
     if not osp.isdir(path):
         os.makedirs(path)
     return path
+
+
+def display_err(alphas, errs, alpha_name, caption):
+    err_dict = dict()
+    err_dict[alpha_name] = alphas
+    for k in errs[0].keys():
+        err_dict[str(k)] = [errs[i][k] for i in range(len(errs))]
+    df = pd.DataFrame(err_dict)
+    df.style.set_table_attributes("style='display:inline'").set_caption(caption)
+    print(df)
+    return df

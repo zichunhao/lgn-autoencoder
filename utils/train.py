@@ -101,7 +101,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
 
 def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
-          epoch, outpath, is_train=True, device=None):
+          epoch, outpath, is_train=True, device=None, latent=False):
 
     if is_train:
         assert (optimizer_encoder is not None) and (optimizer_decoder is not None), "Please specify the optimizers."
@@ -115,6 +115,8 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
     target_data = []
     generated_data = []
+    if latent:
+        latent_spaces = []
     epoch_total_loss = 0
 
     for i, batch in enumerate(tqdm(loader)):
@@ -126,6 +128,8 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         if device is not None:
             p4_target = p4_target.to(device=device)
         target_data.append(p4_target.cpu().detach())
+        if latent:
+            latent_spaces.append(latent_features)
 
         batch_loss = get_loss(args, p4_gen, p4_target)
         epoch_total_loss += batch_loss.item()
@@ -155,6 +159,11 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
     generated_data = torch.cat(generated_data, dim=0)
     target_data = torch.cat(target_data, dim=0)
+    if latent:
+        latent_dict = {
+            k: torch.cat([latent_spaces[i][k] for i in range(len(latent_spaces))], dim=0)
+            for k in latent_features.keys()
+        }
 
     epoch_avg_loss = epoch_total_loss / len(loader)
     save_data(data=epoch_avg_loss, data_name='loss',
@@ -165,16 +174,19 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
         torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
 
-    return epoch_avg_loss, generated_data, target_data
+    if latent:
+        return epoch_avg_loss, generated_data, target_data, latent_dict
+    else:
+        return epoch_avg_loss, generated_data, target_data
 
 
 @torch.no_grad()
-def validate(args, loader, encoder, decoder, epoch, outpath, device):
-    with torch.no_grad():
-        epoch_avg_loss, generated_data, target_data = train(args, loader=loader, encoder=encoder, decoder=decoder,
-                                                            optimizer_encoder=None, optimizer_decoder=None,
-                                                            epoch=epoch, outpath=outpath, is_train=False, device=device)
-    return epoch_avg_loss, generated_data, target_data
+def validate(args, loader, encoder, decoder, epoch, outpath, device, latent=False):
+    return train(
+        args, loader=loader, encoder=encoder, decoder=decoder,
+        optimizer_encoder=None, optimizer_decoder=None,
+        epoch=epoch, outpath=outpath, is_train=False, device=device, latent=latent
+    )
 
 
 def get_loss(args, p4_gen, p4_target):
