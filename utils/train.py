@@ -86,8 +86,8 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         train_avg_losses.append(train_avg_loss)
         valid_avg_losses.append(valid_avg_loss)
 
-        np.savetxt(osp.join(outpath, 'losses_training.txt'), train_avg_losses)
-        np.savetxt(osp.join(outpath, 'losses_validation.txt'), valid_avg_losses)
+        np.savetxt(osp.join(outpath, 'model_evaluations/losses_training.txt'), train_avg_losses)
+        np.savetxt(osp.join(outpath, 'model_evaluations/losses_validation.txt'), valid_avg_losses)
 
         plot_end = time.time()
 
