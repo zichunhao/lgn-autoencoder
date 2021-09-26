@@ -117,6 +117,8 @@ def setup_argparse():
                         help='Batch size.')
     parser.add_argument('-e', '--num-epochs', type=int, default=64, metavar='',
                         help='Number of epochs for training.')
+    parser.add_argument('-p', '--patience', type=int, default=-1, metavar='',
+                        help='Patience for early stopping. Use -1 for no early stopping.')
     parser.add_argument('--loss-choice', type=str, default='ChamferLoss', metavar='',
                         help="Choice of loss function. Options: ('ChamferLoss', 'EMDLoss', 'hybrid')")
     # chamfer loss options
@@ -160,6 +162,9 @@ def setup_argparse():
 
     if args.load_to_train and ((args.load_path is None) or (args.load_epoch is None)):
         raise ValueError("--load-to-train requires --load-model-path and --load-epoch.")
+    if args.patience < 0:
+        import math
+        args.patience = math.inf
 
     return args
 

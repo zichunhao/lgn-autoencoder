@@ -10,6 +10,7 @@ import warnings
 import torch
 import torch.nn as nn
 import sys
+import math
 from tqdm import tqdm
 sys.path.insert(1, 'utils/')
 sys.path.insert(1, 'lgn/')
@@ -34,6 +35,9 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
     outpath_train_jet_plots = make_dir(osp.join(outpath, 'jet_plots/train'))
     outpath_valid_jet_plots = make_dir(osp.join(outpath, 'jet_plots/valid'))
+    best_loss = math.inf
+    best_epoch = 0
+    num_stale_epochs = 0
 
     for ep in range(args.num_epochs):
         epoch = args.load_epoch + ep if args.load_to_train else ep
@@ -46,6 +50,14 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         # Validation
         valid_avg_loss, valid_gen, valid_target = validate(args, valid_loader, encoder, decoder,
                                                            epoch, outpath, device=device)
+        if (abs(valid_avg_loss) < best_loss):
+            best_loss = valid_avg_loss
+            num_stale_epochs = 0
+            best_epoch = epoch
+            torch.save(encoder.state_dict(), osp.join(outpath, "weights_encoder/best_encoder_weights.pth"))
+            torch.save(decoder.state_dict(), osp.join(outpath, "weights_decoder/best_decoder_weights.pth"))
+        else:
+            num_stale_epochs += 1
 
         train_end = time.time()
         save_data(data=train_end - start, data_name='dts', is_train=None, outpath=outpath, epoch=epoch)
@@ -80,7 +92,8 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         plot_end = time.time()
 
         logging.info(f'epoch={epoch+1}/{args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch}, '
-                     f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, dt_train={train_end-start}s, dt_plot={plot_end-train_end}s, dt={plot_end-start}s')
+                     f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, dt_train={train_end-start}s, dt_plot={plot_end-train_end}s, dt={plot_end-start}s, '
+                     f'{num_stale_epochs=}, best_epoch={best_epoch+1}')
 
         if (epoch > 0) and ((epoch + 1) % 10 == 0):
             plot_eval_results(args, data=(train_avg_losses[-10:], valid_avg_losses[-10:]),
@@ -88,6 +101,10 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         if (epoch > 0) and ((epoch + 1) % 100 == 0):
             plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
                               data_name='Losses', outpath=outpath)
+
+        if num_stale_epochs > args.patience:
+            logging.info(f'Number of stale epochs reached the set patience ({args.patience}). Training breaks.')
+            break
 
     # Save global data
     save_data(data=train_avg_losses, data_name='losses', is_train=True, outpath=outpath, epoch=-1)
@@ -129,7 +146,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             p4_target = p4_target.to(device=device)
         target_data.append(p4_target.cpu().detach())
         if latent:
-            latent_spaces.append(latent_features)
+            latent_spaces.append({k: latent_features[k].squeeze(dim=2) for k in latent_features.keys()})
 
         batch_loss = get_loss(args, p4_gen, p4_target)
         epoch_total_loss += batch_loss.item()
