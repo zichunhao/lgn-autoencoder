@@ -18,10 +18,14 @@ MAX_BIN_RANGE = 10
 
 
 def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target_polar, jet_gen_polar,
-                       save_dir, epoch=None, eps=1e-16,
+                       save_dir, epoch=None, eps=1e-16, drop_zeros=True,
                        get_rel_err=(lambda p_target, p_gen, eps: (p_target-p_gen)/(p_target+eps)),
                        show=False):
     """Plot reconstruction errors for jet."""
+    if drop_zeros:
+        jet_target_cartesian, jet_gen_cartesian = filter_out_zeros(jet_target_cartesian, jet_gen_cartesian)
+        jet_target_polar, jet_gen_polar = filter_out_zeros(jet_target_polar, jet_gen_polar)
+
     rel_err_cartesian = [get_rel_err(jet_gen_cartesian[i], jet_target_cartesian[i], eps) for i in range(4)]
     rel_err_polar = [get_rel_err(jet_gen_polar[i], jet_target_polar[i], eps) for i in range(4)]
     ranges = get_bins(NUM_BINS, rel_err_cartesian=rel_err_cartesian, rel_err_polar=rel_err_polar)
@@ -94,3 +98,23 @@ def get_legend(res):
     legend += r'$\sigma$: ' + f'{np.std(res) :.4f}'
     # legend += r'$\mathrm{Med}$: ' + f'{np.median(res) :.4f}'
     return legend
+
+
+def filter_out_zeros(target, gen):
+    """Filter out jets with any zero component.
+
+    Parameters
+    ----------
+    target : iterable of `numpy.ndarray`.
+        Target jet components.
+    gen : iterable of `numpy.ndarray`.
+        Generated/reconstructed jet components.
+
+    Returns
+    -------
+    target_filtered, gen_filtered
+    """
+    mask = (target[0] != 0) & (target[1] != 0) & (target[2] != 0) & (target[3] != 0)
+    target_filtered = tuple([target[i][mask] for i in range(4)])
+    gen_filtered = tuple([gen[i][mask] for i in range(4)])
+    return target_filtered, gen_filtered
