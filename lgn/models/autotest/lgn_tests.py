@@ -5,6 +5,8 @@ import numpy.matlib
 from math import sqrt, cosh
 import logging
 
+from tqdm import tqdm
+
 from lgn.g_lib import rotations as rot
 from lgn.models.autotest.utils import get_output, get_dev, get_avg_output_dev, get_avg_internal_dev, get_node_dev, display_err
 
@@ -201,7 +203,7 @@ def lgn_tests(args, encoder, decoder, dataloader, axis='z', alpha_max=None, thet
     rot_test_all_epochs = []
     perm_test_all_epochs = []
 
-    for idx, data in enumerate(dataloader):
+    for idx, data in enumerate(tqdm(dataloader)):
         boost_results = covariance_test(encoder, decoder, data, test_type='boost',
                                         cg_dict=cg_dict, alpha_max=alpha_max, unit=unit)
         boost_test_all_epochs.append(boost_results)
