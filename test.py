@@ -34,6 +34,10 @@ def test(args):
     logging.info(f'Data saved exported to {test_path}.')
 
     fig_path = make_dir(osp.join(test_path, 'jet_plots'))
+    if args.abs_coord and (args.unit.lower() == 'tev'):
+        # Convert to GeV for plotting
+        recons *= 1000
+        latent *= 1000
     plot_p(args, target, recons, fig_path, particle_recon_err=args.particle_recon_err)
 
     if args.equivariance_test:
