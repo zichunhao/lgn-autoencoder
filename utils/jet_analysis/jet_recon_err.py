@@ -23,7 +23,7 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
                        show=False):
     """Plot reconstruction errors for jet."""
     rel_err_cartesian = [get_rel_err(jet_gen_cartesian[i], jet_target_cartesian[i], eps) for i in range(4)]
-    rel_err_polar = [get_rel_err(jet_target_polar[i], jet_target_polar[i], eps) for i in range(4)]
+    rel_err_polar = [get_rel_err(jet_gen_polar[i], jet_target_polar[i], eps) for i in range(4)]
     ranges = get_bins(NUM_BINS, rel_err_cartesian=rel_err_cartesian, rel_err_polar=rel_err_polar)
 
     LABELS = LABELS_ABS_COORD if args.abs_coord else LABELS_REL_COORD
