@@ -87,6 +87,7 @@ class RadPolyTrig(nn.Module):
             raise ValueError(f'Can only specify mix = real, cplx, or none: {mix}')
 
         self.zero = torch.tensor(0, device=device, dtype=dtype)
+        self.device = device
 
     def forward(self, norms, edge_mask):
         """
@@ -110,7 +111,7 @@ class RadPolyTrig(nn.Module):
         s = norms.shape
 
         # Mask and reshape
-        edge_mask = (edge_mask.byte().type(torch.BoolTensor)).unsqueeze(-1)
+        edge_mask = (edge_mask.byte()).unsqueeze(-1).to(self.device)
         norms = norms.unsqueeze(-1)
 
         # Lorentzian-bell radial functions: a + 1 / (b + c^2 p^2) when not masked
