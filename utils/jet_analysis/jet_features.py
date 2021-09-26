@@ -174,10 +174,10 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir,
 
     jet_name = get_jet_name(args)
     if args.abs_coord:
-        fig.suptitle(r'Distribution of target and reconstructed jet $m$, $p_\mathrm{T}$, $\eta$, and $\phi$ ' +
+        fig.suptitle(r'Distribution of target and reconstructed jet $M$, $P_\mathrm{T}$, $\eta$, and $\phi$ ' +
                      f'of {jet_name} jets', y=1.03)
     else:
-        fig.suptitle(r'Distribution of target and reconstructed jet $m^\mathrm{rel}$, $p_\mathrm{T}^\mathrm{rel}$, $\eta^\mathrm{rel}$, and $\phi^\mathrm{rel}$ ' +
+        fig.suptitle(r'Distribution of target and reconstructed jet $M^\mathrm{rel}$, $P_\mathrm{T}^\mathrm{rel}$, $\eta^\mathrm{rel}$, and $\phi^\mathrm{rel}$ ' +
                      f'of {jet_name} jets', y=1.03)
 
     if epoch is not None:
