@@ -1,7 +1,6 @@
 import os.path as osp
 import argparse
 import logging
-import numpy as np
 import torch
 from utils.argparse_utils import get_bool, get_device, get_dtype
 from utils.argparse_utils import parse_model_settings, parse_plot_settings, parse_covariance_test_settings, parse_data_settings

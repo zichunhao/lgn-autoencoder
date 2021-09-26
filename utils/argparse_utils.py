@@ -2,6 +2,7 @@ import argparse
 import numpy as np
 import torch
 
+
 def get_bool(arg):
     """Parse boolean from input string.
     Adapted from https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
@@ -143,3 +144,5 @@ def parse_data_settings(parser, training=True):
         parser.add_argument('--num-valid', type=int, default=None,
                             help='The number of data used for validation. Used only if train-fraction is greater than 1.'
                             'Useful for test runs.')
+
+    return parser
