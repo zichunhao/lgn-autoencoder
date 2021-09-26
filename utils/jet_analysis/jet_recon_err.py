@@ -14,7 +14,7 @@ LABELS_POLAR_REL_COORD = (r'$M^\mathrm{rel}$', r'$P_\mathrm{T}^\mathrm{rel}$', r
 LABELS_REL_COORD = (LABELS_CARTESIAN_REL_COORD, LABELS_POLAR_REL_COORD)
 COORDINATES = ('cartesian', 'polar')
 DEFAULT_BIN_RANGE = 2
-MAX_BIN_RANGE = 10
+MAX_BIN_RANGE = 5
 
 
 def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target_polar, jet_gen_polar,
@@ -63,7 +63,7 @@ def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None):
     if rel_err_cartesian is None:
         cartesian_min_max = ((-1, 10), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE))
     else:
-        mass_min_max = (-min(10 * np.std(rel_err_cartesian[0]), 1), min(2 * np.std(rel_err_cartesian[0]), MAX_BIN_RANGE))
+        mass_min_max = (-min(10 * np.std(rel_err_cartesian[0]), 1), min(2 * np.std(rel_err_cartesian[0]), 2 * MAX_BIN_RANGE))
         px_min_max = (-min(1.5 * np.std(rel_err_cartesian[1]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_cartesian[1]), MAX_BIN_RANGE))
         py_min_max = (-min(1.5 * np.std(rel_err_cartesian[2]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_cartesian[2]), MAX_BIN_RANGE))
         pz_min_max = (-min(1.5 * np.std(rel_err_cartesian[3]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_cartesian[3]), MAX_BIN_RANGE))
@@ -72,8 +72,8 @@ def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None):
     if rel_err_polar is None:
         polar_min_max = ((-1, DEFAULT_BIN_RANGE), (-1, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE))
     else:
-        mass_min_max = (-min(10 * np.std(rel_err_polar[0]), 1), min(2 * np.std(rel_err_polar[0]), MAX_BIN_RANGE))
-        pt_min_max = (-min(10 * np.std(rel_err_polar[1]), 1), min(2 * np.std(rel_err_polar[1]), MAX_BIN_RANGE))
+        mass_min_max = (-min(10 * np.std(rel_err_polar[0]), 1), min(2 * np.std(rel_err_polar[0]), 2 * MAX_BIN_RANGE))
+        pt_min_max = (-min(10 * np.std(rel_err_polar[1]), 1), min(2 * np.std(rel_err_polar[1]), 2 * MAX_BIN_RANGE))
         eta_min_max = (-min(1.5 * np.std(rel_err_polar[2]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_polar[2]), MAX_BIN_RANGE))
         phi_min_max = (-min(1.5 * np.std(rel_err_polar[3]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_polar[3]), MAX_BIN_RANGE))
         polar_min_max = (mass_min_max, pt_min_max, eta_min_max, phi_min_max)
