@@ -17,6 +17,8 @@ sys.path.insert(1, 'lgn/')
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
+BLOW_UP_THRESHOLD = 1e8
+
 
 def train_loop(args, train_loader, valid_loader, encoder, decoder,
                optimizer_encoder, optimizer_decoder, outpath, device=None):
@@ -104,6 +106,10 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
         if num_stale_epochs > args.patience:
             logging.info(f'Number of stale epochs reached the set patience ({args.patience}). Training breaks.')
+            break
+
+        if (abs(valid_avg_losses) > BLOW_UP_THRESHOLD) or (abs(train_avg_losses) > BLOW_UP_THRESHOLD):
+            logging.error('Loss blows up. Training breaks.')
             break
 
     # Save global data
