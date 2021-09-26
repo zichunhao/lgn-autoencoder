@@ -59,7 +59,7 @@ def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None):
     if rel_err_cartesian is None:
         cartesian_min_max = ((-1, 10), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE))
     else:
-        mass_min_max = (-1, min(2 * np.std(rel_err_cartesian[0]), MAX_BIN_RANGE))
+        mass_min_max = (-min(10 * np.std(rel_err_cartesian[0]), 1), min(2 * np.std(rel_err_cartesian[0]), MAX_BIN_RANGE))
         px_min_max = (-min(1.5 * np.std(rel_err_cartesian[1]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_cartesian[1]), MAX_BIN_RANGE))
         py_min_max = (-min(1.5 * np.std(rel_err_cartesian[2]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_cartesian[2]), MAX_BIN_RANGE))
         pz_min_max = (-min(1.5 * np.std(rel_err_cartesian[3]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_cartesian[3]), MAX_BIN_RANGE))
@@ -68,8 +68,8 @@ def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None):
     if rel_err_polar is None:
         polar_min_max = ((-1, DEFAULT_BIN_RANGE), (-1, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE))
     else:
-        mass_min_max = (-1, min(2 * np.std(rel_err_polar[0]), MAX_BIN_RANGE))
-        pt_min_max = (-1, min(1.5 * np.std(rel_err_polar[1]), MAX_BIN_RANGE))
+        mass_min_max = (-min(10 * np.std(rel_err_cartesian[0]), 1), min(2 * np.std(rel_err_polar[0]), MAX_BIN_RANGE))
+        pt_min_max = (-min(10 * np.std(rel_err_cartesian[1]), 1), min(1.5 * np.std(rel_err_polar[1]), MAX_BIN_RANGE))
         eta_min_max = (-min(1.5 * np.std(rel_err_polar[2]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_polar[2]), MAX_BIN_RANGE))
         phi_min_max = (-min(1.5 * np.std(rel_err_polar[3]), MAX_BIN_RANGE), min(1.5 * np.std(rel_err_polar[3]), MAX_BIN_RANGE))
         polar_min_max = (mass_min_max, pt_min_max, eta_min_max, phi_min_max)
@@ -90,7 +90,7 @@ def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None):
 
 def get_legend(res):
     """Get legend for plots of jet reconstruction."""
-    legend = r'$\mu$: ' + f'{np.mean(res) :.4f},\n'
-    legend += r'$\sigma$: ' + f'{np.std(res) :.4f}'
+    legend = r'$\mu$: ' + f'{np.mean(res) :.6f},\n'
+    legend += r'$\sigma$: ' + f'{np.std(res) :.6f}'
     # legend += r'$\mathrm{Med}$: ' + f'{np.median(res) :.4f}'
     return legend
