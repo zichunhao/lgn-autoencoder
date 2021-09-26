@@ -75,7 +75,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
         # EMD: Plot every epoch because model trains slowly with the EMD loss.
         # Others (MSE and chamfer losses): Plot every args.plot_freq epoch.
-        to_plot = ('emd' in args.loss_choice.lower()) or ('emd' not in args.loss_choice.lower() and ((epoch + 1) % args.plot_freq == 0))
+        to_plot = ('emd' in args.loss_choice.lower()) or ('emd' not in args.loss_choice.lower() and ((epoch + 1) % args.plot_freq == 0)) or (ep == 0)
         if to_plot:
             for target, gen, dir in zip((train_target, valid_target),
                                         (train_gen, valid_gen),
