@@ -167,6 +167,7 @@ def get_rotation(theta, axis):
         return (0, theta, 0)
     if axis.lower() == 'z':
         return (0, 0, theta)
+    return (0, 0, theta)
 
 
 def get_boost(alpha, axis):
@@ -176,6 +177,7 @@ def get_boost(alpha, axis):
         return (0, alpha*1j, 0)
     if axis.lower() == 'z':
         return (0, 0, alpha*1j)
+    return (0, 0, alpha*1j)
 
 
 @torch.no_grad()
