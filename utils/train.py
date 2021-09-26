@@ -108,7 +108,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
             logging.info(f'Number of stale epochs reached the set patience ({args.patience}). Training breaks.')
             break
 
-        if (abs(valid_avg_losses) > BLOW_UP_THRESHOLD) or (abs(train_avg_losses) > BLOW_UP_THRESHOLD):
+        if (abs(valid_avg_loss) > BLOW_UP_THRESHOLD) or (abs(train_avg_loss) > BLOW_UP_THRESHOLD):
             logging.error('Loss blows up. Training breaks.')
             break
 
