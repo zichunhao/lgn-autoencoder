@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from utils.utils import make_dir
 from utils.jet_analysis.utils import NUM_BINS
 import os.path as osp
-import scipy.signal
 
 FIGSIZE = (16, 4)
 LABELS_CARTESIAN_ABS_COORD = (r'$M$', r'$P_x$', r'$P_y$', r'$P_z$')
