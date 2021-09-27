@@ -64,19 +64,19 @@ def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None):
     if rel_err_cartesian is None:
         cartesian_min_max = ((-1, 10), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE))
     else:
-        mass_min_max = (-1, 0.1)
-        px_min_max = (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE)
-        py_min_max = (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE)
-        pz_min_max = (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE)
+        mass_min_max = (-0.005, 0.03)
+        px_min_max = (-0.1, 0.1)
+        py_min_max = (-0.1, 0.1)
+        pz_min_max = (-0.1, 0.1)
         cartesian_min_max = (mass_min_max, px_min_max, py_min_max, pz_min_max)
 
     if rel_err_polar is None:
         polar_min_max = ((-1, DEFAULT_BIN_RANGE), (-1, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE))
     else:
-        mass_min_max = (-1, 0.1)
-        pt_min_max = (-1, 0.1)
-        eta_min_max = (-0.0005, 0.0005)
-        phi_min_max = (-0.0005, 0.0005)
+        mass_min_max = (-0.005, 0.03)
+        pt_min_max = (-0.005, 0.03)
+        eta_min_max = (-0.0002, 0.0002)
+        phi_min_max = (-0.0001, 0.0001)
         polar_min_max = (mass_min_max, pt_min_max, eta_min_max, phi_min_max)
 
     ranges_cartesian = tuple([
