@@ -25,7 +25,7 @@ def test(args):
     decoder.load_state_dict(torch.load(decoder_path, map_location=args.device))
 
     recons, target, latent = validate(args, test_loader, encoder, decoder, args.load_epoch,
-                                         args.model_path, args.device, for_test=True)
+                                      args.model_path, args.device, for_test=True)
 
     test_path = make_dir(osp.join(args.model_path, 'test'))
     torch.save(target, osp.join(test_path, 'target.pt'))
