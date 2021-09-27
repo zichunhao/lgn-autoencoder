@@ -124,5 +124,5 @@ def filter_out_zeros(target, gen):
 def find_fwhm(err):
     """Full width at half maximum of a distribution."""
     peak = scipy.signal.find_peaks(err, height=max(err))[0]
-    fwhm = scipy.signal.peak_widths(err, peak)[0]
+    fwhm = scipy.signal.peak_widths(err, peak)[0][0]
     return fwhm
