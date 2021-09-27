@@ -48,7 +48,7 @@ def test(args):
     if args.equivariance_test:
         dev = lgn_tests(args, encoder, decoder, test_loader, alpha_max=args.alpha_max, theta_max=args.theta_max,
                         cg_dict=encoder.cg_dict, unit=args.unit)
-        plot_all_dev(dev, osp.join(args.model_path, 'model_evaluations/equivariance_tests'))
+        plot_all_dev(dev, osp.join(test_path, 'equivariance_tests'))
 
 
 def setup_argparse():
