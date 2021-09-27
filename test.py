@@ -96,6 +96,9 @@ def setup_argparse():
                         help='Whether to plot reconstruction errors of particle momenta. Used only if a one-to-one mapping is clear.')
 
     # Convariance tests
+    parser.add_argument('--equivariance-test', default=False, action='store_true',
+                        help='Whether to take the equivariance test after all trainings on the last model. True only when it is called.'
+                        'Default: False.')
     parse_covariance_test_settings(parser)
 
     args = parser.parse_args()
