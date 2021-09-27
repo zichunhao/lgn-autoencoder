@@ -124,7 +124,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
 
 def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
-          epoch, outpath, is_train=True, device=None, latent=False):
+          epoch, outpath, is_train=True, for_test=False, device=None):
 
     if is_train:
         assert (optimizer_encoder is not None) and (optimizer_decoder is not None), "Please specify the optimizers."
@@ -138,9 +138,10 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
     target_data = []
     generated_data = []
-    if latent:
+    if for_test:  # Save latent space for later analysis
         latent_spaces = []
-    epoch_total_loss = 0
+    else:
+        epoch_total_loss = 0
 
     for i, batch in enumerate(tqdm(loader)):
         latent_features = encoder(batch, covariance_test=False)
@@ -151,64 +152,62 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         if device is not None:
             p4_target = p4_target.to(device=device)
         target_data.append(p4_target.cpu().detach())
-        if latent:
+        if for_test:
             latent_spaces.append({k: latent_features[k].squeeze(dim=2) for k in latent_features.keys()})
+        else:
+            batch_loss = get_loss(args, p4_gen, p4_target)
+            epoch_total_loss += batch_loss.item()
 
-        batch_loss = get_loss(args, p4_gen, p4_target)
-        epoch_total_loss += batch_loss.item()
+            # Backward propagation
+            if is_train:
+                optimizer_encoder.zero_grad()
+                optimizer_decoder.zero_grad()
+                try:
+                    batch_loss.backward()
+                except RuntimeError as e:
+                    import os
+                    error_path = osp.join(outpath, 'errors')
+                    os.makedirs(error_path, exist_ok=True)
+                    torch.save(p4_gen, osp.join(error_path, 'p4_gen.pt'))
+                    torch.save(p4_target, osp.join(error_path, 'p4_target.pt'))
+                    torch.save(encoder.state_dict(), osp.join(error_path, 'encoder_weights.pt'))
+                    torch.save(decoder.state_dict(), osp.join(error_path, 'decoder_weights.pt'))
+                    raise e
+                optimizer_encoder.step()
+                optimizer_decoder.step()
 
-        # Backward propagation
-        if is_train:
-            optimizer_encoder.zero_grad()
-            optimizer_decoder.zero_grad()
-            try:
-                batch_loss.backward()
-            except RuntimeError as e:
-                import os
-                error_path = osp.join(outpath, 'errors')
-                os.makedirs(error_path, exist_ok=True)
-                torch.save(p4_gen, osp.join(error_path, 'p4_gen.pt'))
-                torch.save(p4_target, osp.join(error_path, 'p4_target.pt'))
-                torch.save(encoder.state_dict(), osp.join(error_path, 'encoder_weights.pt'))
-                torch.save(decoder.state_dict(), osp.join(error_path, 'decoder_weights.pt'))
-                raise e
-            optimizer_encoder.step()
-            optimizer_decoder.step()
-
-            # save model
-            if ((i % args.save_freq) == 0 and i > 0):
-                torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
-                torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
+                # save model
+                if ((i % args.save_freq) == 0 and i > 0):
+                    torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
+                    torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
 
     generated_data = torch.cat(generated_data, dim=0)
     target_data = torch.cat(target_data, dim=0)
-    if latent:
+    if for_test:
         latent_dict = {
             k: [latent_spaces[i][k] for i in range(len(latent_spaces))]
             for k in latent_features.keys()
         }
+        return generated_data, target_data, latent_dict
 
-    epoch_avg_loss = epoch_total_loss / len(loader)
-    save_data(data=epoch_avg_loss, data_name='loss',
-              is_train=is_train, outpath=outpath, epoch=epoch)
-
-    # Save weights
-    if is_train:
-        torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
-        torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
-
-    if latent:
-        return epoch_avg_loss, generated_data, target_data, latent_dict
     else:
+        epoch_avg_loss = epoch_total_loss / len(loader)
+        save_data(data=epoch_avg_loss, data_name='loss',
+                  is_train=is_train, outpath=outpath, epoch=epoch)
+        # Save weights
+        if is_train:
+            torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
+            torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
+
         return epoch_avg_loss, generated_data, target_data
 
 
 @torch.no_grad()
-def validate(args, loader, encoder, decoder, epoch, outpath, device, latent=False):
+def validate(args, loader, encoder, decoder, epoch, outpath, device, for_test=False):
     return train(
         args, loader=loader, encoder=encoder, decoder=decoder,
         optimizer_encoder=None, optimizer_decoder=None,
-        epoch=epoch, outpath=outpath, is_train=False, device=device, latent=latent
+        epoch=epoch, outpath=outpath, is_train=False, device=device, for_test=for_test
     )
 
 
