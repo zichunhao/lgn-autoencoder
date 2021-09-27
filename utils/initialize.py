@@ -44,7 +44,7 @@ def initialize_data(path, batch_size, train_fraction, num_val=None):
 def initialize_test_data(path, batch_size):
     data = torch.load(path)
     jet_data = JetDataset(data, shuffle=False)
-    return DataLoader(jet_data, batch_size=batch_size, shuffle=True)
+    return DataLoader(jet_data, batch_size=batch_size, shuffle=False)
 
 
 def initialize_autoencoder(args):
