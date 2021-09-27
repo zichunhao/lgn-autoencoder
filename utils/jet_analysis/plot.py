@@ -51,10 +51,6 @@ def plot_p(args, p4_target, p4_gen, save_dir, particle_recon_err=False, cutoff=1
     p_gen_cartesian = get_p_cartesian(p4_gen.detach().cpu().numpy(), cutoff=cutoff)
     jet_gen_cartesian = get_jet_feature_cartesian(p4_gen.detach().cpu().numpy())
 
-    # arrays
-    jets_target = get_p_polar_tensor(p4_target, eps=EPS)
-    jets_gen = get_p_polar_tensor(p4_gen, eps=EPS)
-
     plot_p_polar(args, p_target_polar, p_gen_polar, save_dir, epoch=epoch, density=False, fill=False, show=show)
     plot_jet_p_polar(args, jet_target_polar, jet_gen_polar, save_dir, epoch=epoch, density=False, fill=False, show=show)
     plot_p_cartesian(args, p_target_cartesian, p_gen_cartesian, save_dir, epoch=epoch, density=False, fill=False, show=show)
@@ -66,6 +62,8 @@ def plot_p(args, p4_target, p4_gen, save_dir, particle_recon_err=False, cutoff=1
         plot_jet_p_cartesian(args, jet_gen_cartesian, jet_gen_cartesian, save_dir, epoch=epoch, density=False, fill=True, show=show)
 
     for same_norm in (True, False):
+        jets_target = get_p_polar_tensor(p4_target, eps=EPS)
+        jets_gen = get_p_polar_tensor(p4_gen, eps=EPS)
         plot_jet_image(args, jets_target, jets_gen, save_dir, epoch, same_norm=same_norm, maxR=0.5, vmin=args.jet_image_vmin, show=show)
 
     if particle_recon_err:

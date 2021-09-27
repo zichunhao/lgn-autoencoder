@@ -8,16 +8,16 @@ from coffea.nanoevents.methods import vector
 ak.behavior.update(vector.behavior)
 
 
-def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch,
+def plot_jet_image(args, p_target, p_gen, save_dir, epoch,
                    same_norm=True, maxR=0.5, vmin=1e-8, show=False):
     """Plot average jet image and one-to-one jet image
 
     Parameters
     ----------
-    p4_target : np.ndarray
+    p_target : np.ndarray
         Target jets in polar coordinates (pt, eta, phi).
         Shape : (num_jets, num_particles, 3)
-    p4_gen : np.ndarray
+    p_gen : np.ndarray
         Generated/reconstructed jets by the model in polar coordinates (pt, eta, phi).
         Shape : (num_jets, num_particles, 3)
     save_dir : str
@@ -38,20 +38,20 @@ def plot_jet_image(args, p4_target, p4_gen, save_dir, epoch,
     """
     if same_norm and args.abs_coord:
         target_pix_average, gen_pix_average = get_average_jet_image_same_norm(
-            p4_target, p4_gen, npix=args.jet_image_npix
+            p_target, p_gen, npix=args.jet_image_npix
         )
         target_pix, gen_pix = get_n_jet_images_same_norm(
-            p4_target, p4_gen, num_jets=args.num_jet_images, npix=args.jet_image_npix
+            p_target, p_gen, num_jets=args.num_jet_images, npix=args.jet_image_npix
         )
     else:
-        target_pix_average = get_average_jet_image(p4_target, npix=args.jet_image_npix,
+        target_pix_average = get_average_jet_image(p_target, npix=args.jet_image_npix,
                                                    abs_coord=args.abs_coord)
-        gen_pix_average = get_average_jet_image(p4_gen, npix=args.jet_image_npix,
+        gen_pix_average = get_average_jet_image(p_gen, npix=args.jet_image_npix,
                                                 abs_coord=args.abs_coord)
 
-        target_pix = get_n_jet_images(p4_target, num_jets=args.num_jet_images, npix=args.jet_image_npix,
+        target_pix = get_n_jet_images(p_target, num_jets=args.num_jet_images, npix=args.jet_image_npix,
                                       maxR=maxR, abs_coord=args.abs_coord)
-        gen_pix = get_n_jet_images(p4_gen, num_jets=args.num_jet_images, npix=args.jet_image_npix,
+        gen_pix = get_n_jet_images(p_gen, num_jets=args.num_jet_images, npix=args.jet_image_npix,
                                    maxR=maxR, abs_coord=args.abs_coord)
 
     fig, axs = plt.subplots(
