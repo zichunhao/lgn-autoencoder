@@ -179,7 +179,10 @@ def get_jet_rel(jets):
         }, with_name="PtEtaPhiMLorentzVector")
 
     # sum over all the particles in each jet to get the jet 4-vector
-    jet_vecs = part_vecs.sum(axis=1)[:, :2]
+    try:
+        jet_vecs = part_vecs.sum(axis=1)[:, :2]
+    except AttributeError:
+        jet_vecs = ak.sum(part_vecs, axis=1)[:, :2]
 
     jets = normalize(jets, jet_vecs)
     return jets
