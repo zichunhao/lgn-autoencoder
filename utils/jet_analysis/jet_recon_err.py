@@ -94,9 +94,10 @@ def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None):
 
 def get_legend(res, bins):
     """Get legend for plots of jet reconstruction."""
-    legend = r'$\mu$: ' + f'{np.mean(res) :.4f},\n'
-    legend += r'$\mathrm{FWHM}$: ' + f'{find_fwhm(res, bins) :.4f}'
-    # legend += r'$\mathrm{Med}$: ' + f'{np.median(res) :.4f}'
+    legend = r'$\mu$: ' + f'{np.mean(res) :.2E},\n'
+    # legend += r'$\sigma$: ' + f'{np.std(res) :.3E} \n'
+    legend += r'$\mathrm{FWHM}$: ' + f'{find_fwhm(res, bins) :.2E}'
+    # legend += r'$\mathrm{Med}$: ' + f'{np.median(res) :.3E}'
     return legend
 
 
