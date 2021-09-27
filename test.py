@@ -38,7 +38,12 @@ def test(args):
         # Convert to GeV for plotting
         recons *= 1000
         target *= 1000
-    plot_p(args, target, recons, fig_path, particle_recon_err=args.particle_recon_err)
+
+    jet_images_same_norm, jet_images = plot_p(
+        args, target, recons, fig_path, particle_recon_err=args.particle_recon_err
+    )
+    torch.save(jet_images_same_norm, osp.join(test_path, 'jet_images_same_norm.pt'))
+    torch.save(jet_images, osp.join(test_path, 'jet_images.pt'))
 
     if args.equivariance_test:
         dev = lgn_tests(args, encoder, decoder, test_loader, alpha_max=args.alpha_max, theta_max=args.theta_max,

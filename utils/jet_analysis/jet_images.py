@@ -112,6 +112,8 @@ def plot_jet_image(args, p_target, p_gen, save_dir, epoch,
         plt.show()
     plt.close()
 
+    return target_pix_average, gen_pix_average, target_pix, gen_pix
+
 
 def pixelate(jet, mask=None, npix=64, maxR=1.0):
     """Pixelate the jet with Raghav Kansal's method.
