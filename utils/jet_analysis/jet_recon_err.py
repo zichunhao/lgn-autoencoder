@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from utils.utils import make_dir
 from utils.jet_analysis.utils import NUM_BINS
 import os.path as osp
+import scipy.signal
 
 FIGSIZE = (16, 4)
 LABELS_CARTESIAN_ABS_COORD = (r'$M$', r'$P_x$', r'$P_y$', r'$P_z$')
@@ -92,10 +93,10 @@ def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None):
     return ranges
 
 
-def get_legend(res):
+def get_legend(res, measure='fwhm'):
     """Get legend for plots of jet reconstruction."""
     legend = r'$\mu$: ' + f'{np.mean(res) :.4f},\n'
-    legend += r'$\sigma$: ' + f'{np.std(res) :.4f}'
+    legend += r'$\FWHM$: ' + f'{find_fwhm(res) :.4f}'
     # legend += r'$\mathrm{Med}$: ' + f'{np.median(res) :.4f}'
     return legend
 
@@ -118,3 +119,10 @@ def filter_out_zeros(target, gen):
     target_filtered = tuple([target[i][mask] for i in range(4)])
     gen_filtered = tuple([gen[i][mask] for i in range(4)])
     return target_filtered, gen_filtered
+
+
+def find_fwhm(err):
+    """Full width at half maximum of a distribution."""
+    peak = scipy.signal.find_peaks(err, height=max(err))[0]
+    fwhm = scipy.signal.peak_widths(err, peak)[0]
+    return fwhm
