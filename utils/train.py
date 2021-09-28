@@ -80,9 +80,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
             for target, gen, dir in zip((train_target, valid_target),
                                         (train_gen, valid_gen),
                                         (outpath_train_jet_plots, outpath_valid_jet_plots)):
-                plot_p(args, target, gen, save_dir=dir,
-                       particle_recon_err=('mse' in args.loss_choice.lower()),
-                       cutoff=args.cutoff, epoch=epoch)
+                plot_p(args, target, gen, save_dir=dir, cutoff=args.cutoff, epoch=epoch)
 
         dts.append(train_end-start)
         train_avg_losses.append(train_avg_loss)

@@ -224,3 +224,84 @@ def get_jet_name(args):
     else:
         jet_name = args.jet_type
     return jet_name
+
+
+# Ranges
+def get_recons_err_ranges(args):
+    """Get bins for reconstruction error plots"""
+    if args.auto_particle_recons_ranges:
+        particle_recons_ranges = None
+    else:
+        particle_recons_ranges = _get_particle_recons_ranges(args)
+
+    if args.auto_jet_recons_ranges:
+        jet_recons_ranges = None
+    else:
+        jet_recons_ranges = _get_jet_recons_ranges(args)
+
+    return particle_recons_ranges, jet_recons_ranges
+
+
+def _get_particle_recons_ranges(args):
+    if args.auto_particle_recons_ranges:
+        return None
+
+    rel_err_cartesian = tuple([
+        np.linspace(
+            args.particle_rel_err_min_cartesian[i],
+            args.particle_rel_err_max_cartesian[i],
+            NUM_BINS
+        )
+        for i in range(3)
+    ])
+
+    rel_err_polar = tuple([
+        np.linspace(
+            args.particle_rel_err_min_polar[i],
+            args.particle_rel_err_max_polar[i],
+            NUM_BINS
+        )
+        for i in range(3)
+    ])
+
+    padded_recons_cartesian = tuple([
+        np.linspace(
+            args.particle_padded_recons_min_cartesian[i],
+            args.particle_padded_recons_max_cartesian[i],
+            NUM_BINS
+        )
+        for i in range(3)
+    ])
+
+    padded_recons_polar = tuple([
+        np.linspace(
+            args.particle_padded_recons_min_polar[i],
+            args.particle_padded_recons_max_polar[i],
+            NUM_BINS
+        )
+        for i in range(3)
+    ])
+
+    return ((rel_err_cartesian, padded_recons_cartesian),
+            (rel_err_polar, padded_recons_polar))
+
+
+def _get_jet_recons_ranges(args):
+    rel_err_cartesian = tuple([
+        np.linspace(
+            args.jet_rel_err_min_cartesian[i],
+            args.jet_rel_err_max_cartesian[i],
+            NUM_BINS
+        )
+        for i in range(3)
+    ])
+    rel_err_polar = tuple([
+        np.linspace(
+            args.jet_rel_err_min_polar[i],
+            args.jet_rel_err_max_polar[i],
+            NUM_BINS
+        )
+        for i in range(3)
+    ])
+
+    return (rel_err_cartesian, rel_err_polar)

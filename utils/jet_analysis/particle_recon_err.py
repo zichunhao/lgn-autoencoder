@@ -57,7 +57,11 @@ def plot_particle_recon_err(args, p_target, p_gen,
     p_padded_gen_target = convert_to_polar(p_padded_gen_cartesian, eps)
 
     if ranges is None:
-        ranges = get_bins(NUM_BINS)
+        ranges = get_bins(NUM_BINS,
+                          rel_err_cartesian=rel_err_cartesian.numpy(),
+                          rel_err_polar=rel_err_polar.numpy(),
+                          p_padded_recons_cartesian=p_padded_recons_cartesian.numpy(),
+                          p_padded_recons_polar=p_padded_recons_polar.numpy())
 
     # Plot both Cartesian and polar coordinates
     LABELS = LABELS_ABS_COORD if args.abs_coord else LABELS_REL_COORD

@@ -2,9 +2,10 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from utils.utils import make_dir
-from utils.jet_analysis.utils import NUM_BINS, PLOT_FONT_SIZE
+from utils.jet_analysis.utils import NUM_BINS, PLOT_FONT_SIZE, find_fwhm, get_stats
 import os.path as osp
 import logging
+import json
 
 FIGSIZE = (16, 4)
 LABELS_CARTESIAN_ABS_COORD = (r'$M$', r'$P_x$', r'$P_y$', r'$P_z$')
@@ -19,7 +20,7 @@ MAX_BIN_RANGE = 5
 
 
 def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target_polar, jet_gen_polar,
-                       save_dir, epoch=None, eps=1e-16, drop_zeros=True,
+                       save_dir, epoch=None, eps=1e-16, drop_zeros=True, ranges=None,
                        get_rel_err=(lambda p_target, p_gen, eps: (p_target-p_gen)/(p_target+eps)),
                        show=False):
     """Plot reconstruction errors for jet."""
@@ -29,10 +30,11 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
 
     rel_err_cartesian = [get_rel_err(jet_gen_cartesian[i], jet_target_cartesian[i], eps) for i in range(4)]
     rel_err_polar = [get_rel_err(jet_gen_polar[i], jet_target_polar[i], eps) for i in range(4)]
-    ranges = get_bins(NUM_BINS, rel_err_cartesian=rel_err_cartesian, rel_err_polar=rel_err_polar)
+    if ranges is None:
+        ranges = get_bins(NUM_BINS, rel_err_cartesian=rel_err_cartesian, rel_err_polar=rel_err_polar)
 
     LABELS = LABELS_ABS_COORD if args.abs_coord else LABELS_REL_COORD
-    stats_dict = dict()
+    err_dict = dict()
     for rel_err_coordinate, labels, coordinate, bin_tuple in zip((rel_err_cartesian, rel_err_polar), LABELS, COORDINATES, ranges):
         stats_coordinate_list = []
         fig, axs = plt.subplots(1, 4, figsize=FIGSIZE, sharey=False)
@@ -46,7 +48,7 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
 
             stats_coordinate_list.append(get_stats(rel_err, bins))
 
-        stats_dict[coordinate] = stats_coordinate_list
+        err_dict[coordinate] = stats_coordinate_list
 
         plt.rcParams.update({'font.size': PLOT_FONT_SIZE})
         plt.tight_layout()
@@ -55,14 +57,21 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
             if epoch is not None:
                 path = make_dir(osp.join(save_dir, f'jet_reconstruction_errors/{coordinate}'))
                 plt.savefig(osp.join(path, f'jet_reconstruction_errors_epoch_{epoch+1}.pdf'))
+                dict_path = make_dir(osp.join(path, 'err_dict'))
+                file_name = f'jet_reconstruction_errors_epoch_{epoch+1}.json'
+                with open(osp.join(dict_path, file_name), 'w') as f:
+                    json.dump(err_dict, f)
             else:  # Save without creating a subdirectory
                 plt.savefig(osp.join(save_dir, f'jet_reconstruction_errors_{coordinate}.pdf'))
+                dict_path = osp.join(save_dir, 'jet_reconstruction_errors.json')
+                with open(dict_path, 'w') as f:
+                    json.dump(err_dict, f)
         if show:
             plt.show()
         plt.close()
 
-    logging.info('Jet reconstruction errors:')
-    logging.info(stats_dict)
+    logging.debug('Jet reconstruction errors:')
+    logging.debug(err_dict)
 
 
 def default_get_rel_err(p_target, p_gen, eps, alpha=0.01):
@@ -116,10 +125,6 @@ def get_legend(res, bins):
     return legend
 
 
-def get_stats(res, bins):
-    return {'mean': np.mean(res), 'FWHM': find_fwhm(res, bins)}
-
-
 def filter_out_zeros(target, gen):
     """Filter out jets with any zero component.
 
@@ -138,16 +143,3 @@ def filter_out_zeros(target, gen):
     target_filtered = tuple([target[i][mask] for i in range(4)])
     gen_filtered = tuple([gen[i][mask] for i in range(4)])
     return target_filtered, gen_filtered
-
-
-def find_fwhm(err, bins):
-    """Full width at half maximum of a distribution."""
-    hist, _ = np.histogram(err, bins=bins)
-    max_idx = np.argmax(hist)
-    peak = bins[max_idx]
-
-    half_max = hist[max_idx] / 2
-    half_max_idx = (np.abs(hist - half_max)).argmin()
-    half_peak = bins[half_max_idx]
-
-    return 2 * abs(peak - half_peak)
