@@ -44,6 +44,7 @@ def test(args):
     )
     torch.save(jet_images_same_norm, osp.join(test_path, 'jet_images_same_norm.pt'))
     torch.save(jet_images, osp.join(test_path, 'jet_images.pt'))
+    logging.info('Plots finished.')
 
     if args.equivariance_test:
         dev = lgn_tests(args, encoder, decoder, test_loader, alpha_max=args.alpha_max, theta_max=args.theta_max,
