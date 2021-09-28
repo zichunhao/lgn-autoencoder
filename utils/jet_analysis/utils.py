@@ -2,12 +2,11 @@ import torch
 import numpy as np
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-GPU_STR = ['cuda', 'gpu']
 NUM_BINS = 81  # Number of bins for all histograms
 PLOT_FONT_SIZE = 12
 
 
-def get_magnitude(p, device='gpu'):
+def get_magnitude(p, gpu=True):
     """Get the momentum magnitude |p| of the 4-vector.
     Parameters
     ----------
@@ -26,7 +25,7 @@ def get_magnitude(p, device='gpu'):
     if isinstance(p, np.ndarray):
         return np.sqrt(np.sum(np.power(p, 2)[..., 1:], axis=-1))
     elif isinstance(p, torch.Tensor):
-        if device in GPU_STR:
+        if gpu:
             p = p.to(device=DEVICE)
         return torch.sqrt(torch.sum(torch.pow(p, 2)[..., 1:], dim=-1)).detach().cpu()
     else:
@@ -78,7 +77,7 @@ def get_p_cartesian(jets, cutoff=1e-6):
     return px, py, pz
 
 
-def get_p_polar(p4, cutoff=1e-6, eps=1e-12, device='gpu'):
+def get_p_polar(p4, cutoff=1e-6, eps=1e-12, gpu=True):
     """
     Get (pt, eta, phi) from the jet data.
 
@@ -97,7 +96,7 @@ def get_p_polar(p4, cutoff=1e-6, eps=1e-12, device='gpu'):
         eta = np.arcsinh(pz / pt)
         phi = np.arctan2(py, px + eps)
     elif isinstance(p4, torch.Tensor):
-        if device in GPU_STR:
+        if gpu:
             p4 = p4.to(device=DEVICE)
 
         p_polar = get_p_polar_tensor(p4)
@@ -116,9 +115,16 @@ def get_p_polar(p4, cutoff=1e-6, eps=1e-12, device='gpu'):
 
 def get_p_polar_tensor(p, eps=1e-16):
     """(E, px, py, pz) -> (pt, eta, phi)"""
-    px = p[..., 1]
-    py = p[..., 2]
-    pz = p[..., 3]
+    if p.shape[-1] == 4:
+        px = p[..., 1]
+        py = p[..., 2]
+        pz = p[..., 3]
+    elif p.shape[-1] == 3:
+        px = p[..., 0]
+        py = p[..., 1]
+        pz = p[..., 2]
+    else:
+        raise ValueError(f'Invalid error. p.shape[-1] should be either 3 or 4. Found: {p.shape[-1]}.')
 
     pt = torch.sqrt(px ** 2 + py ** 2)
     try:
@@ -134,7 +140,7 @@ def arcsinh(z):
     return torch.log(z + torch.sqrt(1 + torch.pow(z, 2)))
 
 
-def get_jet_feature_cartesian(p4, device='gpu'):
+def get_jet_feature_cartesian(p4, gpu=True):
     """
     Get jet (m, pt, eta, phi) from the jet data.
 
@@ -142,9 +148,9 @@ def get_jet_feature_cartesian(p4, device='gpu'):
     ----------
     p4 : `numpy.ndarray` or `torch.Tensor`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
-    device : str, optional
-        The device for computation when type(p4) is torch.Tensor.
-        Default: 'gpu'.
+    gpu : bool, optional
+        Whether to use gpu whenever possible.
+        Default: True
 
     Raises
     ------
@@ -160,7 +166,7 @@ def get_jet_feature_cartesian(p4, device='gpu'):
         jet_py = jet_p4[:, 2]
         jet_pz = jet_p4[:, 3]
     elif isinstance(p4, torch.Tensor):  # torch.Tensor
-        if device in GPU_STR:
+        if gpu:
             p4 = p4.to(device=DEVICE)
         jet_p4 = torch.sum(p4, axis=-2)
         msq = jet_p4[:, 0] ** 2 - torch.sum(torch.pow(jet_p4, 2)[:, 1:], axis=-1)
@@ -174,7 +180,7 @@ def get_jet_feature_cartesian(p4, device='gpu'):
     return jet_mass, jet_px, jet_py, jet_pz
 
 
-def get_jet_feature_polar(p4, device='gpu', eps=1e-16):
+def get_jet_feature_polar(p4, gpu=True, eps=1e-16):
     """
     Get jet (m, pt, eta, phi) from the jet data.
 
@@ -182,6 +188,9 @@ def get_jet_feature_polar(p4, device='gpu', eps=1e-16):
     ----------
     p4 : `numpy.ndarray` or `torch.Tensor`
         The jet data, with shape (num_particles, 4), which means all jets are merged together.
+    gpu : bool, optional
+        Whether to use gpu whenever possible.
+        Default: True
 
     Raises
     ------
@@ -197,7 +206,7 @@ def get_jet_feature_polar(p4, device='gpu', eps=1e-16):
         phi = np.arctan2(py, px)
         return m, pt, eta, phi
     elif isinstance(p4, torch.Tensor):
-        if device == 'gpu':
+        if gpu:
             p4 = p4.to(device=DEVICE)
         pt = torch.sqrt(px ** 2 + py ** 2)
         try:
@@ -208,6 +217,23 @@ def get_jet_feature_polar(p4, device='gpu', eps=1e-16):
         return m.detach().cpu().numpy(), pt.detach().cpu().numpy(), eta.detach().cpu().numpy(), phi.detach().cpu().numpy()
     else:
         raise ValueError(f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p4)}.")
+
+
+def find_fwhm(err, bins):
+    """Full width at half maximum of a distribution."""
+    hist, _ = np.histogram(err, bins=bins)
+    max_idx = np.argmax(hist)
+    peak = bins[max_idx]
+
+    half_max = hist[max_idx] / 2
+    half_max_idx = (np.abs(hist - half_max)).argmin()
+    half_peak = bins[half_max_idx]
+
+    return 2 * abs(peak - half_peak)
+
+
+def get_stats(res, bins):
+    return {'mean': np.mean(res), 'FWHM': find_fwhm(res, bins)}
 
 
 def get_jet_name(args):
