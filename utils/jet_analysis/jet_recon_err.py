@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from utils.utils import make_dir
 from utils.jet_analysis.utils import NUM_BINS, PLOT_FONT_SIZE
 import os.path as osp
+import logging
 
 FIGSIZE = (16, 4)
 LABELS_CARTESIAN_ABS_COORD = (r'$M$', r'$P_x$', r'$P_y$', r'$P_z$')
@@ -31,16 +32,24 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
     ranges = get_bins(NUM_BINS, rel_err_cartesian=rel_err_cartesian, rel_err_polar=rel_err_polar)
 
     LABELS = LABELS_ABS_COORD if args.abs_coord else LABELS_REL_COORD
+    stats_dict = dict()
     for rel_err_coordinate, labels, coordinate, bin_tuple in zip((rel_err_cartesian, rel_err_polar), LABELS, COORDINATES, ranges):
+        stats_coordinate_list = []
         fig, axs = plt.subplots(1, 4, figsize=FIGSIZE, sharey=False)
         for ax, rel_err, bins, label in zip(axs, rel_err_coordinate, bin_tuple, labels):
-            ax.hist(rel_err, bins=bins, label=get_legend(rel_err, bins=bins), histtype='step', stacked=True)
+            ax.hist(rel_err, bins=bins, histtype='step', stacked=True)
             ax.set_xlabel(fr'$\delta${label}')
             ax.set_ylabel('Number of Jets')
             ax.legend()
 
             for axis in ('x', 'y'):
                 ax.tick_params(axis=axis, labelsize=PLOT_FONT_SIZE)
+
+            stats_coordinate_list.append(get_stats(rel_err, bins))
+
+        stats_dict[coordinate] = stats_coordinate_list
+        logging.info('Jet reconstruction errors:')
+        logging.info(stats_dict)
 
         plt.rcParams.update({'font.size': PLOT_FONT_SIZE})
         plt.tight_layout()
@@ -105,6 +114,10 @@ def get_legend(res, bins):
     legend += r'$\mathrm{FWHM}$: ' + f'{find_fwhm(res, bins) :.2E}'
     # legend += r'$\mathrm{Med}$: ' + f'{np.median(res) :.3E}'
     return legend
+
+
+def get_stats(res, bins):
+    return {'mean': np.mean(res), 'FWHM': find_fwhm(res, bins)}
 
 
 def filter_out_zeros(target, gen):
