@@ -4,7 +4,7 @@ import numpy as np
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 GPU_STR = ['cuda', 'gpu']
 NUM_BINS = 81  # Number of bins for all histograms
-PLOT_FONT_SIZE = 15
+PLOT_FONT_SIZE = 12
 
 
 def get_magnitude(p, device='gpu'):
