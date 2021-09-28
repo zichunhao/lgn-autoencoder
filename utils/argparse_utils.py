@@ -134,13 +134,13 @@ def _parse_jet_recons_err_settings(parser):
     parser.add_argument('--auto-jet-recons-ranges', default=False, action='store_true',
                         help='Whether to automatically determine ranges of jet reconstruction errors. '
                         'Call --auto-jet-recons-ranges to set true.')
-    parser.add_argument('--jet-rel-err-min-cartesian', nargs="+", type=float, default=[-1, -1, -1], metavar='',
+    parser.add_argument('--jet-rel-err-min-cartesian', nargs="+", type=float, default=[-1, -1, -1, -1], metavar='',
                         help='xmin of histogram for jet reconstruction relative errors in Cartesian coordinates.')
-    parser.add_argument('--jet-rel-err-max-cartesian', nargs="+", type=float, default=[1, 1, 1], metavar='',
+    parser.add_argument('--jet-rel-err-max-cartesian', nargs="+", type=float, default=[1, 1, 1, 1], metavar='',
                         help='xmax of histogram for jet reconstruction relative errors in Cartesian coordinates.')
-    parser.add_argument('--jet-rel-err-min-polar', nargs="+", type=float, default=[-1, -1, -1], metavar='',
+    parser.add_argument('--jet-rel-err-min-polar', nargs="+", type=float, default=[-1, -1, -1, -1], metavar='',
                         help='xmin of histogram for jet reconstruction relative errors in polar coordinates (pt, eta, phi).')
-    parser.add_argument('--jet-rel-err-max-polar', nargs="+", type=float, default=[1, 1, 1], metavar='',
+    parser.add_argument('--jet-rel-err-max-polar', nargs="+", type=float, default=[1, 1, 1, 1], metavar='',
                         help='xmax of histogram for jet reconstruction relative errors in polar coordinates (pt, eta, phi).')
     return parser
 

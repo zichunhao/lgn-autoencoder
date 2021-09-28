@@ -319,7 +319,7 @@ def _get_jet_recons_ranges(args):
             args.jet_rel_err_max_cartesian[i],
             NUM_BINS
         )
-        for i in range(3)
+        for i in range(4)
     ])
     rel_err_polar = tuple([
         np.linspace(
@@ -327,7 +327,7 @@ def _get_jet_recons_ranges(args):
             args.jet_rel_err_max_polar[i],
             NUM_BINS
         )
-        for i in range(3)
+        for i in range(4)
     ])
 
     return (rel_err_cartesian, rel_err_polar)
