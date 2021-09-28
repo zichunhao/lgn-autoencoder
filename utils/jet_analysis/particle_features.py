@@ -3,7 +3,7 @@ from utils.utils import make_dir
 import os.path as osp
 import numpy as np
 import matplotlib.pyplot as plt
-from utils.jet_analysis.utils import NUM_BINS
+from utils.jet_analysis.utils import NUM_BINS, PLOT_FONT_SIZE
 
 FIGSIZE = (12, 4)
 LABELS_CARTESIAN_ABS_COORD = (r'$p_x$  (GeV)', r'$p_y$  (GeV)', r'$p_z$  (GeV)')
@@ -80,11 +80,14 @@ def plot_p_cartesian(args, p_targets, p_gens, save_dir, epoch=None,
         ax.set_xlabel(f'Particle {name}')
         ax.set_ylabel('Number of particles')
         ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
+        for axis in ('x', 'y'):
+            ax.tick_params(axis=axis, labelsize=PLOT_FONT_SIZE)
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
 
     handles, labels = ax.get_legend_handles_labels()
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.05), ncol=2)
+    plt.rcParams.update({'font.size': PLOT_FONT_SIZE})
 
     fig.tight_layout()
 
@@ -161,12 +164,16 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir,
             ax.hist(p_target.flatten(), bins=bins, alpha=0.6, label='target', density=density)
         ax.set_xlabel(f'Particle {name}')
         ax.set_ylabel('Number of particles')
+
         ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
+        for axis in ('x', 'y'):
+            ax.tick_params(axis=axis, labelsize=PLOT_FONT_SIZE)
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
 
     handles, labels = ax.get_legend_handles_labels()
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.05), ncol=4)
+    plt.rcParams.update({'font.size': PLOT_FONT_SIZE})
 
     fig.tight_layout()
 

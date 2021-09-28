@@ -1,4 +1,4 @@
-from utils.jet_analysis.utils import get_jet_name, NUM_BINS
+from utils.jet_analysis.utils import get_jet_name, NUM_BINS, PLOT_FONT_SIZE
 from utils.utils import make_dir
 import os.path as osp
 import numpy as np
@@ -82,11 +82,14 @@ def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir,
         ax.set_xlabel(f'Jet {name}')
         ax.set_ylabel('Number of jets')
         ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
+        for axis in ('x', 'y'):
+            ax.tick_params(axis=axis, labelsize=PLOT_FONT_SIZE)
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
 
     handles, labels = ax.get_legend_handles_labels()
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.05), ncol=2)
+    plt.rcParams.update({'font.size': PLOT_FONT_SIZE})
 
     fig.tight_layout()
 
@@ -164,11 +167,14 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir,
         ax.set_xlabel(f'Jet {name}')
         ax.set_ylabel('Number of jets')
         ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
+        for axis in ('x', 'y'):
+            ax.tick_params(axis=axis, labelsize=PLOT_FONT_SIZE)
         ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
 
     handles, labels = ax.get_legend_handles_labels()
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.05), ncol=2)
+    plt.rcParams.update({'font.size': PLOT_FONT_SIZE})
 
     fig.tight_layout()
 

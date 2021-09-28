@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from utils.utils import make_dir
-from utils.jet_analysis.utils import NUM_BINS
+from utils.jet_analysis.utils import NUM_BINS, PLOT_FONT_SIZE
 import os.path as osp
 
 FIGSIZE = (16, 4)
@@ -38,7 +38,13 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
             ax.set_xlabel(fr'$\delta${label}')
             ax.set_ylabel('Number of Jets')
             ax.legend()
+
+            for axis in ('x', 'y'):
+                ax.tick_params(axis=axis, labelsize=PLOT_FONT_SIZE)
+
+        plt.rcParams.update({'font.size': PLOT_FONT_SIZE})
         plt.tight_layout()
+
         if save_dir:
             if epoch is not None:
                 path = make_dir(osp.join(save_dir, f'jet_reconstruction_errors/{coordinate}'))
