@@ -39,9 +39,7 @@ def test(args):
         recons *= 1000
         target *= 1000
 
-    jet_images_same_norm, jet_images = plot_p(
-        args, target, recons, fig_path, particle_recon_err=args.particle_recon_err
-    )
+    jet_images_same_norm, jet_images = plot_p(args, target, recons, fig_path)
     torch.save(jet_images_same_norm, osp.join(test_path, 'jet_images_same_norm.pt'))
     torch.save(jet_images, osp.join(test_path, 'jet_images.pt'))
     logging.info('Plots finished.')
@@ -93,8 +91,6 @@ def setup_argparse():
 
     # Plots
     parse_plot_settings(parser)
-    parser.add_argument('--particle-recon-err', type=get_bool, default=False, metavar='',
-                        help='Whether to plot reconstruction errors of particle momenta. Used only if a one-to-one mapping is clear.')
 
     # Convariance tests
     parse_covariance_test_settings(parser)
