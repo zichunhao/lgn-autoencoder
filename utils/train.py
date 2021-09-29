@@ -38,7 +38,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
     outpath_train_jet_plots = make_dir(osp.join(outpath, 'jet_plots/train'))
     outpath_valid_jet_plots = make_dir(osp.join(outpath, 'jet_plots/valid'))
     best_loss = math.inf
-    best_epoch = 0
+    best_epoch = 1
     num_stale_epochs = 0
 
     for ep in range(args.num_epochs):
@@ -55,16 +55,11 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         if (abs(valid_avg_loss) < best_loss):
             best_loss = valid_avg_loss
             num_stale_epochs = 0
-            best_epoch = epoch
+            best_epoch = epoch + 1
             torch.save(encoder.state_dict(), osp.join(outpath, "weights_encoder/best_encoder_weights.pth"))
             torch.save(decoder.state_dict(), osp.join(outpath, "weights_decoder/best_decoder_weights.pth"))
         else:
             num_stale_epochs += 1
-
-        train_end = time.time()
-        save_data(data=train_end - start, data_name='dts', is_train=None, outpath=outpath, epoch=epoch)
-        save_data(data=train_avg_loss, data_name='losses', is_train=True, outpath=outpath, epoch=epoch)
-        save_data(data=valid_avg_loss, data_name='losses', is_train=False, outpath=outpath, epoch=epoch)
 
         if args.abs_coord and (args.unit.lower() == 'tev'):
             # Convert to GeV for plotting
@@ -82,18 +77,19 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
                                         (outpath_train_jet_plots, outpath_valid_jet_plots)):
                 plot_p(args, target, gen, save_dir=dir, cutoff=args.cutoff, epoch=epoch)
 
-        dts.append(train_end-start)
+        dt = time.time() - start
+
+        dts.append(dt)
         train_avg_losses.append(train_avg_loss)
         valid_avg_losses.append(valid_avg_loss)
 
         np.savetxt(osp.join(outpath, 'model_evaluations/losses_training.txt'), train_avg_losses)
         np.savetxt(osp.join(outpath, 'model_evaluations/losses_validation.txt'), valid_avg_losses)
+        np.savetxt(osp.join(outpath, 'model_evaluations/dts.txt'), dt)
 
-        plot_end = time.time()
-
-        logging.info(f'epoch={epoch+1}/{args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch}, '
-                     f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, dt_train={train_end-start}s, dt_plot={plot_end-train_end}s, dt={plot_end-start}s, '
-                     f'{num_stale_epochs=}, best_epoch={best_epoch+1}')
+        total_epoch = args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch
+        logging.info(f'epoch={epoch+1}/{total_epoch}, train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, '
+                     f'{dt=}s, {num_stale_epochs=}, {best_epoch=}')
 
         if (epoch > 0) and ((epoch + 1) % 10 == 0):
             plot_eval_results(args, data=(train_avg_losses[-10:], valid_avg_losses[-10:]),
@@ -104,11 +100,11 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
         if num_stale_epochs > args.patience:
             logging.info(f'Number of stale epochs reached the set patience ({args.patience}). Training breaks.')
-            break
+            return best_epoch
 
         if (abs(valid_avg_loss) > BLOW_UP_THRESHOLD) or (abs(train_avg_loss) > BLOW_UP_THRESHOLD):
             logging.error('Loss blows up. Training breaks.')
-            break
+            return best_epoch
 
     # Save global data
     save_data(data=train_avg_losses, data_name='losses', is_train=True, outpath=outpath, epoch=-1)
@@ -118,7 +114,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
     plot_eval_results(args, data=(train_avg_losses, valid_avg_losses), data_name='Losses', outpath=outpath)
     plot_eval_results(args, data=dts, data_name='Durations', outpath=outpath)
 
-    return train_avg_losses, valid_avg_losses, dts
+    return best_epoch
 
 
 def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,

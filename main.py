@@ -62,19 +62,24 @@ def main(args):
             json.dump({k: str(v) for k, v in vars(args).items()}, f)
 
     best_epoch = train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_encoder, optimizer_decoder, outpath, args.device)
-    logging.info(f'{Best epoch: }')
+    logging.info(f"Training completed! Best epoch: {best_epoch}")
 
     # Equivariance tests
     if args.equivariance_test:
-        encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{best_epoch}_encoder_weights.pth'),
-                                           map_location=args.test_device))
-        decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{best_epoch}_decoder_weights.pth'),
-                                           map_location=args.test_device))
+        try:
+            encoder.load_state_dict(torch.load(osp.join(outpath, 'weights_encoder/best_encoder_weights.pth'),
+                                               map_location=args.test_device))
+            decoder.load_state_dict(torch.load(osp.join(outpath, 'weights_decoder/best_encoder_weights.pth'),
+                                               map_location=args.test_device))
+        except FileNotFoundError:
+            encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{best_epoch}_encoder_weights.pth'),
+                                               map_location=args.test_device))
+            decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{best_epoch}_decoder_weights.pth'),
+                                               map_location=args.test_device))
+
         dev = lgn_tests(args, encoder, decoder, test_loader, alpha_max=args.alpha_max, theta_max=args.theta_max,
                         cg_dict=encoder.cg_dict, unit=args.unit)
         plot_all_dev(dev, osp.join(outpath, 'model_evaluations/equivariance_tests'))
-
-    logging.info("Training completed!")
 
     logging.info("Done!")
 
