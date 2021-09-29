@@ -228,7 +228,7 @@ def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None,
 
 
 def get_rel_err(target, recons):
-    return ((recons - target) / recons).view(-1, target.shape[-1])
+    return ((recons - target) / target).view(-1, target.shape[-1])
 
 
 def get_legend_rel_err(res):
