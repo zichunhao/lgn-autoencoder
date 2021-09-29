@@ -29,8 +29,6 @@ def main(args):
 
     """Initializations"""
     encoder, decoder = initialize_autoencoder(args)
-
-    # Training and equivariance test
     optimizer_encoder, optimizer_decoder = initialize_optimizers(args, encoder, decoder)
 
     # Both on gpu
@@ -38,14 +36,13 @@ def main(args):
         logging.info('The models are initialized on GPU...')
     # One on cpu and the other on gpu
     elif (next(encoder.parameters()).is_cuda or next(encoder.parameters()).is_cuda):
-        raise AssertionError("The encoder and decoder are not trained on the same device!")
+        raise RuntimeError("The encoder and decoder are not trained on the same device!")
     # Both on cpu
     else:
         logging.info('The models are initialized on CPU...')
 
-    logging.info(f'Training over {args.num_epochs} epochs...')
-
     '''Training'''
+    logging.info(f'Training over {args.num_epochs} epochs...')
     # Load existing model
     if args.load_to_train:
         outpath = args.load_path
@@ -80,6 +77,14 @@ def main(args):
         dev = lgn_tests(args, encoder, decoder, test_loader, alpha_max=args.alpha_max, theta_max=args.theta_max,
                         cg_dict=encoder.cg_dict, unit=args.unit)
         plot_all_dev(dev, osp.join(outpath, 'model_evaluations/equivariance_tests'))
+
+    if args.test_best_model:
+        args.load_epoch = best_epoch
+        args.model_path = outpath
+        args.equivariance_test = False  # Already ran on the best moel
+        logging.info(f'Running test on model from epoch {best_epoch}...')
+        from test import test
+        test(args)
 
     logging.info("Done!")
 
@@ -146,6 +151,9 @@ def setup_argparse():
 
     parse_plot_settings(parser)
     parse_covariance_test_settings(parser)
+
+    parser.add_argument('--test-best-model', default=False, action='store_true',
+                        help='Whether to test the best model with the test dataset.')
 
     args = parser.parse_args()
 
