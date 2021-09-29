@@ -149,8 +149,6 @@ def parse_covariance_test_settings(parser):
     parser.add_argument('--equivariance-test', default=False, action='store_true',
                         help='Whether to take the equivariance test after all trainings on the last model. True only when it is called.'
                         'Default: False.')
-    parser.add_argument('--equivariance-test-only', default=False, action='store_true',
-                        help='Whether to take the equivariance test only (i.e. no training).')
     parser.add_argument('--test-device', type=get_device, default=torch.device('cuda' if torch.cuda.is_available() else 'cpu'), metavar='',
                         help="Device to for testing. Options: ('gpu', 'cpu', 'cuda', '-1')."
                         "Default: -1, which means deciding device based on whether gpu is available.")

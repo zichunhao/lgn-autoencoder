@@ -31,68 +31,52 @@ def main(args):
     encoder, decoder = initialize_autoencoder(args)
 
     # Training and equivariance test
-    if not args.equivariance_test_only:
-        optimizer_encoder, optimizer_decoder = initialize_optimizers(args, encoder, decoder)
+    optimizer_encoder, optimizer_decoder = initialize_optimizers(args, encoder, decoder)
 
-        # Both on gpu
-        if (next(encoder.parameters()).is_cuda and next(encoder.parameters()).is_cuda):
-            logging.info('The models are initialized on GPU...')
-        # One on cpu and the other on gpu
-        elif (next(encoder.parameters()).is_cuda or next(encoder.parameters()).is_cuda):
-            raise AssertionError("The encoder and decoder are not trained on the same device!")
-        # Both on cpu
-        else:
-            logging.info('The models are initialized on CPU...')
-
-        logging.info(f'Training over {args.num_epochs} epochs...')
-
-        '''Training'''
-        # Load existing model
-        if args.load_to_train:
-            outpath = args.load_path
-            encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'),
-                                               map_location=args.device))
-            decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'),
-                                               map_location=args.device))
-        # Create new model
-        else:
-            import json
-            outpath = create_model_folder(args)
-            args_dir = osp.join(outpath, "args_cache.json")
-            with open(args_dir, "w") as f:
-                json.dump({k: str(v) for k, v in vars(args).items()}, f)
-
-        train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_encoder, optimizer_decoder, outpath, args.device)
-
-        # Equivariance tests
-        if args.equivariance_test:
-            encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.num_epochs}_encoder_weights.pth'),
-                                               map_location=args.test_device))
-            decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.num_epochs}_decoder_weights.pth'),
-                                               map_location=args.test_device))
-            dev = lgn_tests(args, encoder, decoder, test_loader, alpha_max=args.alpha_max, theta_max=args.theta_max,
-                            cg_dict=encoder.cg_dict, unit=args.unit)
-            plot_all_dev(dev, osp.join(outpath, 'model_evaluations/equivariance_tests'))
-
-        logging.info("Training completed!")
-    # equivariance test only
+    # Both on gpu
+    if (next(encoder.parameters()).is_cuda and next(encoder.parameters()).is_cuda):
+        logging.info('The models are initialized on GPU...')
+    # One on cpu and the other on gpu
+    elif (next(encoder.parameters()).is_cuda or next(encoder.parameters()).is_cuda):
+        raise AssertionError("The encoder and decoder are not trained on the same device!")
+    # Both on cpu
     else:
-        if args.load_path is not None:
-            loadpath = args.load_path
-        else:
-            raise RuntimeError("load-path cannot be None if equivariance-test-only is True!")
-        load_epoch = args.load_epoch if args.load_epoch is not None else args.num_epochs
+        logging.info('The models are initialized on CPU...')
 
-        encoder.load_state_dict(torch.load(osp.join(loadpath, f'weights_encoder/epoch_{load_epoch}_encoder_weights.pth'),
-                                           map_location=args.test_device))
-        decoder.load_state_dict(torch.load(osp.join(loadpath, f'weights_decoder/epoch_{load_epoch}_decoder_weights.pth'),
-                                           map_location=args.test_device))
+    logging.info(f'Training over {args.num_epochs} epochs...')
 
+    '''Training'''
+    # Load existing model
+    if args.load_to_train:
+        outpath = args.load_path
+        encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'),
+                                           map_location=args.device))
+        decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'),
+                                           map_location=args.device))
+    # Create new model
+    else:
+        import json
+        outpath = create_model_folder(args)
+        args_dir = osp.join(outpath, "args_cache.json")
+        with open(args_dir, "w") as f:
+            json.dump({k: str(v) for k, v in vars(args).items()}, f)
+
+    best_epoch = train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_encoder, optimizer_decoder, outpath, args.device)
+    logging.info(f'{Best epoch: }')
+
+    # Equivariance tests
+    if args.equivariance_test:
+        encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{best_epoch}_encoder_weights.pth'),
+                                           map_location=args.test_device))
+        decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{best_epoch}_decoder_weights.pth'),
+                                           map_location=args.test_device))
         dev = lgn_tests(args, encoder, decoder, test_loader, alpha_max=args.alpha_max, theta_max=args.theta_max,
                         cg_dict=encoder.cg_dict, unit=args.unit)
-        plot_all_dev(dev, osp.join(loadpath, 'model_evaluations/equivariance_tests'))
+        plot_all_dev(dev, osp.join(outpath, 'model_evaluations/equivariance_tests'))
 
-        logging.info("Done!")
+    logging.info("Training completed!")
+
+    logging.info("Done!")
 
 
 def setup_argparse():
