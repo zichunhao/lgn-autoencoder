@@ -48,9 +48,10 @@ def get_polar_rel(p, jet, input_cartesian=True):
     eta = p[..., 1]
     phi = p[..., 2]
 
-    pt /= jet[..., 0]
-    eta -= jet[..., 1]
-    phi -= jet[..., 2]
+    num_particles = p.shape[-2]
+    pt /= jet[..., 0].unsqueeze(dim=-1).repeat(1, num_particles)
+    eta -= jet[..., 1].unsqueeze(dim=-1).repeat(1, num_particles)
+    phi -= jet[..., 2].unsqueeze(dim=-1).repeat(1, num_particles)
 
     return torch.stack((pt, eta, phi), dim=-1)
 
