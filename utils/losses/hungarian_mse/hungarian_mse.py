@@ -51,7 +51,7 @@ def jet_mse_loss(recons, target, abs_coord=True, polar_coord=False, find_match=T
     cost = torch.cdist(recons, target).cpu().detach().numpy()
     matching = [optimize.linear_sum_assignment(cost[i])[1] for i in range(len(cost))]
 
-    recons_shuffle = torch.zeros(recons.shape).to(device)
+    recons_shuffle = torch.zeros(recons.shape).to(device).to(recons.dtype)
     for i in range(len(matching)):
         recons_shuffle[i] = recons[i, matching[i]]
 
