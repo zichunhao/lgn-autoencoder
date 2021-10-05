@@ -118,7 +118,7 @@ def setup_argparse():
     # chamfer loss options
     parser.add_argument('--chamfer-loss-weight', type=float, default=1.0, metavar='',
                         help="The weight for the chamfer loss, only relevant if loss-choice is 'hybrid'. Default: 1.0.")
-    parser.add_argument('--loss-norm-choice', type=str, default='p3', metavar='',
+    parser.add_argument('--chamfer-loss-norm-choice', type=str, default='p3', metavar='',
                         help="Choice of calculating the norms of 4-vectors when calculating the loss. "
                         "Options: ['canonical', 'real', 'cplx', 'p3', 'polar']. "
                         "'canonical': Write p in the basis of zonal functions, take the dot product, and find the norm out of the complex scalar. "
@@ -129,10 +129,16 @@ def setup_argparse():
                         "Default: 'p3.'")
     parser.add_argument('--chamfer-jet-features', type=get_bool, default=True,
                         help="Whether to take into the jet features.")
-    parser.add_argument('--im', type=get_bool, default=True,
+    parser.add_argument('--chamfer-im', type=get_bool, default=True,
                         help="Whether to take into imaginary component of the reconstructed jet into account if using the chamfer loss."
                         "Only used when --loss-norm-choice is in ['p3', 'polar']"
                         "If set to True, the target will be complexified with 0 imaginary components.")
+
+    # Hungarian loss options
+    parser.add_argument('--hungarian-abs-coord', type=get_bool, default=True,
+                        help="Whether to use absolute coordinate when calculating the Hungarian MSE loss.")
+    parser.add_argument('--hungarian-polar-coord', type=get_bool, default=False,
+                        help="Whether to use polar coordinate when calculating the Hungarian MSE loss.")
 
     parser.add_argument('--save-dir', type=str, default='autoencoder-trained-models', metavar='',
                         help='The directory to save trained models and figures.')

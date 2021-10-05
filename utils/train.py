@@ -214,7 +214,7 @@ def get_loss(args, p4_recons, p4_target):
     # Chamfer loss
     if 'chamfer' in loss_choice:
         from utils.losses import ChamferLoss
-        chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice, im=args.im)
+        chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice, im=args.chamfer_im)
         batch_loss = chamferloss(p4_recons, p4_target, jet_features=args.chamfer_jet_features)  # output, target
 
     # EMD loss
@@ -226,7 +226,7 @@ def get_loss(args, p4_recons, p4_target):
     # Hybrid of Chamfer loss and EMD loss
     elif loss_choice in ('hybrid', 'combined', 'mix'):
         from utils.losses import ChamferLoss, EMDLoss
-        chamfer_loss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
+        chamfer_loss = ChamferLoss(loss_norm_choice=args.chamfer_loss_norm_choice, im=args.chamfer_im)
         emd_loss = EMDLoss(eps=get_eps(args))
         batch_loss = args.chamfer_loss_weight * chamfer_loss(p4_recons, p4_target, jet_features=args.chamfer_jet_features)
         batch_loss += emd_loss(p4_recons, p4_target)
@@ -240,7 +240,8 @@ def get_loss(args, p4_recons, p4_target):
     elif 'jet' in loss_choice or 'hungarian' in loss_choice:
         from utils.losses import HungarianMSELoss
         hungarian_mse = HungarianMSELoss()
-        batch_loss = hungarian_mse(p4_recons[0], p4_target)  # TODO: implement different metric for calculating distance
+        # TODO: implement different metric for calculating distance
+        batch_loss = hungarian_mse(p4_recons[0], p4_target, abs_coord=args.hungarian_abs_coord, polar_coord=args.hungarian_polar_coord)
 
     else:
         err_msg = f'Current loss choice ({args.loss_choice}) is not implemented. '
