@@ -57,10 +57,11 @@ def get_p_cartesian(jets, cutoff=1e-6):
         py = jets[:, 2].copy()
         pz = jets[:, 3].copy()
         p = get_magnitude(jets)  # |p| of 3-momenta
+        mask = (p > cutoff)
         if cutoff > 0:
-            px[p < cutoff] = np.nan
-            py[p < cutoff] = np.nan
-            pz[p < cutoff] = np.nan
+            px = px[mask]
+            py = py[mask]
+            pz = pz[mask]
     elif isinstance(jets, torch.Tensor):
         jets = torch.clone(jets).reshape(-1, 4)
         px = torch.clone(jets[:, 1]).detach().cpu().numpy()
@@ -68,9 +69,9 @@ def get_p_cartesian(jets, cutoff=1e-6):
         pz = torch.clone(jets[:, 3]).detach().cpu().numpy()
         p = get_magnitude(jets)  # |p| of 3-momenta
         if cutoff > 0:
-            px[p < cutoff] = np.nan
-            py[p < cutoff] = np.nan
-            pz[p < cutoff] = np.nan
+            px = px[mask]
+            py = py[mask]
+            pz = pz[mask]
     else:
         raise ValueError(f"The input must be numpy.ndarray or torch.Tensor. Found: {type(jets)}.")
 
@@ -106,9 +107,10 @@ def get_p_polar(p4, cutoff=1e-6, eps=1e-12, gpu=True):
 
         if cutoff > 0:
             p = get_magnitude(p4).detach().cpu().numpy()
-            pt[p < cutoff] = np.nan
-            eta[p < cutoff] = np.nan
-            phi[p < cutoff] = np.nan
+            mask = (p > cutoff)
+            pt = pt[mask]
+            eta = eta[mask]
+            phi = phi[mask]
 
     return pt, eta, phi
 

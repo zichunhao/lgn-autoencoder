@@ -2,7 +2,8 @@
 Slightly adapted from Raghav Kansal's code (https://github.com/rkansal47/emd_loss)
 """
 import torch
-from utils.emd_loss.qpth.qp import QPFunction
+import torch.nn as nn
+from utils.losses.emd_loss.qpth.qp import QPFunction
 from utils.utils import get_p_polar
 
 
@@ -73,19 +74,19 @@ def emd_inference_qpth(distance_matrix, weight1, weight2, device, form='QP', l2_
     return emd_score, flow.view(-1, nelement_weight1, nelement_weight2)
 
 
-def emd_loss(target_jet, jet_gen, eps=1e-12, form='L2', l2_strength=0.0001,
+def emd_loss(jet_out, jet_target, eps=1e-12, form='L2', l2_strength=0.0001,
              return_flow=False, device=None):
     """
-    batched Energy Mover's Distance between jet_gen and target_jet
+    batched Energy Mover's Distance between jet_out and jet_target
 
     Parameters
     ----------
-    target_jet : `torch.Tensor`
-        target momenta
-        4-momenta of shape `(batch_size, num_particles, 4)` or `(2, batch_size, num_particles, 4)` if complexified
-    jet_gen : `torch.Tensor`
+    jet_out : `torch.Tensor`
         output momenta
         4-momenta of `(2, batch_size, num_particles, 4)` if complexified
+    jet_target : `torch.Tensor`
+        target momenta
+        4-momenta of shape `(batch_size, num_particles, 4)` or `(2, batch_size, num_particles, 4)` if complexified
     return_flow : bool
         Optional, default: False
         Whether to the flow as well as the EMD score
@@ -97,30 +98,49 @@ def emd_loss(target_jet, jet_gen, eps=1e-12, form='L2', l2_strength=0.0001,
         flow : torch.Tensor with shape (batch_size, num_particles, num_particles)
     """
 
-    if (len(jet_gen.shape) == 4) and (jet_gen.shape[0] == 2) and (jet_gen.shape[-1] == 4):
-        jet_gen = jet_gen[0]  # real component only
-        if len(target_jet.shape) == 4:  # complexified
-            target_jet = target_jet[0]
-    elif (len(jet_gen.shape) == 3):  # real only
+    if (len(jet_out.shape) == 4) and (jet_out.shape[0] == 2) and (jet_out.shape[-1] == 4):
+        jet_out = jet_out[0]  # real component only
+        if len(jet_target.shape) == 4:  # complexified
+            jet_target = jet_target[0]
+    elif (len(jet_out.shape) == 3):  # real components only
         pass
     else:
-        assert ValueError(f"Invalid shape of jet_gen! Found: {jet_gen.shape=}")
+        assert ValueError(f"Invalid shape of jet_out! Found: {jet_out.shape=}")
 
     if device is None:
-        device = jet_gen.device
+        device = jet_out.device
     else:
-        jet_gen = jet_gen.to(device)
+        jet_out = jet_out.to(device)
 
-    target_jet = target_jet.to(device)
+    jet_target = jet_target.to(device)
 
     # Convert to polar coordinate (eta, phi, pt)
-    jet_gen = get_p_polar(jet_gen, eps=eps)
-    target_jet = get_p_polar(target_jet, eps=eps)
+    jet_out = get_p_polar(jet_out, eps=eps)
+    jet_target = get_p_polar(jet_target, eps=eps)
 
-    diffs = -(target_jet[:, :, :2].unsqueeze(2) - jet_gen[:, :, :2].unsqueeze(1)) + eps
+    diffs = -(jet_target[:, :, :2].unsqueeze(2) - jet_out[:, :, :2].unsqueeze(1)) + eps
     dists = torch.norm(diffs, dim=3)
 
-    emd_score, flow = emd_inference_qpth(dists, target_jet[:, :, 2], jet_gen[:, :, 2],
+    emd_score, flow = emd_inference_qpth(dists, jet_target[:, :, 2], jet_out[:, :, 2],
                                          device, form=form, l2_strength=l2_strength)
 
     return (emd_score.sum(), flow) if return_flow else emd_score.sum()
+
+
+class EMDLoss(nn.Module):
+    def __init__(self, eps=1e-16, form='L2', l2_strength=0.0001):
+        """
+        eps : float
+            eps used in computation
+        form : str
+        l2_strength : float
+        device : str or None
+        """
+        super(EMDLoss, self).__init__()
+        self.eps = eps
+        self.form = form
+        self.l2_strength = l2_strength
+
+    def forward(self, jet_out, jet_target, return_flow=False):
+        return emd_loss(jet_out, jet_target, eps=self.eps, form=self.form,
+                        l2_strength=self.l2_strength, return_flow=return_flow)
