@@ -14,8 +14,6 @@ class HungarianMSELoss(nn.Module):
         self.abs_coord = abs_coord
         self.polar_coord = polar_coord
         self.device = recons.device
-        import logging
-        logging(f'{recons.dtype=}')
         return jet_mse_loss(recons, target, abs_coord=abs_coord, polar_coord=polar_coord, find_match=find_match)
 
 
