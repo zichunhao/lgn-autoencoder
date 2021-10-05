@@ -133,10 +133,6 @@ def setup_argparse():
                         help="Whether to take into imaginary component of the reconstructed jet into account if using the chamfer loss."
                         "Only used when --loss-norm-choice is in ['p3', 'polar']"
                         "If set to True, the target will be complexified with 0 imaginary components.")
-    parser.add_argument('--chamfer-im', type=get_bool, default=True,
-                        help="Whether to take into imaginary component of the reconstructed jet into account if using the chamfer loss."
-                        "Only used when --loss-norm-choice is in ['p3', 'polar']"
-                        "If set to True, the target will be complexified with 0 imaginary components.")
 
     # Hungarian loss options
     parser.add_argument('--hungarian-abs-coord', type=get_bool, default=True,
