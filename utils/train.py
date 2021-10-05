@@ -2,8 +2,6 @@ import logging
 import numpy as np
 from utils.jet_analysis.plot import plot_p
 from utils.utils import make_dir, save_data, plot_eval_results, get_eps
-from utils.chamfer_loss import ChamferLoss
-from utils.emd_loss.emd_loss import emd_loss
 import time
 import os.path as osp
 import warnings
@@ -46,9 +44,12 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
         # Training
         start = time.time()
-        train_avg_loss, train_gen, train_target = train(args, train_loader, encoder, decoder,
-                                                        optimizer_encoder, optimizer_decoder, epoch,
-                                                        outpath, is_train=True, device=device)
+        train_avg_loss, train_gen, train_target = train(
+            args, train_loader, encoder, decoder,
+            optimizer_encoder, optimizer_decoder, epoch,
+            outpath, is_train=True, device=device
+        )
+
         # Validation
         valid_avg_loss, valid_gen, valid_target = validate(args, valid_loader, encoder, decoder,
                                                            epoch, outpath, device=device)
@@ -70,7 +71,9 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
         # EMD: Plot every epoch because model trains slowly with the EMD loss.
         # Others (MSE and chamfer losses): Plot every args.plot_freq epoch.
-        to_plot = ('emd' in args.loss_choice.lower()) or ('emd' not in args.loss_choice.lower() and ((epoch + 1) % args.plot_freq == 0)) or (ep == 0)
+        is_emd = 'emd' in args.loss_choice.lower()
+        right_epoch = ((epoch + 1) % args.plot_freq == 0) or (ep == 0)
+        to_plot = is_emd or right_epoch
         if to_plot:
             for target, gen, dir in zip((train_target, valid_target),
                                         (train_gen, valid_gen),
@@ -85,7 +88,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
         np.savetxt(osp.join(outpath, 'model_evaluations/losses_training.txt'), train_avg_losses)
         np.savetxt(osp.join(outpath, 'model_evaluations/losses_validation.txt'), valid_avg_losses)
-        np.savetxt(osp.join(outpath, 'model_evaluations/dts.txt'), dt)
+        np.savetxt(osp.join(outpath, 'model_evaluations/dts.txt'), dts)
 
         total_epoch = args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch
         logging.info(f'epoch={epoch+1}/{total_epoch}, train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, '
@@ -139,8 +142,8 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
     for i, batch in enumerate(tqdm(loader)):
         latent_features = encoder(batch, covariance_test=False)
-        p4_gen = decoder(latent_features, covariance_test=False)
-        generated_data.append(p4_gen[0].cpu().detach())
+        p4_recons = decoder(latent_features, covariance_test=False)
+        generated_data.append(p4_recons[0].cpu().detach())
 
         p4_target = batch['p4']
         if device is not None:
@@ -149,7 +152,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         if for_test:
             latent_spaces.append({k: latent_features[k].squeeze(dim=2) for k in latent_features.keys()})
         else:
-            batch_loss = get_loss(args, p4_gen, p4_target)
+            batch_loss = get_loss(args, p4_recons, p4_target)
             epoch_total_loss += batch_loss.item()
 
             # Backward propagation
@@ -162,7 +165,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
                     import os
                     error_path = osp.join(outpath, 'errors')
                     os.makedirs(error_path, exist_ok=True)
-                    torch.save(p4_gen, osp.join(error_path, 'p4_gen.pt'))
+                    torch.save(p4_recons, osp.join(error_path, 'p4_recons.pt'))
                     torch.save(p4_target, osp.join(error_path, 'p4_target.pt'))
                     torch.save(encoder.state_dict(), osp.join(error_path, 'encoder_weights.pt'))
                     torch.save(decoder.state_dict(), osp.join(error_path, 'decoder_weights.pt'))
@@ -205,21 +208,43 @@ def validate(args, loader, encoder, decoder, epoch, outpath, device, for_test=Fa
     )
 
 
-def get_loss(args, p4_gen, p4_target):
-    if 'chamfer' in args.loss_choice.lower():
+def get_loss(args, p4_recons, p4_target):
+    loss_choice = args.loss_choice.lower()
+
+    # Chamfer loss
+    if 'chamfer' in loss_choice:
+        from utils.losses import ChamferLoss
         chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice, im=args.im)
-        batch_loss = chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features)  # output, target
-    elif 'emd' in args.loss_choice.lower():
-        batch_loss = emd_loss(p4_target, p4_gen, eps=get_eps(args), device=args.device)  # true, output
-    elif 'mse' in args.loss_choice.lower():
+        batch_loss = chamferloss(p4_recons, p4_target, jet_features=args.chamfer_jet_features)  # output, target
+
+    # EMD loss
+    elif 'emd' in loss_choice:
+        from utils.losses import EMDLoss
+        emd_loss = EMDLoss(eps=get_eps(args))
+        batch_loss = emd_loss(p4_recons, p4_target)  # true, output
+
+    # Hybrid of Chamfer loss and EMD loss
+    elif loss_choice in ('hybrid', 'combined', 'mix'):
+        from utils.losses import ChamferLoss, EMDLoss
+        chamfer_loss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
+        emd_loss = EMDLoss(eps=get_eps(args))
+        batch_loss = args.chamfer_loss_weight * chamfer_loss(p4_recons, p4_target, jet_features=args.chamfer_jet_features)
+        batch_loss += emd_loss(p4_recons, p4_target)
+
+    # MSE loss
+    elif 'mse' in loss_choice:
         mseloss = nn.MSELoss()
-        batch_loss = mseloss(p4_gen[0], p4_target)  # output, target
-    elif args.loss_choice.lower() in ('hybrid', 'combined', 'mix'):
-        chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
-        batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features=args.chamfer_jet_features)
-        batch_loss += emd_loss(p4_target, p4_gen, eps=get_eps(args), device=args.device)
+        batch_loss = mseloss(p4_recons[0], p4_target)  # output, target
+
+    # Hungarian loss
+    elif 'jet' in loss_choice or 'hungarian' in loss_choice:
+        from utils.losses import HungarianMSELoss
+        hungarian_mse = HungarianMSELoss()
+        batch_loss = hungarian_mse(p4_recons[0], p4_target)  # TODO: implement different metric for calculating distance
+
     else:
         err_msg = f'Current loss choice ({args.loss_choice}) is not implemented. '
-        err_msg += "The current available options are ('chamfer', 'emd', 'mse', 'hybrid')"
+        err_msg += "The current available options are ('chamfer', 'emd', 'hybrid', 'mse', 'hungarian')"
         raise NotImplementedError(err_msg)
+
     return batch_loss

@@ -2,7 +2,7 @@ import torch
 from enum import Enum
 # from block import block
 
-from utils.emd_loss.qpth.util import get_sizes, bdiag
+from ...util import get_sizes, bdiag
 
 
 def lu_hack(x):
@@ -126,7 +126,7 @@ def forward(Q, p, G, h, A, b, Q_LU, S_LU, R, eps=1e-12, verbose=0, notImprovedLi
         d = z / s
         try:
             factor_kkt(S_LU, R, d)
-        except:
+        except Exception:
             return best['x'], best['y'], best['z'], best['s']
 
         if verbose == 1:
@@ -395,12 +395,8 @@ def pre_factor_kkt(Q, G, A):
 
     try:
         Q_LU = lu_hack(Q)
-    except:
-        raise RuntimeError("""
-qpth Error: Cannot perform LU factorization on Q.
-Please make sure that your Q matrix is PSD and has
-a non-zero diagonal.
-""")
+    except Exception:
+        raise RuntimeError("qpth Error: Cannot perform LU factorization on Q. Please make sure that your Q matrix is PSD and has a non-zero diagonal.")
 
     # S = [ A Q^{-1} A^T        A Q^{-1} G^T          ]
     #     [ G Q^{-1} A^T        G Q^{-1} G^T + D^{-1} ]

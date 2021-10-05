@@ -157,7 +157,7 @@ def pre_factor_kkt(Q, G, A):
         # https://github.com/pytorch/pytorch/issues/199
         try:
             U11 = torch.potrf(A_invQ_AT)
-        except:
+        except Exception:
             U11 = torch.Tensor(np.linalg.cholesky(
                 A_invQ_AT.cpu().numpy())).type_as(A_invQ_AT)
 

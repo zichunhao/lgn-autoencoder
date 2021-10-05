@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from utils.distance_sq import convert_to_complex, pairwise_distance_sq, norm_sq
+from .distance_sq import convert_to_complex, pairwise_distance_sq, norm_sq
 
 
 class ChamferLoss(nn.Module):

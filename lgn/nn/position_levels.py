@@ -111,7 +111,7 @@ class RadPolyTrig(nn.Module):
         s = norms.shape
 
         # Mask and reshape
-        edge_mask = (edge_mask.byte()).unsqueeze(-1).to(self.device)
+        edge_mask = (edge_mask.bool()).unsqueeze(-1).to(self.device)
         norms = norms.unsqueeze(-1)
 
         # Lorentzian-bell radial functions: a + 1 / (b + c^2 p^2) when not masked
