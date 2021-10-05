@@ -10,14 +10,14 @@ class HungarianMSELoss(nn.Module):
     def __init__(self):
         super(HungarianMSELoss, self).__init__()
 
-    def forward(self, recons, target, abs_coord=True, polar_coord=False, find_match=True):
+    def forward(self, recons, target, abs_coord=True, polar_coord=False):
         self.abs_coord = abs_coord
         self.polar_coord = polar_coord
         self.device = recons.device
-        return jet_mse_loss(recons, target, abs_coord=abs_coord, polar_coord=polar_coord, find_match=find_match)
+        return jet_mse_loss(recons, target, abs_coord=abs_coord, polar_coord=polar_coord)
 
 
-def jet_mse_loss(recons, target, abs_coord=True, polar_coord=False, find_match=True):
+def jet_mse_loss(recons, target, abs_coord=True, polar_coord=False):
     """Get the permutation invariant MSE Loss for jets (Hungarian algorithm).
 
     Parameters
@@ -28,10 +28,6 @@ def jet_mse_loss(recons, target, abs_coord=True, polar_coord=False, find_match=T
     target : torch.Tensor
         The target particle momenta in absolute Cartesian coordinates.
         Shape: (batch_size, num_particles, 3) or (batch_size, num_particles, 4)
-    find_match : bool, optional
-        Whether to find the match between target and reconstructed jet.
-        If true, the match will be found using scipy.optimize.
-        Default: True
     abs_coord : bool, optional
         Whether to use absolute coordinate.
         If False, relative coordinates (with respect to the target) will be used.
