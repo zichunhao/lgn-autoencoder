@@ -32,8 +32,6 @@ python main.py \
 --maxdim 2 \
 --unit TeV \
 --loss-choice mse \
---loss-norm-choice p3 \
---im False \
 --tau-latent-scalars 1 \
 --tau-latent-vectors 1 \
 --file-suffix jets_30p_p4 \
