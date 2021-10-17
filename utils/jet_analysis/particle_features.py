@@ -97,7 +97,7 @@ def plot_p_cartesian(args, p_targets, p_gens, save_dir, epoch=None,
     if epoch is not None:
         if fill:
             save_dir = osp.join(save_dir, 'filled')
-        save_dir = make_dir(osp.join(save_dir, 'particle_cartesian'))
+        save_dir = make_dir(osp.join(save_dir, 'particle_features/cartesian'))
     else:
         pass  # Save without creating a subdirectory
 
@@ -188,7 +188,7 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir,
     if epoch is not None:
         if fill:
             save_dir = osp.join(save_dir, 'filled')
-        save_dir = make_dir(osp.join(save_dir, 'particle_polar'))
+        save_dir = make_dir(osp.join(save_dir, 'particle_features/polar'))
     else:
         pass  # Save without creating a subdirectory
 
