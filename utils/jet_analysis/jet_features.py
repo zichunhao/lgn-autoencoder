@@ -102,7 +102,7 @@ def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir,
                      f'{jet_name} jet', y=1.03)
 
     if epoch is not None:
-        save_dir = make_dir(osp.join(save_dir, 'jet_cartesian'))
+        save_dir = make_dir(osp.join(save_dir, 'jet_features/cartesian'))
         if fill:
             save_dir = osp.join(save_dir, 'filled')
     else:
@@ -187,7 +187,7 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir,
                      f'of {jet_name} jets', y=1.03)
 
     if epoch is not None:
-        save_dir = make_dir(osp.join(save_dir, 'jet_polar'))
+        save_dir = make_dir(osp.join(save_dir, 'jet_features/polar'))
         if fill:
             save_dir = osp.join(save_dir, 'filled')
     else:
