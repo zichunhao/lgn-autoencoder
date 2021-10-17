@@ -1,5 +1,4 @@
-from lgn.models.lgn_encoder import LGNEncoder
-from lgn.models.lgn_decoder import LGNDecoder
+from lgn.models import LGNEncoder, LGNDecoder
 from torch.utils.data import DataLoader
 from utils.data.dataset import JetDataset
 from utils.utils import get_eps
