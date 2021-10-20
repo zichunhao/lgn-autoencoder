@@ -214,7 +214,7 @@ def get_loss(args, p4_recons, p4_target):
     # Chamfer loss
     if 'chamfer' in loss_choice:
         from utils.losses import ChamferLoss
-        chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice, im=args.chamfer_im)
+        chamferloss = ChamferLoss(loss_norm_choice=args.chamfer_loss_norm_choice, im=args.chamfer_im)
         batch_loss = chamferloss(p4_recons, p4_target, jet_features=args.chamfer_jet_features)  # output, target
 
     # EMD loss
