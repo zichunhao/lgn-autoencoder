@@ -128,6 +128,15 @@ def arcsinh(z):
     return torch.log(z + torch.sqrt(1 + torch.pow(z, 2)))
 
 
+def get_compression_rate(ls, lv, vec_dim=4, num_particles=30):
+    """
+    Get the compression rate based on the multiplicities of scalars and vectors in the latent space.
+    """
+    input_params = vec_dim * num_particles
+    latent_params = 2 * (ls + 4 * lv)  # Complexified
+    return latent_params / input_params
+
+
 def latest_epoch(model_path, num=-1):
     path = osp.join(model_path, 'weights_decoder/*pth')
     file_list = glob.glob(path)
