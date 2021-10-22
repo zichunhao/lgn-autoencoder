@@ -249,7 +249,8 @@ def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
 def plot_all_dev(dev, save_path):
     make_dir(save_path)
     pkl_path = make_dir(osp.join(save_path, "pkl"))
-    torch.save(dev['perm_dev_output'], osp.join(pkl_path, "perm_dev_output.pkl"))
+    torch.save(dev['perm_invariance_dev_output'], osp.join(pkl_path, "perm_invariance_dev_output.pkl"))
+    torch.save(dev['perm_equivariance_dev_output'], osp.join(pkl_path, "perm_equivariance_dev_output.pkl"))
 
     for weight in [(0, 0), (1, 1)]:
         plot_output_dev(dev_output=dev['boost_dev_output'], alphas=dev['gammas'],
