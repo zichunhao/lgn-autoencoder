@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from lgn.cg_lib import CGDict
 
+
 def rotate_part(D, z, side='left', autoconvert=True, conjugate=False):
     """ Apply a D matrix using complex broadcast matrix multiplication. """
     if autoconvert:

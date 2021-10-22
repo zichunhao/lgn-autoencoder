@@ -10,14 +10,20 @@ def get_output(encoder, decoder, data, covariance_test=True):
     """
     Get output and all internal features from the autoencoder.
     """
-    latent_features, encoder_nodes_all = encoder(data, covariance_test=covariance_test)
+    latent_features, encoder_nodes_all = encoder(
+        data, covariance_test=covariance_test
+    )
     generated_features, nodes_all = decoder(
-        latent_features, covariance_test=covariance_test, nodes_all=encoder_nodes_all)
+        latent_features, covariance_test=covariance_test, nodes_all=encoder_nodes_all
+    )
     return generated_features, nodes_all
 
 
 def get_node_dev(transform_input, transform_output, eps=1e-16):
-    return {weight: ((transform_input[weight] - transform_output[weight]) / (transform_output[weight] + eps)).abs().max().item() for weight in [(0, 0), (1, 1)]}
+    return {
+        weight: ((transform_input[weight] - transform_output[weight]) / (transform_output[weight] + eps)).abs().max().item()
+        for weight in [(0, 0), (1, 1)]
+    }
 
 
 def get_dev(transform_input, transform_output, transform_input_nodes_all, transform_output_nodes_all):

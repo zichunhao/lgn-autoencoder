@@ -91,12 +91,23 @@ def permutation_invariance_test(encoder, decoder, data, *ignore):
     data_noperm = data.copy()
     data_perm = {key: apply_perm(val) if key in ['p4', 'scalars'] else val for key, val in data.items()}
 
-    outputs_perm, internal_perm = get_output(encoder, decoder, data_perm, covariance_test=True)
-    outputs_noperm, internal = get_output(encoder, decoder, data_noperm, covariance_test=True)
+    outputs_perm, _ = get_output(encoder, decoder, data_perm, covariance_test=True)
+    outputs_perm = {k: v.squeeze() for k, v in outputs_perm.items()}
 
-    output_dev = get_node_dev(outputs_perm, outputs_noperm)
+    outputs_noperm, _ = get_output(encoder, decoder, data_noperm, covariance_test=True)
+    outputs_noperm = {k: v.squeeze() for k, v in outputs_noperm.items()}
+    perm_outputs = {
+        k: torch.stack(
+            (apply_perm(v[0]), apply_perm(v[1])),
+            dim=0
+        )
+        for k, v in outputs_noperm.items()
+    }
 
-    return output_dev
+    perm_inv_dev = get_node_dev(outputs_perm, outputs_noperm)
+    perm_equivariance_dev = get_node_dev(outputs_perm, perm_outputs)
+
+    return perm_inv_dev, perm_equivariance_dev
 
 
 def boost_equivariance(encoder, decoder, data, alpha_range, axis, device, dtype, cg_dict):
@@ -203,7 +214,8 @@ def lgn_tests(args, encoder, decoder, dataloader, axis='z', alpha_max=None, thet
 
     boost_test_all_epochs = []
     rot_test_all_epochs = []
-    perm_test_all_epochs = []
+    perm_inv_test_all_epochs = []
+    perm_equivariance_test_all_epochs = []
 
     for idx, data in enumerate(tqdm(dataloader)):
         boost_results = covariance_test(encoder, decoder, data, test_type='boost',
@@ -214,10 +226,12 @@ def lgn_tests(args, encoder, decoder, dataloader, axis='z', alpha_max=None, thet
                                       cg_dict=cg_dict, alpha_max=theta_max, unit=unit)
         rot_test_all_epochs.append(rot_results)
 
-        perm_result = permutation_invariance_test(encoder, decoder, data)
-        perm_test_all_epochs.append(perm_result)
-        if idx + 1 == args.num_test_batch:
-            break
+        perm_inv, perm_equivariance = permutation_invariance_test(encoder, decoder, data)
+        perm_inv_test_all_epochs.append(perm_inv)
+        perm_equivariance_test_all_epochs.append(perm_equivariance)
+        # if idx + 1 == args.num_test_batch:
+        #     break
+        break
 
     dt = time.time() - t0
     print(f"Covariance test completed! Time taken: {round(dt/60, 2)} min")
@@ -232,9 +246,16 @@ def lgn_tests(args, encoder, decoder, dataloader, axis='z', alpha_max=None, thet
     lgn_test_results['rot_dev_output'] = get_avg_output_dev(rot_test_all_epochs, 'rotation')
     lgn_test_results['rot_dev_internal'] = get_avg_internal_dev(rot_test_all_epochs, 'rotation')
 
-    perm_test_avg = {key: sum(dev[key] for dev in perm_test_all_epochs) / len(perm_test_all_epochs)
-                     for key in perm_test_all_epochs[0].keys()}
-    lgn_test_results['perm_dev_output'] = perm_test_avg
+    perm_inv_test_avg = {
+        key: sum(dev[key] for dev in perm_inv_test_all_epochs) / len(perm_inv_test_all_epochs)
+        for key in perm_inv_test_all_epochs[0].keys()
+    }
+    perm_equivariance_test_avg = {
+        key: sum(dev[key] for dev in perm_equivariance_test_all_epochs) / len(perm_equivariance_test_all_epochs)
+        for key in perm_equivariance_test_all_epochs[0].keys()
+    }
+    lgn_test_results['perm_invariance_dev_output'] = perm_inv_test_avg
+    lgn_test_results['perm_equivariance_dev_output'] = perm_equivariance_test_avg
 
     print(SEPARATOR)
 
@@ -248,8 +269,8 @@ def lgn_tests(args, encoder, decoder, dataloader, axis='z', alpha_max=None, thet
 
     print(SEPARATOR)
 
-    print(f"Permutation invariance test result: {lgn_test_results['perm_dev_output']}")
-
+    print(f"Permutation invariance test result: {lgn_test_results['perm_invariance_dev_output']}")
+    print(f"Permutation equivariance test result: {lgn_test_results['perm_equivariance_dev_output']}")
     print(SEPARATOR)
 
     return lgn_test_results
