@@ -1,6 +1,5 @@
 import torch
 from torch.nn import Module
-from functools import reduce
 from lgn.cg_lib import CGModule
 from lgn.g_lib import g_torch, GWeight, GTau, GScalar, GVec
 

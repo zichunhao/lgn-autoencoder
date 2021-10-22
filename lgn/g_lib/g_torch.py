@@ -2,8 +2,6 @@ import torch
 from lgn.g_lib import rotations as rot
 import warnings
 
-from itertools import zip_longest
-
 from lgn.g_lib import g_tau, g_tensor
 from lgn.g_lib import g_vec, g_scalar, g_weight, g_wigner_d
 from lgn.g_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar

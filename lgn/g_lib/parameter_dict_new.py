@@ -1,5 +1,4 @@
-import torch
-from torch.nn import Parameter, ParameterDict
+from torch.nn import ParameterDict
 
 
 class ParameterDictNew(ParameterDict):
