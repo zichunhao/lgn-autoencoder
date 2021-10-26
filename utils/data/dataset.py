@@ -11,6 +11,11 @@ class JetDataset(Dataset):
     def __init__(self, data, num_pts=-1, shuffle=True):
 
         self.data = data
+        if 'Nobj' not in data.keys():
+            try:
+                data['Nobj'] = data['labels'].sum(dim=-1)
+            except KeyError:
+                data['Nobj'] = data['masks'].sum(dim=-1)
 
         if num_pts < 0:
             self.num_pts = len(data['Nobj'])
