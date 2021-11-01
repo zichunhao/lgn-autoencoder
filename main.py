@@ -20,7 +20,7 @@ def main(args):
     compression_rate = get_compression_rate(
         args.tau_latent_scalars,
         args.tau_latent_vectors,
-        vec_dim=args.tau_jet_vectors,
+        vec_dim=4,
         num_particles=args.num_jet_particles
     )
     logging.info(f"compression rate: {compression_rate}")
