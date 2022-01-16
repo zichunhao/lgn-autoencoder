@@ -88,7 +88,7 @@ def main(args):
     if args.test_best_model:
         args.load_epoch = best_epoch
         args.model_path = outpath
-        args.equivariance_test = False  # Already ran on the best moel
+        args.equivariance_test = False  # Already ran on the best model
         logging.info(f'Running test on model from epoch {best_epoch}...')
         from test import test
         test(args)
