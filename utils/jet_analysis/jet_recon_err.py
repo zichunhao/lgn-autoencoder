@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from utils.utils import make_dir
-from utils.jet_analysis.utils import NUM_BINS, PLOT_FONT_SIZE, find_fwhm, get_stats
+from .utils import NUM_BINS, PLOT_FONT_SIZE, find_fwhm, get_stats
 import os.path as osp
 import logging
 import json

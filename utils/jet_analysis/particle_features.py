@@ -1,9 +1,9 @@
-from utils.jet_analysis.utils import get_jet_name
+from .utils import get_jet_name
 from utils.utils import make_dir
 import os.path as osp
 import numpy as np
 import matplotlib.pyplot as plt
-from utils.jet_analysis.utils import NUM_BINS, PLOT_FONT_SIZE
+from .utils import NUM_BINS, PLOT_FONT_SIZE
 
 FIGSIZE = (12, 4)
 LABELS_CARTESIAN_ABS_COORD = (r'$p_x$  (GeV)', r'$p_y$  (GeV)', r'$p_z$  (GeV)')

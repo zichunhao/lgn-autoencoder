@@ -1,6 +1,6 @@
 import logging
 import numpy as np
-from utils.jet_analysis.plot import plot_p
+from utils.jet_analysis import plot_p
 from utils.utils import make_dir, save_data, plot_eval_results, get_eps
 import time
 import os.path as osp

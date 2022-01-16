@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os.path as osp
 from utils.utils import make_dir
-from utils.jet_analysis.utils import get_p_polar_tensor, get_stats, NUM_BINS, PLOT_FONT_SIZE, DEVICE
+from .utils import get_p_polar_tensor, get_stats, NUM_BINS, PLOT_FONT_SIZE, DEVICE
 import scipy.optimize as optimize
 import logging
 import json
