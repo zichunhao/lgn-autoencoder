@@ -11,7 +11,7 @@ def create_model_folder(args):
 
 
 def get_model_fname(args):
-    model_fname = f"StandardAutoencoder_{args.jet_type}Jet_LatentDim{args.latent_node_size}"
+    model_fname = f"StandardAutoencoder_{args.jet_type}Jet_LatentDim{args.latent_node_size}_LatentMap_{args.latent_map}"
     return model_fname
 
 

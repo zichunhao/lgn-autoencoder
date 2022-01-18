@@ -31,7 +31,10 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
     for i, data in enumerate(tqdm(loader)):
         p4_target = data.to(args.dtype)
-        p4_gen = decoder(encoder(p4_target, metric=args.encoder_metric), metric=args.decoder_metric)
+        p4_gen = decoder(
+            encoder(p4_target, metric=args.encoder_metric), 
+            metric=args.decoder_metric
+        )
         generated_data.append(p4_gen.cpu().detach())
 
         if device is not None:

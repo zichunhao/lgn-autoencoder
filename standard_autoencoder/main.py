@@ -74,6 +74,7 @@ def initialize_models(args):
                       dropout=args.encoder_dropout,
                       alphas=args.encoder_alphas,
                       batch_norm=args.encoder_batch_norm,
+                      latent_map=args.latent_map,
                       dtype=args.dtype, device=args.device)
 
     decoder = Decoder(num_nodes=args.num_jet_particles,

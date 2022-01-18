@@ -48,6 +48,8 @@ def setup_argparse():
     parser.add_argument('--encoder-metric', type=get_bool, default=True, metavar='',
                         help="The metric for distance in encoder. Options: ('minkoskian', 'cartesian'). Default: 'cartesian'.")
 
+    parser.add_argument('--latent-map', type=str, default='mean', metavar='',
+                        help="Method to map from GNN to latent space. Options: ('mean', 'mix'). Default: 'mean'.")
     # decoder
     parser.add_argument('--decoder-edge-sizes', type=int, nargs='+', action='append',
                         default=[[32, 128, 64, 16]], metavar='',
