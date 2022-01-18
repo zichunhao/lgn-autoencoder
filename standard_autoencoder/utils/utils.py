@@ -11,7 +11,7 @@ def create_model_folder(args):
 
 
 def get_model_fname(args):
-    model_fname = f"StandardAutoencoder_{args.jet_type}Jet_LatentDim{args.latent_node_size}"
+    model_fname = f"StandardAutoencoder_{args.jet_type}Jet_LatentDim{args.latent_node_size}_LatentMap_{args.latent_map}"
     return model_fname
 
 
@@ -25,6 +25,10 @@ def eps(args):
         return 1e-16
     else:
         return 1e-12
+
+
+def get_eps(args):
+    return eps(args)
 
 
 def get_p_polar(p, eps=1e-16, keep_p0=False):
