@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch
+import numpy as np
 import math
 import os.path as osp
 import time
@@ -63,7 +64,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
     target_data = torch.cat(target_data, dim=0)
 
     epoch_avg_loss = epoch_total_loss / len(loader)
-    save_data(data=epoch_avg_loss, data_name='loss', is_train=is_train, outpath=outpath, epoch=epoch)
+    # save_data(data=epoch_avg_loss, data_name='loss', is_train=is_train, outpath=outpath, epoch=epoch)
 
     # Save weights
     if is_train:
@@ -118,21 +119,19 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
             best_loss = valid_avg_loss
             num_stale_epochs = 0
             best_epoch = epoch + 1
-            torch.save(encoder.state_dict(), osp.join(
-                outpath, "weights_encoder/best_encoder_weights.pth"))
-            torch.save(decoder.state_dict(), osp.join(
-                outpath, "weights_decoder/best_decoder_weights.pth"))
+            torch.save(
+                encoder.state_dict(), 
+                osp.join(outpath, "weights_encoder/best_encoder_weights.pth"
+            ))
+            torch.save(
+                decoder.state_dict(), 
+                osp.join(outpath, "weights_decoder/best_decoder_weights.pth"
+            ))
         else:
             num_stale_epochs += 1
 
 
         dt = time.time() - start
-        save_data(data=dt, data_name='dts', is_train=None,
-                  outpath=outpath, epoch=epoch)
-        save_data(data=train_avg_loss, data_name='losses', is_train=True,
-                  outpath=outpath, epoch=epoch)
-        save_data(data=valid_avg_loss, data_name='losses', is_train=False,
-                  outpath=outpath, epoch=epoch)
         
         if args.abs_coord and (args.unit.lower() == 'tev'):
             # Convert to GeV for plotting
@@ -141,26 +140,35 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
             valid_target *= 1000
             valid_gen *= 1000
 
-        for target, gen, dir in zip((train_target, valid_target),
-                                    (train_gen, valid_gen),
-                                    (outpath_train_jet_plots, outpath_valid_jet_plots)):
-            logging.debug("plotting")
-            plot_p(args, p4_target=target, p4_gen=gen, save_dir=dir, epoch=epoch, show=False)
+        if args.plot_freq > 0:
+            plot_epoch = ((epoch + 1) % args.plot_freq == 0) or (num_stale_epochs == 0)
+        else:
+            plot_epoch = (num_stale_epochs == 0)
+        is_emd = 'emd' in args.loss_choice.lower()
+        to_plot = is_emd or plot_epoch
+        if to_plot:
+            for target, gen, dir in zip((train_target, valid_target),
+                                        (train_gen, valid_gen),
+                                        (outpath_train_jet_plots, outpath_valid_jet_plots)):
+                logging.debug("plotting")
+                plot_p(args, p4_target=target, p4_gen=gen, save_dir=dir, epoch=epoch, show=False)
 
         dts.append(dt)
-        train_avg_losses.append(train_avg_loss)
-        valid_avg_losses.append(valid_avg_loss)
+        train_avg_losses.append(train_avg_loss.cpu().detach())
+        valid_avg_losses.append(valid_avg_loss.cpu().detach())
+        np.savetxt(osp.join(outpath, 'model_evaluations/losses_training.txt'), train_avg_losses)
+        np.savetxt(osp.join(outpath, 'model_evaluations/losses_validation.txt'), valid_avg_losses)
+        np.savetxt(osp.join(outpath, 'model_evaluations/dts.txt'), dts)
 
-        logging.info(f'{epoch=}/{args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch}, '
+        logging.info(f'epoch={epoch+1}/{args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch}, '
                      f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, {dt=}')
 
-        if (epoch > 0) and (epoch % 10 == 0):
-            plot_eval_results(args, data=(train_avg_losses[-10:], valid_avg_losses[-10:]),
-                              data_name=f"losses from {epoch-10} to {epoch}",
-                              outpath=outpath, start=epoch-10)
-        if (epoch > 0) and (epoch % 100 == 0):
-            plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
-                              data_name='Losses', outpath=outpath, start=epoch-10)
+        if args.plot_freq > 0:
+            if (epoch > 0) and (epoch % int(args.plot_freq) == 0):
+                plot_eval_results(
+                    args, data=(train_avg_losses, valid_avg_losses),
+                    data_name='Losses', outpath=outpath, start=epoch-args.plot_freq
+                )
             
         if num_stale_epochs > args.patience:
             logging.info(

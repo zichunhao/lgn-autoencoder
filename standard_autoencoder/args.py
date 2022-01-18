@@ -110,8 +110,8 @@ def setup_argparse():
                         help='Epoch number of the trained model to load.')
 
     ################################### Model evaluation options ###################################
-    parser.add_argument('--plot-freq', type=int, default=10, metavar='',
-                        help='How frequent to plot. Used when --loss-choice is not EMD. Default: 10.')
+    parser.add_argument('--plot-freq', type=int, default=100, metavar='',
+                        help='How frequent to plot. Used when --loss-choice is not EMD. Default: 100.')
     parser.add_argument('--cutoff', type=float, default=1e-7, metavar='',
                         help='Cutoff value of (3-)momenta magnitude to be included in the historgram. Default: 1e-7.')
     parser.add_argument('--fill', default=False, action='store_true',
