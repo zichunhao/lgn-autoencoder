@@ -34,7 +34,9 @@ class Encoder(nn.Module):
                                 dtype=self.dtype, device=self.device).to(self.device).to(self.dtype)
         
         if self.latent_map.lower() == 'mix':
-            self.mix_layer = nn.Linear(self.latent_node_size*self.num_nodes, self.latent_node_size, bias=False)
+            self.mix_layer = nn.Linear(self.latent_node_size*self.num_nodes,
+                                       self.latent_node_size, 
+                                       bias=False).to(self.device).to(self.dtype)
 
         logging.info(f"Encoder initialized. Number of parameters: {sum(p.nelement() for p in self.parameters() if p.requires_grad)}")
 
