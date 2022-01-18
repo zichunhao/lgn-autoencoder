@@ -41,6 +41,8 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
     best_epoch = 1
     num_stale_epochs = 0
 
+    total_epoch = args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch
+    
     for ep in range(args.num_epochs):
         epoch = args.load_epoch + ep if args.load_to_train else ep
 
@@ -99,7 +101,6 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         np.savetxt(osp.join(outpath, 'model_evaluations/losses_validation.txt'), valid_avg_losses)
         np.savetxt(osp.join(outpath, 'model_evaluations/dts.txt'), dts)
 
-        total_epoch = args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch
         logging.info(f'epoch={epoch+1}/{total_epoch}, train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, '
                      f'{dt=}s, {num_stale_epochs=}, {best_epoch=}')
 

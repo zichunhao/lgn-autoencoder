@@ -104,6 +104,8 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
     outpath_train_jet_plots = make_dir(osp.join(outpath, 'model_evaluations/jet_plots/train'))
     outpath_valid_jet_plots = make_dir(osp.join(outpath, 'model_evaluations/jet_plots/valid'))
+    
+    total_epoch = args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch
 
     for ep in range(args.num_epochs):
         epoch = args.load_epoch + ep if args.load_to_train else ep
@@ -166,8 +168,8 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         np.savetxt(osp.join(outpath, 'model_evaluations/losses_validation.txt'), valid_avg_losses)
         np.savetxt(osp.join(outpath, 'model_evaluations/dts.txt'), dts)
 
-        logging.info(f'epoch={epoch+1}/{args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch}, '
-                     f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, {dt=}')
+        logging.info(f'epoch={epoch+1}/{total_epoch}, train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, '
+                     f'{dt=}s, {num_stale_epochs=}, {best_epoch=}')
 
         if args.plot_freq > 0:
             if (epoch > 0) and (epoch % int(args.plot_freq) == 0):
