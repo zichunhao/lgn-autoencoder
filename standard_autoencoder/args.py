@@ -13,6 +13,10 @@ def setup_argparse():
                         help='Path of the data.')
     parser.add_argument('--file-suffix', type=str, default='jets_30p_p4', metavar='',
                         help="The suffix of the file. Default: 'jets_30p_p4'")
+    parser.add_argument('--unit', type=str, default='TeV',
+                        help="The unit of momenta. Choices: ('GeV', 'TeV'). Default: TeV. ")
+    parser.add_argument('--abs-coord', type=get_bool, default=True, metavar='',
+                        help='Whether the data is in absolute coordinates. False when relative coordinates are used.')
     parser.add_argument('--train-fraction', type=float, default=10,
                         help='The fraction (or number) of data used for training.')
     parser.add_argument('--num-valid', type=int, default=10,
@@ -104,22 +108,69 @@ def setup_argparse():
                         help='Epoch number of the trained model to load.')
 
     ################################### Model evaluation options ###################################
-    parser.add_argument('--unit', type=str, default='TeV',
-                        help="The unit of momenta. Choices: ('GeV', 'TeV'). Default: TeV. ")
-    parser.add_argument('--polar-max', nargs="+", type=float, default=[200, 2, np.pi], metavar='',
-                        help='List of maximum values of (pt, eta, phi) in the histogram. Default: [200, np.pi, 2].')
-    parser.add_argument('--cartesian-max', nargs="+", type=float, default=[100, 100, 100], metavar='',
-                        help='List of maximum values of (px, py, pz) in the histogram. Default: [100, 100, 100].')
-    parser.add_argument('--jet-polar-max', nargs="+", type=float, default=[250, 4000, 2, np.pi], metavar='',
-                        help='List of maximum values of jet features (m, pt, eta, phi) in the histogram. Default: [200, 4000, 2, np.pi].')
-    parser.add_argument('--jet-cartesian-max', nargs="+", type=float, default=[250, 2000, 2000, 4000], metavar='',
-                        help='List of maximum values of jet features (m, px, py, pz) in the histogram. Default: [200, 2000, 2000, 4000].')
-    parser.add_argument('--num_bins', type=int, default=81, metavar='',
-                        help='Number of bins in the histogram Default: 81.')
+    # parser.add_argument('--unit', type=str, default='TeV',
+    #                     help="The unit of momenta. Choices: ('GeV', 'TeV'). Default: TeV. ")
+    # parser.add_argument('--polar-max', nargs="+", type=float, default=[200, 2, np.pi], metavar='',
+    #                     help='List of maximum values of (pt, eta, phi) in the histogram. Default: [200, np.pi, 2].')
+    # parser.add_argument('--cartesian-max', nargs="+", type=float, default=[100, 100, 100], metavar='',
+    #                     help='List of maximum values of (px, py, pz) in the histogram. Default: [100, 100, 100].')
+    # parser.add_argument('--jet-polar-max', nargs="+", type=float, default=[250, 4000, 2, np.pi], metavar='',
+    #                     help='List of maximum values of jet features (m, pt, eta, phi) in the histogram. Default: [200, 4000, 2, np.pi].')
+    # parser.add_argument('--jet-cartesian-max', nargs="+", type=float, default=[250, 2000, 2000, 4000], metavar='',
+    #                     help='List of maximum values of jet features (m, px, py, pz) in the histogram. Default: [200, 2000, 2000, 4000].')
+    # parser.add_argument('--num_bins', type=int, default=81, metavar='',
+    #                     help='Number of bins in the histogram Default: 81.')
+    # parser.add_argument('--fill', default=False, action='store_true',
+    #                     help='Whether to plot filled histograms as well. True only if called in the command line.')
+    
+    parser.add_argument('--plot-freq', type=int, default=10, metavar='',
+                        help='How frequent to plot. Used when --loss-choice is not EMD. Default: 10.')
     parser.add_argument('--cutoff', type=float, default=1e-7, metavar='',
                         help='Cutoff value of (3-)momenta magnitude to be included in the historgram. Default: 1e-7.')
     parser.add_argument('--fill', default=False, action='store_true',
                         help='Whether to plot filled histograms as well. True only if called in the command line.')
+
+    parser.add_argument('--jet-image-npix', type=int, default=24,
+                        help='The number of pixels for the jet image')
+    parser.add_argument('--jet-image-vmin', type=float, default=1e-10,
+                        help='vmin for LogNorm')
+    parser.add_argument('--num-jet-images', type=int, default=15,
+                        help='Number of one-to-one jet images to plot.')
+    
+    # reconstruction ranges
+    parser.add_argument('--auto-particle-recons-ranges', default=False, action='store_true',
+                        help='Whether to automatically determine ranges of particle reconstruction errors. '
+                        'Call --auto-particle-recons-ranges to set true.')
+    parser.add_argument('--particle-rel-err-min-cartesian', nargs="+", type=float, default=[-1, -1, -1], metavar='',
+                        help='xmin of histogram for particle reconstruction relative errors in Cartesian coordinates.')
+    parser.add_argument('--particle-rel-err-max-cartesian', nargs="+", type=float, default=[1, 1, 1], metavar='',
+                        help='xmax of histogram for particle reconstruction relative errors in Cartesian coordinates.')
+    parser.add_argument('--particle-padded-recons-min-cartesian', nargs="+", type=float, default=[-100, -100, -100], metavar='',
+                        help='xmin of histogram for reconstructed padded particless in Cartesian coordinates.')
+    parser.add_argument('--particle-padded-recons-max-cartesian', nargs="+", type=float, default=[100, 100, 100], metavar='',
+                        help='xmax of histogram for reconstructed padded particless in Cartesian coordinates.')
+
+    parser.add_argument('--particle-rel-err-min-polar', nargs="+", type=float, default=[-1, -1, -1], metavar='',
+                        help='xmin of histogram for particle reconstruction relative errors in polar coordinates (pt, eta, phi).')
+    parser.add_argument('--particle-rel-err-max-polar', nargs="+", type=float, default=[1, 1, 1], metavar='',
+                        help='xmax of histogram for particle reconstruction relative errors in polar coordinates (pt, eta, phi).')
+    parser.add_argument('--particle-padded-recons-min-polar', nargs="+", type=float, default=[-100, -1, -np.pi], metavar='',
+                        help='xmin of histogram for reconstructed padded particless in polar coordinates (pt, eta, phi).')
+    parser.add_argument('--particle-padded-recons-max-polar', nargs="+", type=float, default=[100, 1, np.pi], metavar='',
+                        help='xmax of histogram for reconstructed padded particless in polar coordinates.')
+    
+    parser.add_argument('--auto-jet-recons-ranges', default=False, action='store_true',
+                        help='Whether to automatically determine ranges of jet reconstruction errors. '
+                        'Call --auto-jet-recons-ranges to set true.')
+    parser.add_argument('--jet-rel-err-min-cartesian', nargs="+", type=float, default=[-1, -1, -1, -1], metavar='',
+                        help='xmin of histogram for jet reconstruction relative errors in Cartesian coordinates.')
+    parser.add_argument('--jet-rel-err-max-cartesian', nargs="+", type=float, default=[1, 1, 1, 1], metavar='',
+                        help='xmax of histogram for jet reconstruction relative errors in Cartesian coordinates.')
+    parser.add_argument('--jet-rel-err-min-polar', nargs="+", type=float, default=[-1, -1, -1, -1], metavar='',
+                        help='xmin of histogram for jet reconstruction relative errors in polar coordinates (pt, eta, phi).')
+    parser.add_argument('--jet-rel-err-max-polar', nargs="+", type=float, default=[1, 1, 1, 1], metavar='',
+                        help='xmax of histogram for jet reconstruction relative errors in polar coordinates (pt, eta, phi).')
+
 
     args = parser.parse_args()
 

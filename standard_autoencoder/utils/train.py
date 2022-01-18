@@ -5,6 +5,7 @@ import time
 from utils.utils import make_dir, save_data, plot_eval_results, eps
 from utils.jet_analysis import plot_p
 import logging
+from tqdm import tqdm
 
 
 def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
@@ -24,8 +25,8 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
     generated_data = []
     epoch_total_loss = 0
 
-    for i, data in enumerate(loader):
-        p4_target = data
+    for i, data in enumerate(tqdm(loader)):
+        p4_target = data.to(args.dtype)
         p4_gen = decoder(encoder(p4_target, metric=args.encoder_metric), metric=args.decoder_metric)
         generated_data.append(p4_gen.cpu().detach())
 
@@ -34,7 +35,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         target_data.append(p4_target.cpu().detach())
 
         batch_loss = get_loss(args, p4_gen, p4_target.to(args.dtype))
-        epoch_total_loss += batch_loss.item()
+        epoch_total_loss += batch_loss.cpu()
 
         # Backward propagation
         if is_train:
@@ -46,15 +47,19 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
             # save model
             if ((i % args.save_freq) == 0 and i > 0):
-                torch.save(encoder.state_dict(), osp.join(
-                    encoder_weight_path, f"epoch_{epoch}_encoder_weights.pth"))
-                torch.save(decoder.state_dict(), osp.join(
-                    decoder_weight_path, f"epoch_{epoch}_decoder_weights.pth"))
+                torch.save(
+                    encoder.state_dict(), 
+                    osp.join(encoder_weight_path, f"epoch_{epoch}_encoder_weights.pth")
+                )
+                torch.save(
+                    decoder.state_dict(), 
+                    osp.join(decoder_weight_path, f"epoch_{epoch}_decoder_weights.pth")
+                )
 
-    generated_data = torch.cat(generated_data, dim=0).numpy()
-    target_data = torch.cat(target_data, dim=0).numpy()
+    generated_data = torch.cat(generated_data, dim=0)
+    target_data = torch.cat(target_data, dim=0)
 
-    epoch_avg_loss = epoch_total_loss.cpu().item() / len(loader)
+    epoch_avg_loss = epoch_total_loss / len(loader)
     save_data(data=epoch_avg_loss, data_name='loss', is_train=is_train, outpath=outpath, epoch=epoch)
 
     # Save weights
@@ -91,7 +96,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
     outpath_valid_jet_plots = make_dir(osp.join(outpath, 'model_evaluations/jet_plots/valid'))
 
     for ep in range(args.num_epochs):
-        epoch = args.load_epoch + ep if args.load_to_train else ep + 1
+        epoch = args.load_epoch + ep if args.load_to_train else ep
 
         # Training
         start = time.time()
@@ -120,10 +125,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
                                     (train_gen, valid_gen),
                                     (outpath_train_jet_plots, outpath_valid_jet_plots)):
             logging.debug("plotting")
-            plot_p(args, target_data=target, gen_data=gen, save_dir=dir,
-                   polar_max=args.polar_max, cartesian_max=args.cartesian_max,
-                   jet_polar_max=args.jet_polar_max, jet_cartesian_max=args.jet_cartesian_max,
-                   num_bins=args.num_bins, cutoff=args.cutoff, epoch=epoch)
+            plot_p(args, p4_target=target, p4_gen=gen, save_dir=dir, epoch=epoch, show=False)
 
         dts.append(dt)
         train_avg_losses.append(train_avg_loss)
@@ -155,13 +157,13 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
 def get_loss(args, p4_gen, p4_target):
     if args.loss_choice.lower() in ['chamfer', 'chamferloss', 'chamfer_loss']:
-        from utils.chamfer_loss import ChamferLoss
+        from utils.losses import ChamferLoss
         chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
         batch_loss = chamferloss(p4_gen, p4_target, jet_features_weight=args.chamfer_jet_features_weight)  # output, target
         return batch_loss
 
     if args.loss_choice.lower() in ['emd', 'emdloss', 'emd_loss']:
-        from utils.emd_loss import emd_loss
+        from utils.losses import emd_loss
         batch_loss = emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)  # true, output
         return batch_loss
 
@@ -171,9 +173,12 @@ def get_loss(args, p4_gen, p4_target):
         return batch_loss
 
     if args.loss_choice.lower() in ['hybrid', 'combined', 'mix']:
-        from utils.chamfer_loss import ChamferLoss
-        from utils.emd_loss import emd_loss
+        from utils.losses import ChamferLoss
+        from utils.losses import emd_loss
         chamferloss = ChamferLoss(loss_norm_choice=args.loss_norm_choice)
-        batch_loss = args.chamfer_loss_weight * chamferloss(p4_gen, p4_target, jet_features_weight=args.chamfer_jet_features_weight) + \
-            emd_loss(p4_target, p4_gen, eps=eps(args), device=args.device)
+        batch_loss = args.chamfer_loss_weight * chamferloss(
+            p4_gen, p4_target, jet_features_weight=args.chamfer_jet_features_weight
+        ) + emd_loss(
+            p4_target, p4_gen, eps=eps(args), device=args.device
+        )
         return batch_loss

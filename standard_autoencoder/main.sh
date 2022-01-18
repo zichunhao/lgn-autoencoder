@@ -22,7 +22,7 @@ else
     num_valid=10
 fi
 
-mkdir -p "$output_path"/autoencoder;
+mkdir -p "$output_path";
 python main.py \
 -b 2 \
 -j g \

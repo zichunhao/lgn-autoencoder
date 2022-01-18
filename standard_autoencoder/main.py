@@ -10,6 +10,8 @@ from models.decoder import Decoder
 import logging
 logging.basicConfig(level=logging.INFO)
 
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
 def main(args):
     if args.load_to_train and args.load_epoch < 0:
@@ -45,7 +47,8 @@ def main(args):
     # One on cpu and the other on gpu
     elif (next(encoder.parameters()).is_cuda or next(encoder.parameters()).is_cuda):
         raise AssertionError(
-            "The encoder and decoder are not trained on the same device!")
+            "The encoder and decoder are not trained on the same device!"
+        )
     # Both on cpu
     else:
         logging.info('The models are initialized on CPU...')
@@ -82,10 +85,14 @@ def initialize_models(args):
 
     if args.load_to_train:
         outpath = args.load_path
-        encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'),
-                                           map_location=args.device))
-        decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'),
-                                           map_location=args.device))
+        encoder.load_state_dict(torch.load(
+            osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'),
+            map_location=args.device
+        ))
+        decoder.load_state_dict(torch.load(
+            osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'),
+            map_location=args.device
+        ))
     # Create new model
     else:
         import json

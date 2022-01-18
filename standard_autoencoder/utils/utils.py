@@ -27,6 +27,10 @@ def eps(args):
         return 1e-12
 
 
+def get_eps(args):
+    return eps(args)
+
+
 def get_p_polar(p, eps=1e-16, keep_p0=False):
     """
     (E, px, py, pz) -> (eta, phi, pt) or (E, eta, phi, pt)
