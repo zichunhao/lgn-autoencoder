@@ -11,7 +11,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 import warnings
-warnings.filterwarnings("ignore", category=RuntimeWarning) 
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
 
 def main(args):
     if args.load_to_train and args.load_epoch < 0:

@@ -3,7 +3,7 @@ Slightly adapted from Raghav Kansal's code (https://github.com/rkansal47/emd_los
 """
 import torch
 import torch.nn as nn
-from utils.losses.emd_loss.qpth.qp import QPFunction
+from .qpth.qp import QPFunction
 from utils.utils import get_p_polar
 
 
