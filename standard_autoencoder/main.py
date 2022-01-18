@@ -16,9 +16,13 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 def main(args):
     if args.load_to_train and args.load_epoch < 0:
         args.load_epoch = latest_epoch(args.load_path, num=args.load_epoch)
+        
+    if args.patience <= 0:
+        import math
+        args.patience = math.inf
 
     logging.info(args)
-
+    
     # Loading data and initializing models
     train_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}.pt")
 

@@ -1,11 +1,14 @@
 import torch.nn as nn
 import torch
+import math
 import os.path as osp
 import time
 from utils.utils import make_dir, save_data, plot_eval_results, eps
 from utils.jet_analysis import plot_p
 import logging
 from tqdm import tqdm
+
+BLOW_UP_THRESHOLD = 1e8
 
 
 def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
@@ -91,6 +94,10 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
     train_avg_losses = []
     valid_avg_losses = []
     dts = []
+    
+    best_epoch = 1
+    num_stale_epochs = 0
+    best_loss = math.inf
 
     outpath_train_jet_plots = make_dir(osp.join(outpath, 'model_evaluations/jet_plots/train'))
     outpath_valid_jet_plots = make_dir(osp.join(outpath, 'model_evaluations/jet_plots/valid'))
@@ -106,6 +113,18 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         # Validation
         valid_avg_loss, valid_gen, valid_target = validate(args, valid_loader, encoder, decoder,
                                                            epoch, outpath, device=device)
+        
+        if (abs(valid_avg_loss) < best_loss):
+            best_loss = valid_avg_loss
+            num_stale_epochs = 0
+            best_epoch = epoch + 1
+            torch.save(encoder.state_dict(), osp.join(
+                outpath, "weights_encoder/best_encoder_weights.pth"))
+            torch.save(decoder.state_dict(), osp.join(
+                outpath, "weights_decoder/best_decoder_weights.pth"))
+        else:
+            num_stale_epochs += 1
+
 
         dt = time.time() - start
         save_data(data=dt, data_name='dts', is_train=None,
@@ -114,7 +133,8 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
                   outpath=outpath, epoch=epoch)
         save_data(data=valid_avg_loss, data_name='losses', is_train=False,
                   outpath=outpath, epoch=epoch)
-        if args.unit.lower() == 'tev':
+        
+        if args.abs_coord and (args.unit.lower() == 'tev'):
             # Convert to GeV for plotting
             train_target *= 1000
             train_gen *= 1000
@@ -134,13 +154,24 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         logging.info(f'{epoch=}/{args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch}, '
                      f'train_loss={train_avg_loss}, valid_loss={valid_avg_loss}, {dt=}')
 
-        if (epoch > 1) and (epoch % 10 == 0):
+        if (epoch > 0) and (epoch % 10 == 0):
             plot_eval_results(args, data=(train_avg_losses[-10:], valid_avg_losses[-10:]),
                               data_name=f"losses from {epoch-10} to {epoch}",
                               outpath=outpath, start=epoch-10)
-        if (epoch > 1) and (epoch % 100 == 0):
+        if (epoch > 0) and (epoch % 100 == 0):
             plot_eval_results(args, data=(train_avg_losses, valid_avg_losses),
                               data_name='Losses', outpath=outpath, start=epoch-10)
+            
+        if num_stale_epochs > args.patience:
+            logging.info(
+                f'Number of stale epochs reached the set patience ({args.patience}). Training breaks.'
+            )
+            return best_epoch
+
+        if (abs(valid_avg_loss) > BLOW_UP_THRESHOLD) or (abs(train_avg_loss) > BLOW_UP_THRESHOLD):
+            logging.error('Loss blows up. Training breaks.')
+            return best_epoch
+
 
     # Save global data
     save_data(data=train_avg_losses, data_name='losses', is_train=True, outpath=outpath, epoch=-1)
