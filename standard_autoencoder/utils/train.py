@@ -10,7 +10,8 @@ import logging
 from tqdm import tqdm
 
 BLOW_UP_THRESHOLD = 1e8
-
+# The percentage of total epochs after which the thus-far best result is plotted
+PLOT_START_PERCENTAGE = 0.05
 
 def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
           epoch, outpath, is_train=True, device=None):
@@ -142,9 +143,13 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
             valid_gen *= 1000
 
         if args.plot_freq > 0:
-            plot_epoch = ((epoch + 1) % args.plot_freq == 0) or (num_stale_epochs == 0)
+            if (epoch >= int(args.num_epochs * PLOT_START_PERCENTAGE)):
+                plot_epoch = ((epoch + 1) % args.plot_freq ==0) or (num_stale_epochs == 0)
+            else:
+                plot_epoch = ((epoch + 1) % args.plot_freq == 0)
         else:
             plot_epoch = (num_stale_epochs == 0)
+
         is_emd = 'emd' in args.loss_choice.lower()
         to_plot = is_emd or plot_epoch
         if to_plot:
