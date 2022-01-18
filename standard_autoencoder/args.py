@@ -99,7 +99,7 @@ def setup_argparse():
     parser.add_argument('--save-dir', type=str, default='standard-autoencoder-trained-models', metavar='',
                         help='The directory to save trained models and figures.')
     parser.add_argument('--save-freq', type=int, default=500, metavar='',
-                        help='How frequent the model weights are saved in each epoch. Default: 500.')
+                        help='How frequent the model weights are saved in each epoch (when using EMD loss). Default: 500.')
     parser.add_argument('--custom-suffix', type=str, default=None, metavar='',
                         help='Custom suffix of the saving directory.')
 

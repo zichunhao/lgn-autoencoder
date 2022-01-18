@@ -51,23 +51,21 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             batch_loss.backward()
             optimizer_encoder.step()
             optimizer_decoder.step()
-
-            # save model
-            if ((i % args.save_freq) == 0 and i > 0):
+            
+            if ('emd' in args.loss_choice.lower()) and ((i % args.save_freq) == 0 and i > 0):
                 torch.save(
                     encoder.state_dict(), 
-                    osp.join(encoder_weight_path, f"epoch_{epoch}_encoder_weights.pth")
+                    osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth")
                 )
                 torch.save(
                     decoder.state_dict(), 
-                    osp.join(decoder_weight_path, f"epoch_{epoch}_decoder_weights.pth")
+                    osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth")
                 )
 
     generated_data = torch.cat(generated_data, dim=0)
     target_data = torch.cat(target_data, dim=0)
 
     epoch_avg_loss = epoch_total_loss / len(loader)
-    # save_data(data=epoch_avg_loss, data_name='loss', is_train=is_train, outpath=outpath, epoch=epoch)
 
     # Save weights
     if is_train:
