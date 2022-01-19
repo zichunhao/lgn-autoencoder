@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import logging
 
-from models.graphnet import GraphNet
+from .graphnet import GraphNet
 
 
 class Encoder(nn.Module):
@@ -48,4 +48,7 @@ class Encoder(nn.Module):
             x = torch.mean(x, dim=-2).unsqueeze(dim=0)  # Latent vector
         elif self.latent_map.lower() == 'mix':
             x = self.mix_layer(x.view(bs, -1)).unsqueeze(dim=0)
+        else:
+            logging.warning(f"Unknown latent map {self.latent_map} in Encoder. Using mean.")
+            x = torch.mean(x, dim=-2).unsqueeze(dim=0)
         return x

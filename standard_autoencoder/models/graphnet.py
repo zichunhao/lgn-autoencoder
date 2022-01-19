@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import logging
+import types
 
 
 class GraphNet(nn.Module):
@@ -103,11 +104,12 @@ class GraphNet(nn.Module):
         ----------
         x : torch.Tensor
             The input node features.
-        metric : str
+        metric : str or function
             The metric for computing distances between nodes.
             Choices:
                 - 'cartesian': diag(+, +, +, +)
                 - 'minkowskian': diag(+, -, -, -), which is used only if x.shape[-1] == 4
+                - A mapping to R.
             Default: 'cartesian'
 
         Return
@@ -205,6 +207,8 @@ def _adjust_var_list(data, num):
 
 
 def _get_metric_func(metric):
+    if isinstance(metric, types.FunctionType):
+        return metric
     if metric.lower() == 'cartesian':
         return lambda x: torch.norm(x, dim=2).unsqueeze(2)
     if metric.lower() == 'minkowskian':

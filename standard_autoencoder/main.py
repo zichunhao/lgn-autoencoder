@@ -4,8 +4,8 @@ from utils.utils import create_model_folder, eps, latest_epoch
 from args import setup_argparse
 from utils.make_data import initialize_data
 from utils.train import train_loop
-from models.encoder import Encoder
-from models.decoder import Decoder
+from models import Encoder
+from models import Decoder
 
 import logging
 logging.basicConfig(level=logging.INFO)

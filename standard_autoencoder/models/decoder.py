@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import logging
 
-from models.graphnet import GraphNet
+from .graphnet import GraphNet
 
 
 class Decoder(nn.Module):
