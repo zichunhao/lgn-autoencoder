@@ -28,7 +28,7 @@ def setup_argparse():
     parser.add_argument('--vec-dims', type=int, default=4, metavar='',
                         help='Dimension of vectors. Default: 4 for 4-vectors.')
     parser.add_argument('--latent-node-size', type=int, default=20, metavar='',
-                        help='Dimension of latent vectors (shape: N x 1).')
+                        help='Dimension of latent vectors. If --latent-map is "local" or "node", this stands for the size of feature vector per node.')
 
     # encoder
     parser.add_argument('--encoder-edge-sizes', type=int, nargs='+', action='append',
@@ -49,7 +49,7 @@ def setup_argparse():
                         help="The metric for distance in encoder. Options: ('minkoskian', 'cartesian'). Default: 'cartesian'.")
 
     parser.add_argument('--latent-map', type=str, default='mean', metavar='',
-                        help="Method to map from GNN to latent space. Options: ('mean', 'mix'). Default: 'mean'.")
+                        help="Method to map from GNN to latent space. Options: ('mean', 'mix', 'local', 'node'). Default: 'mean'.")
     # decoder
     parser.add_argument('--decoder-edge-sizes', type=int, nargs='+', action='append',
                         default=[[32, 128, 64, 16]], metavar='',
