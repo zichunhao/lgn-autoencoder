@@ -103,7 +103,7 @@ class Encoder(nn.Module):
         elif self.latent_map.lower() in ['local', 'node', 'conv']:
             self.mix_layer = nn.Linear(
                 encoder_out_size, latent_node_size
-            )
+            ).to(self.device).to(self.dtype)
         else:
             pass
 
