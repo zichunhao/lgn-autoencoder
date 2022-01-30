@@ -25,7 +25,7 @@ def setup_argparse():
     ######################################## Model options ########################################
     parser.add_argument('--num-jet-particles', type=int, default=30, metavar='',
                         help='Number of particles per jet (batch) in the input. Default: 30 for the hls4ml 30p data.')
-    parser.add_argument('--vec-dims', type=int, default=4, metavar='',
+    parser.add_argument('--vec-dims', type=int, default=3, metavar='',
                         help='Dimension of vectors. Default: 4 for 4-vectors.')
     parser.add_argument('--latent-node-size', type=int, default=20, metavar='',
                         help='Dimension of latent vectors. If --latent-map is "local" or "node", this stands for the size of feature vector per node.')

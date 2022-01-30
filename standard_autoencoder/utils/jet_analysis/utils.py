@@ -115,6 +115,12 @@ def get_p_polar(p4, cutoff=1e-6, eps=1e-12, gpu=True):
     return pt, eta, phi
 
 
+def get_p4(p3):
+    '''Convert particle p3 to p4'''
+    p0 = torch.sum(torch.pow(p3, 2), dim=-1, keepdim=True)
+    return torch.cat((p0, p3), dim=-1)
+
+
 def get_p_polar_tensor(p, eps=1e-16):
     """(E, px, py, pz) -> (pt, eta, phi)"""
     if p.shape[-1] == 4:
