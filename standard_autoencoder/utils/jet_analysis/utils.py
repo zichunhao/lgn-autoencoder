@@ -117,7 +117,7 @@ def get_p_polar(p4, cutoff=1e-6, eps=1e-12, gpu=True):
 
 def get_p4(p3):
     '''Convert particle p3 to p4'''
-    p0 = torch.sum(torch.pow(p3, 2), dim=-1, keepdim=True)
+    p0 = torch.norm(p3, dim=-1, keepdim=True)
     return torch.cat((p0, p3), dim=-1)
 
 
