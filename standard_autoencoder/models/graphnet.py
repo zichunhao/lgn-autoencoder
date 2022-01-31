@@ -4,46 +4,59 @@ import torch.nn.functional as F
 import logging
 import types
 
+DEFAULT_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEFAULT_DTYPE = torch.float
 
 class GraphNet(nn.Module):
-    """
-    The basic graph neural network in the autoencoder.
 
-    Parameters
-    ----------
-    num_nodes : int
-        Number of nodes for the graph.
-    input_node_size : int
-        Dimension of input node feature vectors.
-    output_node_size : int
-        Dimension of output node feature vectors of the network.
-    node_sizes : list of list of int
-        Dimensions of hidden node per layer per iteration of message passing.
-    edge_sizes : list of list of int
-        Dimension of edges networks per layer per iteration of message passing.
-    num_mps : int
-        The number of message passing step.
-    dropout : float
-        Dropout momentum for edge features per iteration of message passing.s
-    alphas : list of int or list float
-        Alpha value for the leaky relu layer for edge features per iteration of message passing.
-    batch_norm : bool (default: True)
-        Whether to use batch normalization.
-    device : torch.device
-        Device to which the model is initialized
-    """
+    def __init__(
+        self, num_nodes, input_node_size, output_node_size, node_sizes, edge_sizes,
+        num_mps, dropout=0.1, alphas=0.1, batch_norm=True, 
+        device=None, dtype=None
+    ):
+        """
+        A fully connected message-passing standard graph neural network
+        with the distance as edge features.
 
-    def __init__(self, num_nodes, input_node_size, output_node_size, node_sizes, edge_sizes,
-                 num_mps, dropout=0.1, alphas=0.1, batch_norm=True, dtype=None, device=None):
+        Parameters
+        ----------
+        num_nodes : int
+            Number of nodes for the graph.
+        input_node_size : int
+            Size/dimension of input node feature vectors.
+        output_node_size : int
+            Size/dimension of output node feature vectors.
+        node_sizes : list of list of int
+            Sizes/dimensions of hidden node 
+            in each layer in each iteration of message passing.
+        edge_sizes : list of list of int
+            Sizes/dimensions of edges networks 
+            in each layer  in each iteration of message passing.
+        num_mps : int
+            The number of message passing step.
+        dropout : float
+            Dropout momentum for edge features 
+            in each iteration of message passing.
+        alphas: array-like
+            Alpha value for the leaky relu layer for edge features 
+            in each iteration of message passing.
+        batch_norm : bool, default: `True`
+            Whether to use batch normalization 
+            in the edge and node features.
+        device: torch.device, default: `'cuda'` if gpu is available and `'cpu'` otherwise
+            The device on which the model is run.
+        dtype: torch.dtype, default: torch.float
+            The data type of the model.
+        """
 
         node_sizes = _adjust_var_list(node_sizes, num_mps)
         edge_sizes = _adjust_var_list(edge_sizes, num_mps)
         alphas = _adjust_var_list(alphas, num_mps)
 
         if device is None:
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            device = DEFAULT_DEVICE
         if dtype is None:
-            dtype = torch.float
+            dtype = DEFAULT_DTYPE
 
         super(GraphNet, self).__init__()
         self.device = device

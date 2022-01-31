@@ -27,6 +27,12 @@ python main.py \
 -b 2 \
 -j g \
 -e $num_epochs \
+--latent-map 'local' \
+--latent-node-size 1 \
+--encoder-edge-sizes '16,16,8,8;' \
+--decoder-edge-sizes '16,16,8,8;' \
+--encoder-node-sizes '3;3;3;3;' \
+--decoder-node-sizes '3;3;3;3;' \
 --chamfer-jet-features-weight 10 \
 --train-fraction "$train_fraction" \
 --num-valid "$num_valid" \

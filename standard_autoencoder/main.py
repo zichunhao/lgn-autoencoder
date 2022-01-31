@@ -86,6 +86,7 @@ def initialize_models(args):
                       num_mps=args.decoder_num_mps,
                       dropout=args.decoder_dropout,
                       alphas=args.decoder_alphas,
+                      latent_map=args.latent_map,
                       batch_norm=args.decoder_batch_norm,
                       dtype=args.dtype, device=args.device)
 
@@ -109,6 +110,7 @@ def initialize_models(args):
 
     logging.info(f"{encoder=}")
     logging.info(f"{decoder=}")
+    logging.info(f'Latent space size: {encoder.latent_space_size}')
 
     return encoder, decoder, outpath
 
