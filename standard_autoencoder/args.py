@@ -31,12 +31,16 @@ def setup_argparse():
                         help='Dimension of latent vectors. If --latent-map is "local" or "node", this stands for the size of feature vector per node.')
 
     # encoder
-    parser.add_argument('--encoder-edge-sizes', type=int, nargs='+', action='append',
+    parser.add_argument('--encoder-edge-sizes', type=get_list_of_list,
                         default=[[32, 128, 64, 16]], metavar='',
-                        help='Edge convolution layer width in each message passing step in encoder.')
-    parser.add_argument('--encoder-node-sizes', type=int, nargs='+', action='append',
+                        help="Edge convolution layer width in each message passing step in encoder. "
+                        "To enter a list of lists, use ';' to separate the lists and ',' to separate the elements in each list."
+                        )
+    parser.add_argument('--encoder-node-sizes', type=get_list_of_list,
                         default=[[16], [32], [8]], metavar='',
-                        help='Edge convolution layer width in each message passing step in encoder.')
+                        help="Edge convolution layer width in each message passing step in encoder. "
+                        "To enter a list of lists, use ';' to separate the lists and ',' to separate the elements in each list."
+                        )
     parser.add_argument('--encoder-num-mps', type=int, default=3, metavar='',
                         help='Number of message passing steps in encoder.')
     parser.add_argument('--encoder-dropout', type=float, default=0.2, metavar='',
@@ -51,12 +55,15 @@ def setup_argparse():
     parser.add_argument('--latent-map', type=str, default='mean', metavar='',
                         help="Method to map from GNN to latent space. Options: ('mean', 'mix', 'local', 'node'). Default: 'mean'.")
     # decoder
-    parser.add_argument('--decoder-edge-sizes', type=int, nargs='+', action='append',
+    parser.add_argument('--decoder-edge-sizes', type=get_list_of_list,
                         default=[[32, 128, 64, 16]], metavar='',
-                        help='Edge convolution layer width in each message passing step in decoder.')
-    parser.add_argument('--decoder-node-sizes', type=int, nargs='+', action='append',
+                        help="Edge convolution layer width in each message passing step in decoder. "
+                        "To enter a list of lists, use ';' to separate the lists and ',' to separate the elements in each list.")
+    parser.add_argument('--decoder-node-sizes', type=get_list_of_list,
                         default=[[16], [32], [8]], metavar='',
-                        help='Edge convolution layer width in each message passing step in decoder.')
+                        help="Edge convolution layer width in each message passing step in decoder."
+                        "To enter a list of lists, use ';' to separate the lists and ',' to separate the elements in each list."
+                        )
     parser.add_argument('--decoder-num-mps', type=int, default=3, metavar='',
                         help='Number of message passing steps in decoder.')
     parser.add_argument('--decoder-dropout', type=float, default=0.1, metavar='',
@@ -204,3 +211,8 @@ def get_dtype(arg):
     else:
         dtype = torch.float64
     return dtype
+
+def get_list_of_list(arg):
+    if arg[-1] == ';':
+        arg = arg[:-1]
+    return [[int(item) for item in s.split(',') if s != ''] for s in arg.split(';')]
