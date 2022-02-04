@@ -43,7 +43,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         target_data.append(p4_target.cpu().detach())
 
         batch_loss = get_loss(args, p4_gen, p4_target.to(args.dtype))
-        epoch_total_loss += batch_loss.cpu()
+        epoch_total_loss += batch_loss.cpu().item()
 
         # Backward propagation
         if is_train:
