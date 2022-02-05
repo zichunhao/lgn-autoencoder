@@ -162,8 +162,8 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
                 plot_p(args, p4_target=target, p4_gen=gen, save_dir=dir, epoch=epoch, show=False)
 
         dts.append(dt)
-        train_avg_losses.append(train_avg_loss.cpu().detach())
-        valid_avg_losses.append(valid_avg_loss.cpu().detach())
+        train_avg_losses.append(train_avg_loss)
+        valid_avg_losses.append(valid_avg_loss)
         np.savetxt(osp.join(outpath, 'model_evaluations/losses_training.txt'), train_avg_losses)
         np.savetxt(osp.join(outpath, 'model_evaluations/losses_validation.txt'), valid_avg_losses)
         np.savetxt(osp.join(outpath, 'model_evaluations/dts.txt'), dts)
