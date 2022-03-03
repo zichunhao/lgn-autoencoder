@@ -25,9 +25,7 @@ def main(args):
     logging.info(args)
     
     # Loading data and initializing models
-    train_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}.pt")
-
-    train_loader, valid_loader = initialize_data(path=train_data_path,
+    train_loader, valid_loader = initialize_data(path=args.file_path,
                                                  batch_size=args.batch_size,
                                                  vec_dims=args.vec_dims,
                                                  train_fraction=args.train_fraction,

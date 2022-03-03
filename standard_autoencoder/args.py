@@ -9,10 +9,8 @@ def setup_argparse():
     ######################################### Data options #########################################
     parser.add_argument('-j', '--jet-type', type=str, required=True, metavar='',
                         help="Jet type to train. Options: ('g', 'q', 't', 'w', 'z').")
-    parser.add_argument('--file-path', type=str, default='../hls4ml/', metavar='',
+    parser.add_argument('--file-path', type=str, metavar='',
                         help='Path of the data.')
-    parser.add_argument('--file-suffix', type=str, default='jets_30p_p4', metavar='',
-                        help="The suffix of the file. Default: 'jets_30p_p4'")
     parser.add_argument('--unit', type=str, default='TeV',
                         help="The unit of momenta. Choices: ('GeV', 'TeV'). Default: TeV. ")
     parser.add_argument('--abs-coord', type=get_bool, default=True, metavar='',
