@@ -11,7 +11,7 @@ class GraphNet(nn.Module):
 
     def __init__(
         self, num_nodes, input_node_size, output_node_size, node_sizes, edge_sizes,
-        num_mps, dropout=0.1, alphas=0.1, batch_norm=True, 
+        num_mps, dropout=0.1, alphas=0.1, batch_norm=False, 
         device=None, dtype=None
     ):
         """

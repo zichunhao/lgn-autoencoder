@@ -11,7 +11,7 @@ LOCAL_MIXING_CHOICES = ('node', 'local')
 class Encoder(nn.Module):
     def __init__(
         self, num_nodes, input_node_size, latent_node_size, node_sizes, edge_sizes,
-        num_mps, dropout, alphas, batch_norm=True, latent_map='mix', 
+        num_mps, dropout, alphas, batch_norm=False, latent_map='mix', 
         device=None, dtype=None
     ):
         """
