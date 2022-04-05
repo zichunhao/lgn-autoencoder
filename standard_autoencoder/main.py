@@ -85,6 +85,7 @@ def initialize_models(args):
                       dropout=args.decoder_dropout,
                       alphas=args.decoder_alphas,
                       latent_map=args.latent_map,
+                      normalize_output=args.normalized,
                       batch_norm=args.decoder_batch_norm,
                       dtype=args.dtype, device=args.device)
 
