@@ -15,6 +15,8 @@ def setup_argparse():
                         help="The unit of momenta. Choices: ('GeV', 'TeV'). Default: TeV. ")
     parser.add_argument('--abs-coord', type=get_bool, default=True, metavar='',
                         help='Whether the data is in absolute coordinates. False when relative coordinates are used.')
+    parser.add_argument('--polar-coord', type=get_bool, default=False, metavar='',
+                        help='Whether the data is in polar coordinates (pt, eta, phi). False when Cartesian coordinates are used.')
     parser.add_argument('--normalized', type=get_bool, default=False, metavar='',
                         help='Whether the data is normalized. False when unnormalized data is used.')
     parser.add_argument('--train-fraction', type=float, default=10,
