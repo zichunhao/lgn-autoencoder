@@ -11,7 +11,7 @@ LOCAL_MIXING_CHOICES = ('node', 'local')
 class Decoder(nn.Module):
     def __init__(
         self, num_nodes, latent_node_size, output_node_size, node_sizes, edge_sizes,
-        num_mps, dropout, alphas, batch_norm=True, latent_map='mix',
+        num_mps, dropout, alphas, batch_norm=False, latent_map='mix', normalize_output=False,
         device=None, dtype=None
     ):
         '''
@@ -64,6 +64,7 @@ class Decoder(nn.Module):
         self.node_sizes = node_sizes
         self.edge_sizes = edge_sizes
         self.num_mps = num_mps
+        self.normalize_output = normalize_output
 
         self.device = device
         self.dtype = dtype
@@ -99,4 +100,6 @@ class Decoder(nn.Module):
         x = x.to(self.device).to(self.dtype)
         x = self.linear(x).view(-1, self.num_nodes, self.latent_node_size)
         x = self.decoder(x, metric=metric)
+        if self.normalize_output:
+            x = torch.tanh(x)
         return x

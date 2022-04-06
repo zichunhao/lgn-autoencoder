@@ -29,7 +29,7 @@ RANGES_POLAR_ABS_COORD = (
     np.linspace(-np.pi, np.pi, NUM_BINS)  # Jet phi
 )
 RANGES_POLAR_REL_COORD = (
-    np.linspace(0, 0.2, NUM_BINS),    # Jet M_rel
+    np.linspace(0, 5, NUM_BINS),         # Jet M_rel
     np.linspace(0.5, 1.02, NUM_BINS),    # Jet Pt_rel
     np.linspace(-0.02, 0.02, NUM_BINS),  # Jet eta_rel
     np.linspace(-0.02, 0.02, NUM_BINS)   # Jet phi_rel

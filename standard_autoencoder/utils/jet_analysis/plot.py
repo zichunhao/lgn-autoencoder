@@ -1,7 +1,7 @@
 from .jet_features import plot_jet_p_cartesian, plot_jet_p_polar
 from .particle_features import plot_p_cartesian, plot_p_polar
 from .jet_images import plot_jet_image
-from .utils import get_p_polar, get_p_cartesian, get_p4
+from .utils import get_p_polar, get_p_cartesian, get_p4, get_p4_cartesian_from_polar
 from .utils import get_jet_feature_polar, get_jet_feature_cartesian
 from .utils import get_p_polar_tensor, get_recons_err_ranges
 from .particle_recon_err import plot_particle_recon_err
@@ -41,6 +41,10 @@ def plot_p(args, p4_target, p4_gen, save_dir, cutoff=1e-6, epoch=None, show=Fals
         p4_gen = get_p4(p4_gen)
 
     # tuples
+    if args.polar_coord:
+        p4_target = get_p4_cartesian_from_polar(p4_target)
+        p4_gen = get_p4_cartesian_from_polar(p4_gen)
+    
     p_target_polar = get_p_polar(p4_target, cutoff=cutoff, eps=EPS)
     jet_target_polar = get_jet_feature_polar(p4_target)
     p_gen_polar = get_p_polar(p4_gen, cutoff=cutoff, eps=EPS)
