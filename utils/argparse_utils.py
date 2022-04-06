@@ -174,6 +174,10 @@ def parse_data_settings(parser, training=True):
                         help='The batch size for equivariance test.')
     parser.add_argument('--abs-coord', type=get_bool, default=True, metavar='',
                         help='Whether the data is in absolute coordinates. False when relative coordinates are used.')
+    parser.add_argument('--polar-coord', type=get_bool, default=False, metavar='',
+                        help='Whether the data is in polar coordinates (pt, eta, phi). False when Cartesian coordinates are used.')
+    parser.add_argument('--normalized', type=get_bool, default=False, metavar='',
+                        help='Whether the data is normalized. False when unnormalized data is used.')
     parser.add_argument('--scale', type=float, default=1., metavar='',
                         help='The rescaling factor of the input 4-momenta. Default: 1.')
     parser.add_argument('--num-test-batch', type=int, default=-1, metavar='',

@@ -115,6 +115,26 @@ def get_p_polar(p4, cutoff=1e-6, eps=1e-12, gpu=True):
     return pt, eta, phi
 
 
+def get_p4_cartesian_from_polar(p: torch.Tensor) -> torch.Tensor:
+    '''
+    (pt, eta, phi) -> (E, px, py, pz) or
+    (E, pt, eta, phi) -> (E, px, py, pz).
+    '''
+    if p.shape[-1] == 4:
+        E_idx, pt_idx, eta_idx, phi_idx = 0, 1, 2, 3
+        E = (p[..., E_idx]).unsqueeze(-1)
+    elif p.shape[-1] == 3:
+        pt_idx, eta_idx, phi_idx = 0, 1, 2
+        E = (p[..., pt_idx] * torch.cosh(p[..., eta_idx])).unsqueeze(-1)
+    else:
+        raise ValueError(f'Invalid shape of feature dimension: {p.shape[-1]}.')
+
+    px = (p[..., pt_idx] * torch.cos(p[..., phi_idx])).unsqueeze(-1)
+    py = (p[..., pt_idx] * torch.sin(p[..., phi_idx])).unsqueeze(-1)
+    pz = (p[..., pt_idx] * torch.sinh(p[..., eta_idx])).unsqueeze(-1)
+
+    return torch.cat((E, px, py, pz), dim=-1)
+
 def get_p_polar_tensor(p, eps=1e-16):
     """(E, px, py, pz) -> (pt, eta, phi)"""
     if p.shape[-1] == 4:

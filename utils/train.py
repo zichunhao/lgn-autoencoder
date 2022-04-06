@@ -66,7 +66,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         else:
             num_stale_epochs += 1
 
-        if args.abs_coord and (args.unit.lower() == 'tev'):
+        if (args.abs_coord and (args.unit.lower() == 'tev')) and not args.normalized:
             # Convert to GeV for plotting
             train_target *= 1000
             train_gen *= 1000
