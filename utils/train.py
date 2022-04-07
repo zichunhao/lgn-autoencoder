@@ -40,7 +40,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
     num_stale_epochs = 0
 
     total_epoch = args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch
-    
+
     for ep in range(args.num_epochs):
         epoch = args.load_epoch + ep if args.load_to_train else ep
 
@@ -82,7 +82,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         else:
             plot_epoch = (num_stale_epochs == 0)
         to_plot = is_emd or plot_epoch
-        
+
         if to_plot:
             for target, gen, dir in zip((train_target, valid_target),
                                         (train_gen, valid_gen),
@@ -151,22 +151,23 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         epoch_total_loss = 0
 
     for i, batch in enumerate(tqdm(loader)):
-        
+
         if args.normalize:
-            norm_factor = torch.abs(batch['p4']).amax(dim=-2, keepdim=True)
+            norm_factor = torch.abs(batch['p4']).amax(dim=-2, keepdim=True).to(batch['p4'].device)
             batch['p4'] /= norm_factor
-        
+
         latent_features = encoder(batch, covariance_test=False)
         p4_recons = decoder(latent_features, covariance_test=False)
         if args.normalize:
+            norm_factor.to(p4_recons.device)
             generated_data.append((p4_recons[0]*norm_factor).detach().cpu())
         else:
             generated_data.append(p4_recons[0].cpu().detach())
-        
+
         p4_target = batch['p4']
         if device is not None:
             p4_target = p4_target.to(device=device)
-            
+
         if args.normalize:
             target_data.append((p4_target*norm_factor).detach().cpu())
         else:

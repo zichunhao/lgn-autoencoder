@@ -33,7 +33,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
     for i, data in enumerate(tqdm(loader)):
         p4_target = data.to(args.dtype)
         p4_gen = decoder(
-            encoder(p4_target, metric=args.encoder_metric), 
+            encoder(p4_target, metric=args.encoder_metric),
             metric=args.decoder_metric
         )
         generated_data.append(p4_gen.cpu().detach())
@@ -52,14 +52,14 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             batch_loss.backward()
             optimizer_encoder.step()
             optimizer_decoder.step()
-            
+
             if ('emd' in args.loss_choice.lower()) and ((i % args.save_freq) == 0 and i > 0):
                 torch.save(
-                    encoder.state_dict(), 
+                    encoder.state_dict(),
                     osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth")
                 )
                 torch.save(
-                    decoder.state_dict(), 
+                    decoder.state_dict(),
                     osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth")
                 )
 
@@ -97,14 +97,14 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
     train_avg_losses = []
     valid_avg_losses = []
     dts = []
-    
+
     best_epoch = 1
     num_stale_epochs = 0
     best_loss = math.inf
 
     outpath_train_jet_plots = make_dir(osp.join(outpath, 'model_evaluations/jet_plots/train'))
     outpath_valid_jet_plots = make_dir(osp.join(outpath, 'model_evaluations/jet_plots/valid'))
-    
+
     total_epoch = args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch
 
     for ep in range(args.num_epochs):
@@ -118,25 +118,24 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         # Validation
         valid_avg_loss, valid_gen, valid_target = validate(args, valid_loader, encoder, decoder,
                                                            epoch, outpath, device=device)
-        
+
         if (abs(valid_avg_loss) < best_loss):
             best_loss = valid_avg_loss
             num_stale_epochs = 0
             best_epoch = epoch + 1
             torch.save(
-                encoder.state_dict(), 
-                osp.join(outpath, "weights_encoder/best_encoder_weights.pth"
-            ))
+                encoder.state_dict(),
+                osp.join(outpath, "weights_encoder/best_encoder_weights.pth")
+            )
             torch.save(
-                decoder.state_dict(), 
-                osp.join(outpath, "weights_decoder/best_decoder_weights.pth"
-            ))
+                decoder.state_dict(),
+                osp.join(outpath, "weights_decoder/best_decoder_weights.pth")
+            )
         else:
             num_stale_epochs += 1
 
-
         dt = time.time() - start
-        
+
         if (args.abs_coord and (args.unit.lower() == 'tev')) and not args.normalized:
             # Convert to GeV for plotting
             train_target *= 1000
@@ -146,7 +145,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
         if args.plot_freq > 0:
             if (epoch >= int(args.num_epochs * PLOT_START_PERCENTAGE)):
-                plot_epoch = ((epoch + 1) % args.plot_freq ==0) or (num_stale_epochs == 0)
+                plot_epoch = ((epoch + 1) % args.plot_freq == 0) or (num_stale_epochs == 0)
             else:
                 plot_epoch = ((epoch + 1) % args.plot_freq == 0)
         else:
@@ -177,7 +176,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
                     args, data=(train_avg_losses, valid_avg_losses),
                     data_name='Losses', outpath=outpath, start=epoch-args.plot_freq
                 )
-            
+
         if num_stale_epochs > args.patience:
             logging.info(
                 f'Number of stale epochs reached the set patience ({args.patience}). Training breaks.'
