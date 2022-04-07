@@ -158,20 +158,18 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
         latent_features = encoder(batch, covariance_test=False)
         p4_recons = decoder(latent_features, covariance_test=False)
-        if args.normalize:
-            norm_factor.to(p4_recons.device)
-            generated_data.append((p4_recons[0]*norm_factor).detach().cpu())
-        else:
-            generated_data.append(p4_recons[0].cpu().detach())
-
         p4_target = batch['p4']
         if device is not None:
             p4_target = p4_target.to(device=device)
 
         if args.normalize:
+            norm_factor = norm_factor.to(p4_recons.device)
+            generated_data.append((p4_recons[0]*norm_factor).detach().cpu())
             target_data.append((p4_target*norm_factor).detach().cpu())
         else:
+            generated_data.append(p4_recons[0].cpu().detach())
             target_data.append(p4_target.cpu().detach())
+
         if for_test:
             latent_spaces.append({k: latent_features[k].squeeze(dim=2) for k in latent_features.keys()})
             if args.normalize:
