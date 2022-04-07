@@ -16,8 +16,6 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
 BLOW_UP_THRESHOLD = 1e8
-# The percentage of total epochs after which the thus-far best result is plotted
-PLOT_START_PERCENTAGE = 0.05
 
 
 def train_loop(args, train_loader, valid_loader, encoder, decoder,
@@ -77,10 +75,10 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         # Others (MSE and chamfer losses): Plot every args.plot_freq epoch or the best epoch.
         is_emd = 'emd' in args.loss_choice.lower()
         if args.plot_freq > 0:
-            if (epoch >= int(args.num_epochs * PLOT_START_PERCENTAGE)):
-                plot_epoch = ((epoch + 1) % args.plot_freq ==0) or (num_stale_epochs == 0)
+            if (epoch >= args.plot_start_epoch):
+                plot_epoch = ((epoch + 1) % args.plot_freq == 0) or (num_stale_epochs == 0)
             else:
-                plot_epoch = ((epoch + 1) % args.plot_freq == 0)
+                plot_epoch = False
         else:
             plot_epoch = (num_stale_epochs == 0)
         to_plot = is_emd or plot_epoch
