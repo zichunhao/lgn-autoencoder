@@ -66,7 +66,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         else:
             num_stale_epochs += 1
 
-        if (args.abs_coord and (args.unit.lower() == 'tev')) and not args.normalized:
+        if args.abs_coord and (args.unit.lower() == 'tev'):
             # Convert to GeV for plotting
             train_target *= 1000
             train_gen *= 1000
@@ -151,9 +151,14 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         epoch_total_loss = 0
 
     for i, batch in enumerate(tqdm(loader)):
+        
+        if args.normalize:
+            norm_factor = torch.abs(batch['p4']).amax(dim=-2, keepdim=True)
+            batch['p4'] *= norm_factor
+        
         latent_features = encoder(batch, covariance_test=False)
         p4_recons = decoder(latent_features, covariance_test=False)
-        generated_data.append(p4_recons[0].cpu().detach())
+        generated_data.append(p4_recons[0].cpu().detach() * norm_factor)
 
         p4_target = batch['p4']
         if device is not None:
