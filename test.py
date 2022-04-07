@@ -24,13 +24,16 @@ def test(args):
     encoder.load_state_dict(torch.load(encoder_path, map_location=args.device))
     decoder.load_state_dict(torch.load(decoder_path, map_location=args.device))
 
-    recons, target, latent = validate(args, test_loader, encoder, decoder, args.load_epoch,
-                                      args.model_path, args.device, for_test=True)
+    recons, target, latent, norm_factors = validate(
+        args, test_loader, encoder, decoder, args.load_epoch,
+        args.model_path, args.device, for_test=True
+    )
 
     test_path = make_dir(osp.join(args.model_path, 'test'))
     torch.save(target, osp.join(test_path, 'target.pt'))
     torch.save(recons, osp.join(test_path, 'reconstructed.pt'))
     torch.save(latent, osp.join(test_path, 'latent.pt'))
+    torch.save(norm_factors, osp.join(test_path, 'norm_factors.pt'))
     logging.info(f'Data saved exported to {test_path}.')
 
     fig_path = make_dir(osp.join(test_path, 'jet_plots'))
