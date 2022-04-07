@@ -147,6 +147,8 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
     generated_data = []
     if for_test:  # Save latent space for later analysis
         latent_spaces = []
+        if args.normalize:
+            norm_factors = []
     else:
         epoch_total_loss = 0
 
@@ -154,18 +156,27 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         
         if args.normalize:
             norm_factor = torch.abs(batch['p4']).amax(dim=-2, keepdim=True)
-            batch['p4'] *= norm_factor
+            batch['p4'] /= norm_factor
         
         latent_features = encoder(batch, covariance_test=False)
         p4_recons = decoder(latent_features, covariance_test=False)
-        generated_data.append(p4_recons[0].cpu().detach() * norm_factor)
-
+        if args.normalize:
+            generated_data.append((p4_recons[0]*norm_factor).detach().cpu())
+        else:
+            generated_data.append(p4_recons[0].cpu().detach())
+        
         p4_target = batch['p4']
         if device is not None:
             p4_target = p4_target.to(device=device)
-        target_data.append(p4_target.cpu().detach())
+            
+        if args.normalize:
+            target_data.append((p4_target*norm_factor).detach().cpu())
+        else:
+            target_data.append(p4_target.cpu().detach())
         if for_test:
             latent_spaces.append({k: latent_features[k].squeeze(dim=2) for k in latent_features.keys()})
+            if args.normalize:
+                norm_factors.append(norm_factor.squeeze(dim=2))
         else:
             batch_loss = get_loss(args, p4_recons, p4_target)
             epoch_total_loss += batch_loss.item()
@@ -200,7 +211,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             k: [latent_spaces[i][k] for i in range(len(latent_spaces))]
             for k in latent_features.keys()
         }
-        return generated_data, target_data, latent_dict
+        return generated_data, target_data, latent_dict, norm_factors
 
     else:
         epoch_avg_loss = epoch_total_loss / len(loader)
