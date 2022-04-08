@@ -39,14 +39,21 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
         stats_coordinate_list = []
         fig, axs = plt.subplots(1, 4, figsize=FIGSIZE, sharey=False)
         for ax, rel_err, bins, label in zip(axs, rel_err_coordinate, bin_tuple, labels):
-            ax.hist(rel_err, bins=bins, histtype='step', stacked=True)
+            
+            stats = get_stats(rel_err, bins)
+            stats_coordinate_list.append(stats)
+            
+            # Find the range based on the FWHM
+            FWHM = stats['FWHM']
+            bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
+            ax.hist(rel_err, bins=bins_suitable, histtype='step', stacked=True)
             ax.set_xlabel(fr'$\delta${label}')
             ax.set_ylabel('Number of Jets')
 
             for axis in ('x', 'y'):
                 ax.tick_params(axis=axis, labelsize=PLOT_FONT_SIZE)
 
-            stats_coordinate_list.append(get_stats(rel_err, bins))
+            
 
         err_dict[coordinate] = stats_coordinate_list
 
