@@ -13,7 +13,7 @@ from utils.train import validate
 
 
 def test(args):
-    test_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}_test.pt")
+    test_data_path = args.test_file_path
     test_loader = initialize_test_data(path=test_data_path, batch_size=args.test_batch_size)
 
     # Load models

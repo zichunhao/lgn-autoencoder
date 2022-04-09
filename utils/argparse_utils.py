@@ -166,10 +166,10 @@ def parse_covariance_test_settings(parser):
 def parse_data_settings(parser, training=True):
     parser.add_argument('-j', '--jet-type', type=str, required=True, metavar='',
                         help="The jet type to train. Options: ('g', 'q', 't', 'w', 'z').")
-    parser.add_argument('--file-path', type=str, default='hls4ml/', metavar='',
-                        help='The path of the data.')
-    parser.add_argument('--file-suffix', type=str, default='jets_30p_p4', metavar='',
-                        help="The suffix of the file. Default: 'jets_30p_p4'")
+    parser.add_argument('--file-path', type=str, default='hls4ml/g_jets_30p_p4.pt', metavar='',
+                        help='The path of the training data.')
+    parser.add_argument('--test-file-path', type=str, default='hls4ml/g_jets_30p_p4_test.pt', metavar='',
+                        help='The path of the test data.')
     parser.add_argument('--unit', type=str, default='TeV',
                         help="The unit of momenta. Choices: ('GeV', 'TeV'). Default: TeV. ")
     parser.add_argument('-tbs', '--test-batch-size', type=int, default=4, metavar='',

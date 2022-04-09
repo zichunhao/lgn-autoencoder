@@ -40,7 +40,7 @@ python main.py \
 --equivariance-test \
 --encoder-num-channels 4 5 4 4 \
 --decoder-num-channels 4 5 4 4 \
---file-path "./hls4ml" \
---file-suffix "jets_30p_p4" \
+--file-path "./hls4ml/g_jets_30p_p4.pt" \
+--test-file-path "./hls4ml/g_jets_30p_p4_test.pt" \
 --save-dir "$output_path" \
 | tee -a "$output_path"/autoencoder-g-s1-v1-4544-4544.txt
