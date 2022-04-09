@@ -93,19 +93,31 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
 
         for i, (ax, bins, label) in enumerate(zip(axs[0], ranges_real, labels)):
             res = rel_err[..., i].numpy()
-            err_dict_coordinate['rel_err'].append(get_stats(res, bins))
-            ax.hist(res, bins=bins, histtype='step', stacked=True)
+            stats = get_stats(res, bins)
+            err_dict_coordinate['rel_err'].append(stats)
+            
+            # Find the range based on the FWHM
+            FWHM = stats['FWHM']
+            bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
+            ax.hist(res, bins=bins_suitable, histtype='step', stacked=True)
+            
             ax.set_xlabel(fr'$\delta${label}')
             ax.set_ylabel('Number of real particles')
             ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
             ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
             ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
+            
             for axis in ('x', 'y'):
                 ax.tick_params(axis=axis, labelsize=PLOT_FONT_SIZE)
 
         for i, (ax, bins, label) in enumerate(zip(axs[1], ranges_padded, labels)):
             p = p_padded_recons[..., i].numpy()
-            err_dict_coordinate['pad_recons'].append(get_stats(p, bins))
+            stats = get_stats(p, bins)
+            err_dict_coordinate['pad_recons'].append(stats)
+            
+            # Find the range based on the FWHM
+            FWHM = stats['FWHM']
+            bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
             ax.hist(p, histtype='step', stacked=True, bins=bins)
             if args.abs_coord:
                 ax.set_xlabel(f'Reconstructed padded {label} (GeV)')
