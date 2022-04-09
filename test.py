@@ -13,8 +13,7 @@ from utils.train import validate
 
 
 def test(args):
-    test_data_path = args.test_file_path
-    test_loader = initialize_test_data(path=test_data_path, batch_size=args.test_batch_size)
+    test_loader = initialize_test_data(path=args.test_data_path, batch_size=args.test_batch_size)
 
     # Load models
     encoder, decoder = initialize_autoencoder(args)

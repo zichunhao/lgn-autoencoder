@@ -25,11 +25,11 @@ def main(args):
     )
     logging.info(f"compression rate: {compression_rate}")
 
-    train_loader, valid_loader = initialize_data(path=args.file_path,
+    train_loader, valid_loader = initialize_data(path=args.data_path,
                                                  batch_size=args.batch_size,
                                                  train_fraction=args.train_fraction,
                                                  num_val=args.num_valid)
-    test_loader = initialize_test_data(path=args.test_file_path, batch_size=args.test_batch_size)
+    test_loader = initialize_test_data(path=args.test_data_path, batch_size=args.test_batch_size)
 
     """Initializations"""
     encoder, decoder = initialize_autoencoder(args)
