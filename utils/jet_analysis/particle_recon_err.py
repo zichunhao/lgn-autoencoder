@@ -118,7 +118,7 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
             # Find the range based on the FWHM
             FWHM = stats['FWHM']
             bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
-            ax.hist(p, histtype='step', stacked=True, bins=bins)
+            ax.hist(p, histtype='step', stacked=True, bins=bins_suitable)
             if args.abs_coord:
                 ax.set_xlabel(f'Reconstructed padded {label} (GeV)')
             else:
