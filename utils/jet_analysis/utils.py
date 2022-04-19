@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from scipy import stats
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 NUM_BINS = 81  # Number of bins for all histograms
@@ -255,7 +256,44 @@ def find_fwhm(err, bins):
 
 
 def get_stats(res, bins):
-    return {'mean': np.mean(res), 'FWHM': find_fwhm(res, bins)}
+    try:
+        max_val = np.max(res)
+    except ValueError:
+        max_val = None
+        
+    try:
+        min_val = np.min(res)
+    except ValueError:
+        min_val = None
+        
+    try:
+        abs_min = np.min(np.abs(res))
+    except ValueError:
+        abs_min = None
+        
+    mean = np.mean(res)
+    mean = None if np.isnan(mean) else mean
+        
+    std_dev = np.std(res)
+    std_dev = None if np.isnan(std_dev) else std_dev
+    
+    skew = stats.skew(res)
+    skew = None if np.isnan(skew) else skew
+    
+    kurtosis = stats.kurtosis(res)
+    kurtosis = None if np.isnan(kurtosis) else kurtosis
+    
+    return {
+        'mean': mean, 
+        'max': max_val,
+        'min': min_val,
+        'abs_min': abs_min,
+        'std_dev': std_dev,
+        'skew': skew,
+        'kurtosis': kurtosis,
+        'FWHM': find_fwhm(res, bins)
+    }
+    
 
 
 def get_jet_name(args):
