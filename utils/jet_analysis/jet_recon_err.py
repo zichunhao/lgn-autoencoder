@@ -32,6 +32,9 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
     rel_err_polar = [get_rel_err(jet_gen_polar[i], jet_target_polar[i], eps) for i in range(4)]
     if ranges is None:
         ranges = get_bins(NUM_BINS, rel_err_cartesian=rel_err_cartesian, rel_err_polar=rel_err_polar)
+        custom_range = False
+    else:
+        custom_range = True
 
     LABELS = LABELS_ABS_COORD if args.abs_coord else LABELS_REL_COORD
     err_dict = dict()
@@ -43,10 +46,13 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
             stats = get_stats(rel_err, bins)
             stats_coordinate_list.append(stats)
             
+            if not custom_range:
             # Find the range based on the FWHM
-            FWHM = stats['FWHM']
-            bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
-            ax.hist(rel_err, bins=bins_suitable, histtype='step', stacked=True)
+                FWHM = stats['FWHM']
+                bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
+                ax.hist(rel_err, bins=bins_suitable, histtype='step', stacked=True)
+            else:
+                ax.hist(rel_err, bins=bins, histtype='step', stacked=True)
             ax.set_xlabel(fr'$\delta${label}')
             ax.set_ylabel('Number of Jets')
 

@@ -69,12 +69,17 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
 
     LABELS = LABELS_ABS_COORD if args.abs_coord else LABELS_REL_COORD
     if ranges is None:
-        ranges = get_bins(NUM_BINS,
-                          rel_err_cartesian=rel_err_cartesian.numpy(),
-                          rel_err_polar=rel_err_polar.numpy(),
-                          p_padded_recons_cartesian=p_padded_recons_cartesian.numpy(),
-                          p_padded_recons_polar=p_padded_recons_polar.numpy())
-
+        ranges = get_bins(
+            NUM_BINS,
+            rel_err_cartesian=rel_err_cartesian.numpy(),
+            rel_err_polar=rel_err_polar.numpy(),
+            p_padded_recons_cartesian=p_padded_recons_cartesian.numpy(),
+            p_padded_recons_polar=p_padded_recons_polar.numpy()
+        )
+        custom_range = False
+    else:
+        custom_range = True
+    
     # Plot both Cartesian and polar coordinates
     err_dict = dict()
     for rel_err, p_padded_recons, coordinate, bin_tuple, labels in zip(
@@ -96,10 +101,13 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
             stats = get_stats(res, bins)
             err_dict_coordinate['rel_err'].append(stats)
             
-            # Find the range based on the FWHM
-            FWHM = stats['FWHM']
-            bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
-            ax.hist(res, bins=bins_suitable, histtype='step', stacked=True)
+            if not custom_range:
+                # Find the range based on the FWHM
+                FWHM = stats['FWHM']
+                bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
+                ax.hist(res, bins=bins_suitable, histtype='step', stacked=True)
+            else:
+                ax.hist(res, bins=bins, histtype='step', stacked=True)
             
             ax.set_xlabel(fr'$\delta${label}')
             ax.set_ylabel('Number of real particles')
@@ -115,10 +123,14 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
             stats = get_stats(p, bins)
             err_dict_coordinate['pad_recons'].append(stats)
             
+            if not custom_range:
             # Find the range based on the FWHM
-            FWHM = stats['FWHM']
-            bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
-            ax.hist(p, histtype='step', stacked=True, bins=bins_suitable)
+                FWHM = stats['FWHM']
+                bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
+                ax.hist(p, histtype='step', stacked=True, bins=bins_suitable)
+            else:
+                ax.hist(p, histtype='step', stacked=True, bins=bins)
+                
             if args.abs_coord:
                 ax.set_xlabel(f'Reconstructed padded {label} (GeV)')
             else:
