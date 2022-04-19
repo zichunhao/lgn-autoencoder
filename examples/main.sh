@@ -30,17 +30,16 @@ python main.py \
 --train-fraction "$train_fraction" \
 --num-valid "$num_valid" \
 --maxdim 2 \
---unit TeV \
 --loss-choice mse \
 --tau-latent-scalars 1 \
---tau-latent-vectors 1 \
---file-suffix jets_30p_p4 \
+--tau-latent-vectors 13 \
 --num-test-batch 200 \
 --plot-freq 1 \
+--plot-start-epoch 0 \
 --equivariance-test \
---encoder-num-channels 4 5 4 4 \
---decoder-num-channels 4 5 4 4 \
---file-path "./hls4ml/g_jets_30p_p4.pt" \
---test-file-path "./hls4ml/g_jets_30p_p4_test.pt" \
+--encoder-num-channels 4 5 3 3 \
+--decoder-num-channels 4 5 3 3 \
+--data-path "./hls4ml/g_jets_30p_p4.pt" \
+--test-data-path "./hls4ml/g_jets_30p_p4_test.pt" \
 --save-dir "$output_path" \
 | tee -a "$output_path"/autoencoder-g-s1-v1-4544-4544.txt
