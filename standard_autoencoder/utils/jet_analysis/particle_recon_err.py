@@ -130,7 +130,7 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
                 ax.hist(p, histtype='step', stacked=True, bins=bins)
             
             if args.abs_coord:
-                if label in (LABELS_ABS_COORD[1][1], LABELS_ABS_COORD[1][2]):
+                if ('eta' in label.lower()) or ('phi' in label.lower()):
                     # eta and phi are dimensionless
                     ax.set_xlabel(f'Reconstructed padded {label}')
                 else:
