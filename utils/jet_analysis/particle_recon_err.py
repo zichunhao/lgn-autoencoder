@@ -132,8 +132,12 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
                 ax.hist(p, histtype='step', stacked=True, bins=bins)
                 
             if args.abs_coord:
-                ax.set_xlabel(f'Reconstructed padded {label} (GeV)')
-            else:
+                if label in (LABELS_ABS_COORD[1][1], LABELS_ABS_COORD[1][2]):
+                    # eta and phi are dimensionless
+                    ax.set_xlabel(f'Reconstructed padded {label}')  
+                else:
+                    ax.set_xlabel(f'Reconstructed padded {label} (GeV)')
+            else:  # relative coordinates are normalized and dimensionless
                 ax.set_xlabel(f'Reconstructed padded {label}')
             ax.set_ylabel('Number of padded particles')
             ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
