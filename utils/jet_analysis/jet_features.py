@@ -17,14 +17,14 @@ RANGES_CARTESIAN_ABS_COORD = (
     np.linspace(-4000, 4000, NUM_BINS)   # Jet Pz
 )
 RANGES_CARTESIAN_REL_COORD = (
-    np.linspace(0, 0.2, NUM_BINS),    # Jet M_rel
+    np.linspace(0, 0.2, NUM_BINS),       # Jet M_rel
     np.linspace(0.5, 1.02, NUM_BINS),    # Jet Px_rel
     np.linspace(-0.02, 0.02, NUM_BINS),  # Jet Px_rel
     np.linspace(-0.02, 0.02, NUM_BINS)   # Jet Pz_rel
 )
 RANGES_POLAR_ABS_COORD = (
     np.linspace(0, 250, NUM_BINS),        # Jet M
-    np.linspace(0, 4000, NUM_BINS),       # Jet Pt
+    np.linspace(0, 2000, NUM_BINS),       # Jet Pt
     np.linspace(-2, 2, NUM_BINS),         # Jet eta
     np.linspace(-np.pi, np.pi, NUM_BINS)  # Jet phi
 )
