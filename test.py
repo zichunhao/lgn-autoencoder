@@ -24,6 +24,7 @@ def test(args):
     decoder.load_state_dict(torch.load(decoder_path, map_location=args.device))
     
     if args.plot_only:
+        test_path = osp.join(args.model_path, 'test')
         try:
             recons = torch.load(osp.join(test_path, 'reconstructed.pt')).to(args.device)
             target = torch.load(osp.join(test_path, 'target.pt')).to(args.device)
