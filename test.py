@@ -28,11 +28,10 @@ def test(args):
         try:
             recons = torch.load(osp.join(test_path, 'reconstructed.pt')).to(args.device)
             target = torch.load(osp.join(test_path, 'target.pt')).to(args.device)
-            latent = torch.load(osp.join(test_path, 'latent.pt')).to(args.device)
-            norm_factors = torch.load(osp.join(test_path, 'norm_factors.pt')).to(args.device)
         except FileNotFoundError:
             logging.warning('Inference results not found. Run inference first.')
-            recons, target, latent, norm_factors = validate(
+            # we do not need to load latent space or normalization factors
+            recons, target, _, _ = validate(
                 args, test_loader, encoder, decoder, args.load_epoch,
                 args.model_path, args.device, for_test=True
             )
