@@ -315,7 +315,7 @@ def get_jet_name(args):
 # Ranges
 def get_recons_err_ranges(args):
     """Get bins for reconstruction error plots"""
-    if args.custom_particlea_recons_ranges:
+    if args.custom_particle_recons_ranges:
         particle_recons_ranges = None
     else:
         particle_recons_ranges = _get_particle_recons_ranges(args)
@@ -329,7 +329,7 @@ def get_recons_err_ranges(args):
 
 
 def _get_particle_recons_ranges(args):
-    if args.custom_particlea_recons_ranges:
+    if args.custom_particle_recons_ranges:
         return None
 
     rel_err_cartesian = tuple([
