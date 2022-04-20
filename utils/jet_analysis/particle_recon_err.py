@@ -173,7 +173,7 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
 
 
 def get_rel_err_find_match(p_target_cartesian, p_recons_cartesian, p_target_polar, p_recons_polar, gpu=True):
-    """Get relative errors after finding the match beween target and reconstructed/generated jet."""
+    """Get relative errors after finding the match between target and reconstructed/generated jet."""
     if gpu:
         p_target_cartesian = p_target_cartesian.to(DEVICE)
         p_recons_cartesian = p_recons_cartesian.to(DEVICE)
