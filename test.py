@@ -22,18 +22,30 @@ def test(args):
     decoder_path = osp.join(args.model_path, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth')
     encoder.load_state_dict(torch.load(encoder_path, map_location=args.device))
     decoder.load_state_dict(torch.load(decoder_path, map_location=args.device))
-
-    recons, target, latent, norm_factors = validate(
-        args, test_loader, encoder, decoder, args.load_epoch,
-        args.model_path, args.device, for_test=True
-    )
-
-    test_path = make_dir(osp.join(args.model_path, 'test'))
-    torch.save(target, osp.join(test_path, 'target.pt'))
-    torch.save(recons, osp.join(test_path, 'reconstructed.pt'))
-    torch.save(latent, osp.join(test_path, 'latent.pt'))
-    torch.save(norm_factors, osp.join(test_path, 'norm_factors.pt'))
-    logging.info(f'Data saved exported to {test_path}.')
+    
+    if args.plot_only:
+        try:
+            recons = torch.load(osp.join(test_path, 'reconstructed.pt')).to(args.device)
+            target = torch.load(osp.join(test_path, 'target.pt')).to(args.device)
+            latent = torch.load(osp.join(test_path, 'latent.pt')).to(args.device)
+            norm_factors = torch.load(osp.join(test_path, 'norm_factors.pt')).to(args.device)
+        except FileNotFoundError:
+            logging.warning('Inference results not found. Run inference first.')
+            recons, target, latent, norm_factors = validate(
+                args, test_loader, encoder, decoder, args.load_epoch,
+                args.model_path, args.device, for_test=True
+            )
+    else:
+        recons, target, latent, norm_factors = validate(
+            args, test_loader, encoder, decoder, args.load_epoch,
+            args.model_path, args.device, for_test=True
+        )
+        test_path = make_dir(osp.join(args.model_path, 'test'))
+        torch.save(target, osp.join(test_path, 'target.pt'))
+        torch.save(recons, osp.join(test_path, 'reconstructed.pt'))
+        torch.save(latent, osp.join(test_path, 'latent.pt'))
+        torch.save(norm_factors, osp.join(test_path, 'norm_factors.pt'))
+        logging.info(f'Data saved exported to {test_path}.')
 
     fig_path = make_dir(osp.join(test_path, 'jet_plots'))
     if args.abs_coord and (args.unit.lower() == 'tev'):
@@ -62,6 +74,8 @@ def setup_argparse():
     parse_model_settings(parser)
 
     # Test
+    parser.add_argument('--plot-only', action='store_true', default=False,
+                        help='Only plot the results without the inference. If inference results are not found, run inference first.')
     parser.add_argument('--loss-choice', type=str, default='ChamferLoss', metavar='',
                         help="Choice of loss function. Options: ('ChamferLoss', 'EMDLoss', 'hybrid')")
     parser.add_argument('--loss-norm-choice', type=str, default='p3', metavar='',
