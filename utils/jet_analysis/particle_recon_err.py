@@ -68,7 +68,7 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
     p_padded_recons_polar = p_gen_polar.view(-1, 3)[is_padded]
 
     LABELS = LABELS_ABS_COORD if args.abs_coord else LABELS_REL_COORD
-    if ranges is None:
+    if (not args.custom_particle_recons_ranges) or (ranges is None):
         ranges = get_bins(
             NUM_BINS,
             rel_err_cartesian=rel_err_cartesian.numpy(),
@@ -76,9 +76,6 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
             p_padded_recons_cartesian=p_padded_recons_cartesian.numpy(),
             p_padded_recons_polar=p_padded_recons_polar.numpy()
         )
-        custom_range = False
-    else:
-        custom_range = True
     
     # Plot both Cartesian and polar coordinates
     err_dict = dict()
@@ -101,7 +98,7 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
             stats = get_stats(res, bins)
             err_dict_coordinate['rel_err'].append(stats)
             
-            if not custom_range:
+            if not args.custom_particle_recons_ranges:
                 # Find the range based on the FWHM
                 FWHM = stats['FWHM']
                 bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
@@ -126,8 +123,8 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
             stats = get_stats(p, bins)
             err_dict_coordinate['pad_recons'].append(stats)
             
-            if not custom_range:
-            # Find the range based on the FWHM
+            if not args.custom_particle_recons_ranges:
+                # Find the range based on the FWHM
                 FWHM = stats['FWHM']
                 bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
                 ax.hist(p, histtype='step', stacked=True, bins=bins_suitable)
@@ -135,7 +132,7 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
                 ax.hist(p, histtype='step', stacked=True, bins=bins)
                 
             if args.abs_coord:
-                if label in (LABELS_ABS_COORD[1][1], LABELS_ABS_COORD[1][2]):
+                if coordinate == 'polar' and i in (1, 2):
                     # eta and phi are dimensionless
                     ax.set_xlabel(f'Reconstructed padded {label}')  
                 else:
