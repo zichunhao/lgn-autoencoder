@@ -109,9 +109,9 @@ def parse_plot_settings(parser):
 
 
 def _parse_particle_recons_err_settings(parser):
-    parser.add_argument('--auto-particle-recons-ranges', default=False, action='store_true',
-                        help='Whether to automatically determine ranges of particle reconstruction errors. '
-                        'Call --auto-particle-recons-ranges to set true.')
+    parser.add_argument('--custom-particle-recons-ranges', default=False, action='store_true',
+                        help='Whether to manually set the ranges of particle reconstruction errors when plotting the histograms. '
+                        'Call --custom-particle-recons-ranges to set true.')
     parser.add_argument('--particle-rel-err-min-cartesian', nargs="+", type=float, default=[-1, -1, -1], metavar='',
                         help='xmin of histogram for particle reconstruction relative errors in Cartesian coordinates.')
     parser.add_argument('--particle-rel-err-max-cartesian', nargs="+", type=float, default=[1, 1, 1], metavar='',
@@ -133,9 +133,9 @@ def _parse_particle_recons_err_settings(parser):
 
 
 def _parse_jet_recons_err_settings(parser):
-    parser.add_argument('--auto-jet-recons-ranges', default=False, action='store_true',
-                        help='Whether to automatically determine ranges of jet reconstruction errors. '
-                        'Call --auto-jet-recons-ranges to set true.')
+    parser.add_argument('--custom-jet-recons-ranges', default=False, action='store_true',
+                        help='Whether to manually set the ranges of jet reconstruction errors when plotting the histograms. '
+                        'Call --custom-jet-recons-ranges to set true.')
     parser.add_argument('--jet-rel-err-min-cartesian', nargs="+", type=float, default=[-1, -1, -1, -1], metavar='',
                         help='xmin of histogram for jet reconstruction relative errors in Cartesian coordinates.')
     parser.add_argument('--jet-rel-err-max-cartesian', nargs="+", type=float, default=[1, 1, 1, 1], metavar='',

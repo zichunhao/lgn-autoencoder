@@ -136,9 +136,9 @@ def setup_argparse():
                         help='Number of one-to-one jet images to plot.')
     
     # reconstruction ranges
-    parser.add_argument('--auto-particle-recons-ranges', default=False, action='store_true',
-                        help='Whether to automatically determine ranges of particle reconstruction errors. '
-                        'Call --auto-particle-recons-ranges to set true.')
+    parser.add_argument('--custom-particle-recons-ranges', default=False, action='store_true',
+                        help='Whether to manually set the ranges of particle reconstruction errors. '
+                        'Call --custom-particle-recons-ranges to set true.')
     parser.add_argument('--particle-rel-err-min-cartesian', nargs="+", type=float, default=[-1, -1, -1], metavar='',
                         help='xmin of histogram for particle reconstruction relative errors in Cartesian coordinates.')
     parser.add_argument('--particle-rel-err-max-cartesian', nargs="+", type=float, default=[1, 1, 1], metavar='',
@@ -157,9 +157,9 @@ def setup_argparse():
     parser.add_argument('--particle-padded-recons-max-polar', nargs="+", type=float, default=[100, 1, np.pi], metavar='',
                         help='xmax of histogram for reconstructed padded particless in polar coordinates.')
     
-    parser.add_argument('--auto-jet-recons-ranges', default=False, action='store_true',
-                        help='Whether to automatically determine ranges of jet reconstruction errors. '
-                        'Call --auto-jet-recons-ranges to set true.')
+    parser.add_argument('--custom-jet-recons-ranges', default=False, action='store_true',
+                        help='Whether to manually set the ranges of jet reconstruction errors. '
+                        'Call --custom-jet-recons-ranges to set true.')
     parser.add_argument('--jet-rel-err-min-cartesian', nargs="+", type=float, default=[-1, -1, -1, -1], metavar='',
                         help='xmin of histogram for jet reconstruction relative errors in Cartesian coordinates.')
     parser.add_argument('--jet-rel-err-max-cartesian', nargs="+", type=float, default=[1, 1, 1, 1], metavar='',
