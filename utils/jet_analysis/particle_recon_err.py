@@ -119,7 +119,10 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
                 ax.tick_params(axis=axis, labelsize=PLOT_FONT_SIZE)
 
         for i, (ax, bins, label) in enumerate(zip(axs[1], ranges_padded, labels)):
-            p = p_padded_recons[..., i].numpy()
+            p = p_padded_recons[..., i]
+            if isinstance(p, torch.Tensor):
+                p = p.detach().cpu().numpy()
+            
             stats = get_stats(p, bins)
             err_dict_coordinate['pad_recons'].append(stats)
             
