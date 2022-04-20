@@ -76,7 +76,7 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
             p_padded_recons_cartesian=p_padded_recons_cartesian.numpy(),
             p_padded_recons_polar=p_padded_recons_polar.numpy()
         )
-    
+
     # Plot both Cartesian and polar coordinates
     err_dict = dict()
     for rel_err, p_padded_recons, coordinate, bin_tuple, labels in zip(
@@ -97,7 +97,7 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
             res = rel_err[..., i].numpy()
             stats = get_stats(res, bins)
             err_dict_coordinate['rel_err'].append(stats)
-            
+
             if not args.custom_particle_recons_ranges:
                 # Find the range based on the FWHM
                 FWHM = stats['FWHM']
@@ -105,13 +105,14 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
                 ax.hist(res, bins=bins_suitable, histtype='step', stacked=True)
             else:
                 ax.hist(res, bins=bins, histtype='step', stacked=True)
-            
+
             ax.set_xlabel(fr'$\delta${label}')
             ax.set_ylabel('Number of real particles')
+            ax.ticklabel_format(axis="x", style="sci", scilimits=(-2, 0), useMathText=True)
             ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
             ax.tick_params(bottom=True, top=True, left=True, right=True, direction='in')
             ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False)
-            
+
             for axis in ('x', 'y'):
                 ax.tick_params(axis=axis, labelsize=PLOT_FONT_SIZE)
 
@@ -119,10 +120,10 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
             p = p_padded_recons[..., i]
             if isinstance(p, torch.Tensor):
                 p = p.detach().cpu().numpy()
-            
+
             stats = get_stats(p, bins)
             err_dict_coordinate['pad_recons'].append(stats)
-            
+
             if not args.custom_particle_recons_ranges:
                 # Find the range based on the FWHM
                 FWHM = stats['FWHM']
@@ -130,7 +131,7 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
                 ax.hist(p, histtype='step', stacked=True, bins=bins_suitable)
             else:
                 ax.hist(p, histtype='step', stacked=True, bins=bins)
-                
+
             if args.abs_coord:
                 if ('eta' in label.lower()) or ('phi' in label.lower()):
                     # eta and phi are dimensionless
@@ -139,7 +140,7 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
                     ax.set_xlabel(f'Reconstructed padded {label} (GeV)')
             else:  # relative coordinates are normalized and dimensionless
                 ax.set_xlabel(f'Reconstructed padded {label}')
-            
+
             ax.set_ylabel('Number of padded particles')
             ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
             for axis in ('x', 'y'):

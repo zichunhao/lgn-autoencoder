@@ -39,10 +39,10 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
         stats_coordinate_list = []
         fig, axs = plt.subplots(1, 4, figsize=FIGSIZE, sharey=False)
         for ax, rel_err, bins, label in zip(axs, rel_err_coordinate, bin_tuple, labels):
-            
+
             stats = get_stats(rel_err, bins)
             stats_coordinate_list.append(stats)
-            
+
             if not args.custom_particle_recons_ranges:
             # Find the range based on the FWHM
                 FWHM = stats['FWHM']
@@ -52,9 +52,11 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
                 ax.hist(rel_err, bins=bins, histtype='step', stacked=True)
             ax.set_xlabel(fr'$\delta${label}')
             ax.set_ylabel('Number of Jets')
+            ax.ticklabel_format(axis="x", style="sci", scilimits=(-2, 0), useMathText=True)
+            ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
 
             for axis in ('x', 'y'):
-                ax.tick_params(axis=axis, labelsize=PLOT_FONT_SIZE)    
+                ax.tick_params(axis=axis, labelsize=PLOT_FONT_SIZE)
 
         err_dict[coordinate] = stats_coordinate_list
 
