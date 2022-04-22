@@ -46,7 +46,7 @@ def initialize_test_data(path, batch_size):
     return DataLoader(jet_data, batch_size=batch_size, shuffle=False)
 
 
-def initialize_autoencoder(args):
+def initialize_autoencoder(args, print_info=True):
     encoder = LGNEncoder(num_input_particles=args.num_jet_particles,
                          tau_input_scalars=args.tau_jet_scalars,
                          tau_input_vectors=args.tau_jet_vectors,
@@ -70,8 +70,9 @@ def initialize_autoencoder(args):
                          num_basis_fn=args.num_basis_fn, activation=args.activation,
                          mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
                          cg_dict=encoder.cg_dict, device=args.device, dtype=args.dtype)
-    logging.info(f"{encoder=}")
-    logging.info(f"{decoder=}")
+    if print_info:
+        logging.info(f"{encoder=}")
+        logging.info(f"{decoder=}")
 
     return encoder, decoder
 
