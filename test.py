@@ -71,7 +71,7 @@ def test(args):
 
 
 def setup_argparse():
-    parser = argparse.ArgumentParser(description='LGN Autoencoder on Test Dataset')
+    parser = argparse.ArgumentParser(description='LGNAE on tests.')
 
     # Data
     parse_data_settings(parser)

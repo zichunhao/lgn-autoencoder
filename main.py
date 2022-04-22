@@ -94,7 +94,7 @@ def main(args):
 
 
 def setup_argparse():
-    parser = argparse.ArgumentParser(description='LGN Autoencoder Options')
+    parser = argparse.ArgumentParser(description='LGNAE training.')
 
     # Data
     parse_data_settings(parser, training=True)
@@ -117,8 +117,8 @@ def setup_argparse():
                         help='Number of epochs for training.')
     parser.add_argument('-p', '--patience', type=int, default=-1, metavar='',
                         help='Patience for early stopping. Use -1 for no early stopping.')
-    parser.add_argument('--loss-choice', type=str, default='ChamferLoss', metavar='',
-                        help="Choice of loss function. Options: ('ChamferLoss', 'EMDLoss', 'hybrid')")
+    parser.add_argument('--loss-choice', type=str, default='MSELoss', metavar='',
+                        help="Choice of loss function. Options: ('MSELoss', 'ChamferLoss', 'EMDLoss', 'hybrid')")
     # chamfer loss options
     parser.add_argument('--chamfer-loss-weight', type=float, default=1.0, metavar='',
                         help="The weight for the chamfer loss, only relevant if loss-choice is 'hybrid'. Default: 1.0.")
