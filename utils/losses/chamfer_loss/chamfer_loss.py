@@ -43,7 +43,7 @@ class ChamferLoss(nn.Module):
         self.im = im
         self.device = device if (device is not None) else torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    def forward(self, p, q, jet_features=False):
+    def forward(self, p, q, jet_features=False, take_sqrt=True):
         """
         The forward pass to compute the chamfer loss of the point-cloud like jets.
 
@@ -55,6 +55,9 @@ class ChamferLoss(nn.Module):
         q : `torch.Tensor`
             The **target** jets 4-momenta.
             Shape: `(2, batch_size, num_particles, 4) or (batch_size, num_particles, 4)`
+        take_sqrt : `bool`
+            Whether to take the square root of the loss.
+            Used only when `self.loss_norm_choice` is 'p3'.
         """
 
         if (len(p.shape) != 4) or (p.shape[0] != 2):
@@ -66,7 +69,17 @@ class ChamferLoss(nn.Module):
         else:
             raise ValueError(f'Invalid dimension: {q.shape}. The second argument should be the jet target momenta.')
 
-        dist = pairwise_distance_sq(p, q, norm_choice=self.loss_norm_choice, im=self.im, device=self.device)
+        # normal Euclidean distance
+        if ('p3' in self.loss_norm_choice.lower()) and (take_sqrt and not self.im):
+            if p.shape[-1] == 4:
+                p = p[..., 1:]
+            if q.shape[-1] == 4:
+                q = q[..., 1:]
+            dist = torch.cdist(p, q, p=2)
+        else:  # Other cases
+            dist = pairwise_distance_sq(p, q, norm_choice=self.loss_norm_choice, im=self.im, device=self.device)
+            if self.loss_norm_choice == 'p3':
+                dist = torch.sqrt(dist + 1e-12)
 
         min_dist_pq = torch.min(dist, dim=-1)
         min_dist_qp = torch.min(dist, dim=-2)  # Equivalent to permuting the last two axis
