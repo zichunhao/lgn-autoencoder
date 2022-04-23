@@ -46,14 +46,14 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
         # Training
         start = time.time()
-        train_avg_loss, train_gen, train_target = train(
+        train_avg_loss, train_recons, train_target = train(
             args, train_loader, encoder, decoder,
             optimizer_encoder, optimizer_decoder, epoch,
             outpath, is_train=True, device=device
         )
 
         # Validation
-        valid_avg_loss, valid_gen, valid_target = validate(args, valid_loader, encoder, decoder,
+        valid_avg_loss, valid_recons, valid_target = validate(args, valid_loader, encoder, decoder,
                                                            epoch, outpath, device=device)
         if (abs(valid_avg_loss) < best_loss):
             best_loss = valid_avg_loss
@@ -67,9 +67,9 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         if args.abs_coord and (args.unit.lower() == 'tev'):
             # Convert to GeV for plotting
             train_target *= 1000
-            train_gen *= 1000
+            train_recons *= 1000
             valid_target *= 1000
-            valid_gen *= 1000
+            valid_recons *= 1000
 
         # EMD: Plot every epoch because model trains slowly with the EMD loss.
         # Others (MSE and chamfer losses): Plot every args.plot_freq epoch or the best epoch.
@@ -84,10 +84,12 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         to_plot = is_emd or plot_epoch
 
         if to_plot:
-            for target, gen, dir in zip((train_target, valid_target),
-                                        (train_gen, valid_gen),
-                                        (outpath_train_jet_plots, outpath_valid_jet_plots)):
-                plot_p(args, target, gen, save_dir=dir, cutoff=args.cutoff, epoch=epoch)
+            for target, recons, dir in zip(
+                (train_target, valid_target),
+                (train_recons, valid_recons),
+                (outpath_train_jet_plots, outpath_valid_jet_plots)
+            ):
+                plot_p(args, target, recons, save_dir=dir, cutoff=args.cutoff, epoch=epoch)
 
         dt = time.time() - start
 
@@ -115,6 +117,17 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
         if (abs(valid_avg_loss) > BLOW_UP_THRESHOLD) or (abs(train_avg_loss) > BLOW_UP_THRESHOLD):
             logging.error('Loss blows up. Training breaks.')
+            
+            error_path = osp.join(outpath, 'errors')
+            import os
+            torch.save(train_target, osp.join(error_path, 'p4_recons_train.pt'))
+            torch.save(train_recons, osp.join(error_path, 'p4_target_train.pt'))
+            torch.save(valid_target, osp.join(error_path, 'p4_recons_valid.pt'))
+            torch.save(valid_recons, osp.join(error_path, 'p4_target_valid.pt'))
+            torch.save(encoder.state_dict(), osp.join(error_path, 'encoder_weights.pt'))
+            torch.save(decoder.state_dict(), osp.join(error_path, 'decoder_weights.pt'))
+            
+            logging.error('Saved error data to: ' + error_path)
             return best_epoch
 
     # Save global data
@@ -145,7 +158,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         decoder.eval()
 
     target_data = []
-    generated_data = []
+    reconstructed_data = []
     if for_test:  # Save latent space for later analysis
         latent_spaces = []
         if args.normalize:
@@ -167,10 +180,10 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
         if args.normalize:
             norm_factor = norm_factor.to(p4_recons.device)
-            generated_data.append((p4_recons[0]*norm_factor).detach().cpu())
+            reconstructed_data.append((p4_recons[0]*norm_factor).detach().cpu())
             target_data.append((p4_target*norm_factor).detach().cpu())
         else:
-            generated_data.append(p4_recons[0].cpu().detach())
+            reconstructed_data.append(p4_recons[0].cpu().detach())
             target_data.append(p4_target.cpu().detach())
 
         if for_test:
@@ -198,20 +211,20 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
                     raise e
                 optimizer_encoder.step()
                 optimizer_decoder.step()
-
+                
                 # save model
                 if ('emd' in args.loss_choice.lower()) and ((i % args.save_freq) == 0 and i > 0):
                     torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
                     torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
 
-    generated_data = torch.cat(generated_data, dim=0)
+    reconstructed_data = torch.cat(reconstructed_data, dim=0)
     target_data = torch.cat(target_data, dim=0)
     if for_test:
         latent_dict = {
             k: [latent_spaces[i][k] for i in range(len(latent_spaces))]
             for k in latent_features.keys()
         }
-        return generated_data, target_data, latent_dict, norm_factors
+        return reconstructed_data, target_data, latent_dict, norm_factors
 
     else:
         epoch_avg_loss = epoch_total_loss / len(loader)
@@ -222,7 +235,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
             torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
             torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
 
-        return epoch_avg_loss, generated_data, target_data
+        return epoch_avg_loss, reconstructed_data, target_data
 
 
 @torch.no_grad()
