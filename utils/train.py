@@ -120,10 +120,10 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
             logging.error('Loss blows up. Training breaks.')
             
             error_path = make_dir(osp.join(outpath, 'errors'))
-            torch.save(train_target, osp.join(error_path, 'p4_recons_train.pt'))
-            torch.save(train_recons, osp.join(error_path, 'p4_target_train.pt'))
-            torch.save(valid_target, osp.join(error_path, 'p4_recons_valid.pt'))
-            torch.save(valid_recons, osp.join(error_path, 'p4_target_valid.pt'))
+            torch.save(train_target, osp.join(error_path, 'p4_target_train.pt'))
+            torch.save(train_recons, osp.join(error_path, 'p4_recons_train.pt'))
+            torch.save(valid_target, osp.join(error_path, 'p4_target_valid.pt'))
+            torch.save(valid_recons, osp.join(error_path, 'p4_recons_valid.pt'))
             torch.save(encoder.state_dict(), osp.join(error_path, 'encoder_weights.pt'))
             torch.save(decoder.state_dict(), osp.join(error_path, 'decoder_weights.pt'))
             
