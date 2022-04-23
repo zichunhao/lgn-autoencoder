@@ -62,35 +62,50 @@ class ChamferLoss(nn.Module):
 
         if (len(p.shape) != 4) or (p.shape[0] != 2):
             raise ValueError(f'Invalid dimension: {p.shape}. The first argument should be complex generated momenta.')
-        if len(q.shape) == 3:
-            q = convert_to_complex(q)
-        elif len(q.shape) == 4:
-            pass
+        if self.im:
+            # complexify if necessary
+            if len(q.shape) == 3:
+                p = convert_to_complex(p)
+            if len(q.shape) == 3:
+                q = convert_to_complex(q)
         else:
-            raise ValueError(f'Invalid dimension: {q.shape}. The second argument should be the jet target momenta.')
+            # take the real part if necessary
+            if len(p.shape) == 4:
+                p = p[0]
+            if len(q.shape) == 4:
+                p = q[0]
 
-        # normal Euclidean distance
+        # standard Euclidean distance
         if ('p3' in self.loss_norm_choice.lower()) and (take_sqrt and not self.im):
+            # Take (px, py, pz) from (E, px, py, pz) if necessary
             if p.shape[-1] == 4:
-                p = p[..., 1:]
+                p3 = p[..., 1:]
             if q.shape[-1] == 4:
-                q = q[..., 1:]
-            dist = torch.cdist(p, q, p=2)
+                q3 = q[..., 1:]
+            dist = torch.cdist(p3, q3, p=2)
+
         else:  # Other cases
-            dist = pairwise_distance_sq(p, q, norm_choice=self.loss_norm_choice, im=self.im, device=self.device)
-            if self.loss_norm_choice == 'p3':
+            dist = pairwise_distance_sq(
+                p, q,
+                norm_choice=self.loss_norm_choice,
+                im=self.im,
+                device=self.device
+            )
+            if self.loss_norm_choice == 'p3':  # Euclidean norm
                 dist = torch.sqrt(dist + 1e-12)
 
         min_dist_pq = torch.min(dist, dim=-1)
         min_dist_qp = torch.min(dist, dim=-2)  # Equivalent to permuting the last two axis
 
-        # Adapted from Steven Tsan https://github.com/stsan9/AnomalyDetection4Jets/blob/emd/code/loss_util.py#L3
-        chamfer_loss = torch.sum(min_dist_pq.values + min_dist_qp.values)
+        # Adapted from Steven Tsan
+        # https://github.com/stsan9/AnomalyDetection4Jets/blob/b31a9a2af927a79093079911070a45f14a833c14/code/loss_util.py#L27-L31
+        chamfer_loss = torch.sum((min_dist_pq.values + min_dist_qp.values) / 2)
 
         if jet_features:
-            jet_p = torch.sum(p[0], dim=-2)
-            jet_q = torch.sum(q[0], dim=-2)
+            jet_p = torch.sum(p, dim=-2)
+            jet_q = torch.sum(q, dim=-2)
             jet_loss = norm_sq(jet_p - jet_q).sum()
+            jet_loss = torch.sqrt(jet_loss + 1e-12) * torch.sign(jet_loss)
         else:
             jet_loss = 0
 
