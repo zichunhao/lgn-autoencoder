@@ -130,6 +130,9 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
 
 def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
           epoch, outpath, is_train=True, for_test=False, device=None):
+    
+    if args.normalize:
+        eps = get_eps(args)
 
     if is_train:
         assert (optimizer_encoder is not None) and (optimizer_decoder is not None), "Please specify the optimizers."
@@ -154,7 +157,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
         if args.normalize:
             norm_factor = torch.abs(batch['p4']).amax(dim=-2, keepdim=True).to(batch['p4'].device)
-            batch['p4'] /= norm_factor
+            batch['p4'] /= (norm_factor + eps)
 
         latent_features = encoder(batch, covariance_test=False)
         p4_recons = decoder(latent_features, covariance_test=False)
