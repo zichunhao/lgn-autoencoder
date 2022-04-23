@@ -1,4 +1,5 @@
 import logging
+from os import mkdir
 import numpy as np
 from utils.jet_analysis import plot_p
 from utils.utils import make_dir, save_data, plot_eval_results, get_eps
@@ -118,8 +119,7 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
         if (abs(valid_avg_loss) > BLOW_UP_THRESHOLD) or (abs(train_avg_loss) > BLOW_UP_THRESHOLD):
             logging.error('Loss blows up. Training breaks.')
             
-            error_path = osp.join(outpath, 'errors')
-            import os
+            error_path = make_dir(osp.join(outpath, 'errors'))
             torch.save(train_target, osp.join(error_path, 'p4_recons_train.pt'))
             torch.save(train_recons, osp.join(error_path, 'p4_target_train.pt'))
             torch.save(valid_target, osp.join(error_path, 'p4_recons_valid.pt'))
