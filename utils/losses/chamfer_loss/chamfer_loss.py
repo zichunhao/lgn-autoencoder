@@ -105,7 +105,6 @@ class ChamferLoss(nn.Module):
             jet_p = torch.sum(p, dim=-2)
             jet_q = torch.sum(q, dim=-2)
             jet_loss = norm_sq(jet_p - jet_q).sum()
-            jet_loss = torch.sqrt(jet_loss + 1e-12) * torch.sign(jet_loss)
         else:
             jet_loss = 0
 
