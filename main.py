@@ -133,7 +133,7 @@ def setup_argparse():
                         "Default: 'p3.'")
     parser.add_argument('--chamfer-jet-features', type=get_bool, default=False,
                         help="Whether to take into the jet features.")
-    parser.add_argument('--chamfer-im', type=get_bool, default=True,
+    parser.add_argument('--chamfer-im', type=get_bool, default=False,
                         help="Whether to take into imaginary component of the reconstructed jet into account if using the chamfer loss."
                         "Only used when --loss-norm-choice is in ['p3', 'polar']"
                         "If set to True, the target will be complexified with 0 imaginary components.")
