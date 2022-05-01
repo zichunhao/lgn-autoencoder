@@ -11,6 +11,9 @@ from lgn.nn import MixReps
 
 from lgn.models.utils import adapt_var_list
 
+IMPLEMENTED_AGGREGATIONS = (
+    'mix', 'sum', 'mean', 'average', 'min', 'max', 'min_max', 'mean_min_max'
+)
 
 class LGNEncoder(CGModule):
     """
@@ -96,8 +99,11 @@ class LGNEncoder(CGModule):
 
         num_cg_levels = len(num_channels) - 1
 
-        if map_to_latent.lower() not in ['mix', 'sum', 'mean', 'average']:
-            raise NotImplementedError(f"map_to_latent can only one of ('mix', 'sum', 'mean'). Found: {map_to_latent}")
+        if map_to_latent.lower() not in IMPLEMENTED_AGGREGATIONS:
+            raise NotImplementedError(
+                f"map_to_latent can only one of {IMPLEMENTED_AGGREGATIONS}. "
+                f"Found: {map_to_latent}"
+            )
 
         level_gain = adapt_var_list(level_gain, num_cg_levels)
         maxdim = adapt_var_list(maxdim, num_cg_levels)
@@ -232,12 +238,7 @@ class LGNEncoder(CGModule):
         latent_features = self.mix_reps(node_features)
         latent_features = GVec({weight: latent_features[weight] for weight in [(0, 0), (1, 1)]})  # Truncate higher order irreps than (1, 1)
 
-        if self.map_to_latent.lower() == 'sum':
-            latent_features = GVec({weight: torch.sum(value, dim=-3).unsqueeze(dim=-3)
-                                    for weight, value in latent_features.items()})
-        elif self.map_to_latent.lower() in ['mean', 'average']:
-            latent_features = GVec({weight: torch.mean(value, dim=-3).unsqueeze(dim=-3)
-                                    for weight, value in latent_features.items()})
+        latent_features = self._aggregate(latent_features)
 
         latent_features_canonical = GVec({weight: val.clone()
                                           for weight, val in latent_features.items()})
@@ -293,3 +294,67 @@ class LGNEncoder(CGModule):
             scalars = torch.cat([scalars, data['scalars'].to(device=self.device, dtype=self.dtype)], dim=-1)
 
         return scalars, node_ps, node_mask, edge_mask
+
+    
+    def _aggregate(self, latent_features):
+        '''Aggregate to the latent space.'''
+        if self.map_to_latent.lower() == 'sum':
+            latent_features = GVec({
+                weight: torch.sum(value, dim=-3, keepdim=True).unsqueeze(dim=-3)
+                for weight, value in latent_features.items()
+            })
+            return latent_features
+        elif self.map_to_latent.lower() in ['mean', 'average']:
+            latent_features = GVec({
+                weight: torch.mean(value, dim=-3, keepdim=True)
+                for weight, value in latent_features.items()
+            })
+            return latent_features
+        elif self.map_to_latent.lower() == 'max':
+            latent_features = GVec({
+                weight: torch.max(value, dim=-3, keepdim=True).values
+                for weight, value in latent_features.items()
+            })
+            return latent_features
+        elif self.map_to_latent.lower() == 'min':
+            latent_features = GVec({
+                weight: torch.min(value, dim=-3, keepdim=True).values
+                for weight, value in latent_features.items()
+            })
+            return latent_features
+        elif 'min_max' in self.map_to_latent.lower():
+            min_latent_features = GVec({
+                weight: torch.min(value, dim=-3, keepdim=True).values
+                for weight, value in latent_features.items()
+            })
+            max_latent_features = GVec({
+                weight: torch.max(value, dim=-3, keepdim=True).values
+                for weight, value in latent_features.items()
+            })
+            latent_features = GVec({
+                weight: min_latent_features[weight] + max_latent_features[weight] 
+                for weight in latent_features.keys()
+            })
+            return latent_features
+        elif 'mean_min_max' in self.map_to_latent.lower():
+            min_latent_features = GVec({
+                weight: torch.min(value, dim=-3, keepdim=True).values
+                for weight, value in latent_features.items()
+            })
+            max_latent_features = GVec({
+                weight: torch.max(value, dim=-3, keepdim=True).values
+                for weight, value in latent_features.items()
+            })
+            mean_latent_features = latent_features = GVec({
+                weight: torch.mean(value, dim=-3, keepdim=True)
+                for weight, value in latent_features.items()
+            })
+            latent_features = GVec({
+                weight: min_latent_features[weight] + max_latent_features[weight] + mean_latent_features[weight]
+                for weight in latent_features.keys()
+            })
+            return latent_features
+        elif self.map_to_latent.lower() == 'mix':  # will be processed in the next step
+            return latent_features
+        else:
+            raise NotImplementedError(f'{self.map_to_latent} is not implemented.')
