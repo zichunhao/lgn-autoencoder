@@ -142,8 +142,10 @@ class LGNEncoder(CGModule):
         tau_pos = self.rad_funcs.tau
 
         # Input linear layer: Prepare input to the CG layers
-        tau_in = GTau({**{(0, 0): tau_input_scalars, (1, 1): tau_input_vectors},
-                       **{(l, l): 1 for l in range(2, max_zf[0] + 1)}})
+        tau_in = GTau({
+            **{(0, 0): tau_input_scalars, (1, 1): tau_input_vectors},
+            **{(l, l): 1 for l in range(2, max_zf[0] + 1)}
+        })
         # A dictionary of multiplicities in the model (updated as the model is built)
         self.tau_dict = {'input': tau_in}
         # tau_out = GTau({weight: num_channels[0] for weight in [(0, 0), (1, 1)]})
@@ -170,12 +172,17 @@ class LGNEncoder(CGModule):
         self.tau_output[(0, 0)] = tau_latent_scalars
         self.tau_output[(1, 1)] = tau_latent_vectors
         self.tau_dict['latent'] = self.tau_output
-        self.mix_reps = MixReps(self.tau_cg_levels_node[-1], self.tau_output, device=self.device, dtype=self.dtype)
+        self.mix_reps = MixReps(
+            self.tau_cg_levels_node[-1], 
+            self.tau_output, 
+            device=self.device, dtype=self.dtype
+        )
 
         self.scale = scale
         self.tau_latent = self.tau_output
 
-        logging.info(f'Encoder initialized. Number of parameters: {sum(p.nelement() for p in self.parameters() if p.requires_grad)}')
+        num_param = sum(p.nelement() for p in self.parameters() if p.requires_grad)
+        logging.info(f'Encoder initialized. Number of parameters: {num_param}')
 
     def forward(self, data, covariance_test=False):
         '''
@@ -210,8 +217,10 @@ class LGNEncoder(CGModule):
         zonal_functions_in, _, _ = self.zonal_fns_in(node_ps)
         # Cartesian basis is used for the input data
         # All input are real, so [real, imaginary] = [scalars, 0]
-        zonal_functions_in[(0, 0)] = torch.stack([node_scalars.unsqueeze(-1),
-                                                  torch.zeros_like(node_scalars.unsqueeze(-1))])
+        zonal_functions_in[(0, 0)] = torch.stack([
+            node_scalars.unsqueeze(-1),
+            torch.zeros_like(node_scalars.unsqueeze(-1))
+        ])
         zonal_functions, norms, sq_norms = self.zonal_fns(node_ps, node_ps)
 
         # Input layer
@@ -231,18 +240,25 @@ class LGNEncoder(CGModule):
 
         # Size for each reshaped rep: (2, batch_size, 1, tau_rep, dim_rep)
         if self.map_to_latent.lower() == 'mix':
-            node_features = GVec({weight: reps.view(2, reps.shape[1], 1, -1, reps.shape[-1])
-                                  for weight, reps in node_features.items()})
+            node_features = GVec({
+                weight: reps.view(2, reps.shape[1], 1, -1, reps.shape[-1])
+                for weight, reps in node_features.items()
+            })
         # Mix
         # node_all[-1] is the updated feature in the last layer
         latent_features = self.mix_reps(node_features)
         latent_features = GVec({weight: latent_features[weight] for weight in [(0, 0), (1, 1)]})  # Truncate higher order irreps than (1, 1)
 
-        latent_features = self._aggregate(latent_features)
+        # latent_features = self._aggregate(latent_features)
 
-        latent_features_canonical = GVec({weight: val.clone()
-                                          for weight, val in latent_features.items()})
         latent_features[(1, 1)] = rep_to_p(latent_features[(1, 1)])  # Convert to Cartesian coordinates
+        
+        latent_features = self._aggregate(latent_features)
+        latent_features_canonical = GVec({
+            weight: val.clone()
+            for weight, val in latent_features.items()
+        })
+
 
         if not covariance_test:
             return latent_features
