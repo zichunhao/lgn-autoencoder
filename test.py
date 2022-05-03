@@ -24,7 +24,7 @@ def test(args):
     decoder.load_state_dict(torch.load(decoder_path, map_location=args.device))
     
     if args.plot_only:
-        test_path = osp.join(args.model_path, 'test')
+        test_path = osp.join(args.model_path, f'test_{args.jet_type}_jets')
         try:
             # we do not need to load latent space or normalization factors
             recons = torch.load(osp.join(test_path, 'reconstructed.pt')).to(args.device)
@@ -35,7 +35,7 @@ def test(args):
                 args, test_loader, encoder, decoder, args.load_epoch,
                 args.model_path, args.device, for_test=True
             )
-            test_path = make_dir(osp.join(args.model_path, 'test'))
+            test_path = make_dir(osp.join(args.model_path, f'test_{args.jet_type}_jets'))
             torch.save(target, osp.join(test_path, 'target.pt'))
             torch.save(recons, osp.join(test_path, 'reconstructed.pt'))
             torch.save(latent, osp.join(test_path, 'latent.pt'))
@@ -46,7 +46,7 @@ def test(args):
             args, test_loader, encoder, decoder, args.load_epoch,
             args.model_path, args.device, for_test=True
         )
-        test_path = make_dir(osp.join(args.model_path, 'test'))
+        test_path = make_dir(osp.join(args.model_path, f'test_{args.jet_type}_jets'))
         torch.save(target, osp.join(test_path, 'target.pt'))
         torch.save(recons, osp.join(test_path, 'reconstructed.pt'))
         torch.save(latent, osp.join(test_path, 'latent.pt'))
