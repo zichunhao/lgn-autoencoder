@@ -66,7 +66,9 @@ def plot_p(args, p4_target, p4_gen, save_dir, cutoff=1e-6, epoch=None, show=Fals
         jets_target = get_p_polar_tensor(p4_target, eps=EPS)
         jets_gen = get_p_polar_tensor(p4_gen, eps=EPS)
         target_pix_average, gen_pix_average, target_pix, gen_pix = plot_jet_image(
-            args, jets_target, jets_gen, save_dir, epoch, same_norm=same_norm, maxR=0.5, vmin=args.jet_image_vmin, show=show
+            args, jets_target, jets_gen, save_dir, epoch, 
+            same_norm=same_norm, maxR=args.jet_image_maxR, 
+            vmin=args.jet_image_vmin, show=show
         )
         jet_images_dict = {
             'target_average': target_pix_average,
