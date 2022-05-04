@@ -97,6 +97,8 @@ def parse_plot_settings(parser):
 
     parser.add_argument('--jet-image-npix', type=int, default=24,
                         help='The number of pixels for the jet image')
+    parser.add_argument('--jet-image-maxR', type=float, default=0.5,
+                        help='The maxR of the jet image')
     parser.add_argument('--jet-image-vmin', type=float, default=1e-10,
                         help='vmin for LogNorm')
     parser.add_argument('--num-jet-images', type=int, default=15,
