@@ -61,8 +61,18 @@ def main(args):
         args_dir = osp.join(outpath, "args_cache.json")
         with open(args_dir, "w") as f:
             json.dump({k: str(v) for k, v in vars(args).items()}, f)
+            
+    if args.equivariance_test:
+        dev = lgn_tests(args, encoder, decoder, test_loader, alpha_max=args.alpha_max, theta_max=args.theta_max,
+                        cg_dict=encoder.cg_dict, unit=args.unit)
+        plot_all_dev(dev, osp.join(outpath, 'model_evaluations/equivariance_tests/initial'))
 
-    best_epoch = train_loop(args, train_loader, valid_loader, encoder, decoder, optimizer_encoder, optimizer_decoder, outpath, args.device)
+    best_epoch = train_loop(
+        args, train_loader, valid_loader, 
+        encoder, decoder, 
+        optimizer_encoder, optimizer_decoder, 
+        outpath, args.device
+    )
     logging.info(f"Training completed! Best epoch: {best_epoch}")
 
     # Equivariance tests

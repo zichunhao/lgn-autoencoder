@@ -327,24 +327,27 @@ class LGNEncoder(CGModule):
             })
             return latent_features
         elif self.map_to_latent.lower() == 'max':
+            p4 = latent_features[(1, 1)]
             latent_features = GVec({
-                weight: torch.max(value, dim=-3, keepdim=True).values
+                weight: get_max_features(value, p4)
                 for weight, value in latent_features.items()
             })
             return latent_features
         elif self.map_to_latent.lower() == 'min':
+            p4 = latent_features[(1, 1)]
             latent_features = GVec({
-                weight: torch.min(value, dim=-3, keepdim=True).values
+                weight: get_min_features(value, p4)
                 for weight, value in latent_features.items()
             })
             return latent_features
         elif 'min_max' in self.map_to_latent.lower():
+            p4 = latent_features[(1, 1)]
             min_latent_features = GVec({
-                weight: torch.min(value, dim=-3, keepdim=True).values
+                weight: get_min_features(value, p4)
                 for weight, value in latent_features.items()
             })
             max_latent_features = GVec({
-                weight: torch.max(value, dim=-3, keepdim=True).values
+                weight: get_min_features(value, p4)
                 for weight, value in latent_features.items()
             })
             latent_features = GVec({
@@ -353,12 +356,13 @@ class LGNEncoder(CGModule):
             })
             return latent_features
         elif 'mean_min_max' in self.map_to_latent.lower():
+            p4 = latent_features[(1, 1)]
             min_latent_features = GVec({
-                weight: torch.min(value, dim=-3, keepdim=True).values
+                weight: get_min_features(value, p4)
                 for weight, value in latent_features.items()
             })
             max_latent_features = GVec({
-                weight: torch.max(value, dim=-3, keepdim=True).values
+                weight: get_max_features(value, p4)
                 for weight, value in latent_features.items()
             })
             mean_latent_features = latent_features = GVec({
@@ -374,3 +378,85 @@ class LGNEncoder(CGModule):
             return latent_features
         else:
             raise NotImplementedError(f'{self.map_to_latent} is not implemented.')
+        
+        
+def get_msq(p4: torch.Tensor, keep_dim=False):
+    '''Get mass squared of a 4-momentum.'''
+    E, p3 = p4[..., 0], p4[..., 1:]
+    msq = E**2 - torch.norm(p3, dim=-1)**2
+    if keep_dim:
+        return msq.unsqueeze(-1)
+    return msq
+
+
+
+def gather_righthand(src, index, check=True):
+    '''
+    Index a tensor src based on a tensor index.
+    Source: https://stackoverflow.com/a/68198072
+    '''
+    index = index.long()
+    i_dim = index.dim()
+    s_dim = src.dim()
+    t_dim = i_dim-1
+    if check:
+        if s_dim <= i_dim:
+            raise ValueError(
+                f"src.dim() ({src.dim()}) <= index.dim() {index.dim()}."
+                'src dimension must be larger than index dimension.'
+            )
+        for d in range(0, t_dim):
+            if src.size(d) != index.size(d):
+                raise ValueError(
+                    f'src.shape[{d}] ({src.shape[d]}) != index.shape[{d}] ({index.shape[d]}).'
+                    'src and index must have the same shape.'
+                )
+    index_new_shape = list(src.shape)
+    index_new_shape[t_dim] = index.shape[t_dim]
+    for _ in range(i_dim, s_dim):
+        index = index.unsqueeze(-1)
+
+    # only this two line matters
+    index_expand = index.expand(index_new_shape)
+    # only this two line matters
+    return torch.gather(src, dim=t_dim, index=index_expand)
+
+
+def get_min_features(
+    feature: torch.Tensor, 
+    p4: torch.Tensor, 
+    map_func = get_msq
+):
+    # (2, batch_size, num_particles, tau, feature_dim)
+    # -> (2, batch_size, tau, num_particles, feature_dim)
+    features_permute = feature.permute(0, 1, 3, 2, 4)
+    scalar = get_msq(feature, keep_dim=False)
+    indices = torch.min(scalar, dim=-2).indices.unsqueeze(-1)
+
+    aggregated_permuted = gather_righthand(features_permute, indices)
+
+    # (2, batch_size, tau, num_particles, feature_dim)
+    # -> (2, batch_size, num_particles, tau, feature_dim)
+    return gather_righthand(features_permute, indices).permute(0, 1, 3, 2, 4)
+
+
+def get_max_features(
+    feature: torch.Tensor, 
+    ref: torch.Tensor, 
+    map_func = get_msq
+):
+    '''
+    Get the maximum features per tau based on the reference and a map function.
+    '''
+    # (2, batch_size, num_particles, tau, feature_dim) 
+    # -> (2, batch_size, tau, num_particles, feature_dim)
+    features_permute = feature.permute(0, 1, 3, 2, 4)
+    scalar = get_msq(feature, keep_dim=False)
+    indices = torch.min(scalar, dim=-2).indices.unsqueeze(-1)
+    
+    aggregated_permuted = gather_righthand(features_permute, indices)
+    
+    # (2, batch_size, tau, num_particles, feature_dim) 
+    # -> (2, batch_size, num_particles, tau, feature_dim)
+    return gather_righthand(features_permute, indices).permute(0, 1, 3, 2, 4) 
+    
