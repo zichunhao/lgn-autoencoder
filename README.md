@@ -4,6 +4,48 @@ This jet data generative model exploits the symmetry of the [Lorentz Group](http
 
 To achieve Lorentz equivariance, the model works on the [irreducible representations](https://en.wikipedia.org/wiki/Irreducible_representation) of the [Lorentz group](https://en.wikipedia.org/wiki/Representation_theory_of_the_Lorentz_group). For instance, Lorentz scalars are (0,0) representations, and 4-vectors, such as the particle 4-momenta, are (1/2,1/2) representations. Each representation has its transformation rules. That the model is equivariant implies that each parameter in the model will transform according to its corresponding transformation rule if the input undergoes a Lorentz transformation. In this way, the model can always generate data that satisfy the special relativity, and the latent space, since all internal parameters are Lorentz tensors, can possibly be more physically interpretable.
 
+## Running the model
+An example training looks like this.
+```
+python main.py \
+-j g \
+-e 5000 \
+-bs 256 \
+--tbs 512 \
+--data-path "./hls4ml/g_jets_30p_p4.pt" \
+--test-data-path "./hls4ml/g_jets_30p_p4_test.pt" \
+--train-fraction 0.75 \
+--loss-choice chamfer \
+--maxdim 2 \
+--tau-latent-scalars 1 \
+--tau-latent-vectors 13 \
+--encoder-num-channels 4 5 3 3 \
+--decoder-num-channels 4 5 3 3 \
+--plot-freq 100 \
+--plot-start-epoch 100 \
+--equivariance-test \
+--save-dir "LGNAE-trained-models" \
+| tee -a" LGNAE-trained-models/autoencoder-g-s1-v13-4533-4533.txt"
+```
+### Some important parameters for `main.py`
+- `-bs` (`batch-size`): batch size.
+- `-tbs` (`--test-batch-size`): test batch size.
+- `-j` (`--jet-type`): the jet type used for training (mainly used for naming files).
+- `-e` (`--num-epochs`): number of epochs to train.
+- `--loss-choice`: loss function to use.
+- `--train-fraction`: fraction of the data used for training.
+- `--data-path`: path to the training data.
+- `--test-data-path`: path to the test data.
+- `--maxdim`: maximum weight of representation to keep in training (recommended: 2 or 3).
+- `--tau-latent-scalars`: number of (complexified) Lorentz scalars to keep in the latent space.
+- `--tau-latent-vectors`: number of (complexified) 4-vectors to keep in the latent space.
+- `--encoder-num-channels`: the number of channels for each representation in the encoder.
+- `--decoder-num-channels`: the number of channels for each representation in the decoder.
+- `--plot-freq`: frequency of plotting (plotting / epoch).
+- `--plot-start-epoch`: epoch number at which to start plotting (for better GPU usage in the beginning).
+- `--save-dir`: directory to save the trained model and plots.
+- `--equivariance-test`: whether to test the model for equivariance.
+
 ## Results
 ### Equivariance Tests
 Boost and rotational equivariance tests were done on the model. The rotation angles range from `0` to `2pi`, and the Lorentz factors range from `0` to `11013.2`. The model is equivariant with respect to rotation up to floating point errors and is equivariant with respect to boost in the physically relevant region (the errors increase as the Lorentz factor increases because of the floating point sensitivity of boost). See [`results/equivariance_tests`](results/equivariance_tests) for more details.
