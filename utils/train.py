@@ -219,12 +219,17 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
     reconstructed_data = torch.cat(reconstructed_data, dim=0)
     target_data = torch.cat(target_data, dim=0)
+    
     if for_test:
         latent_dict = {
             k: [latent_spaces[i][k] for i in range(len(latent_spaces))]
             for k in latent_features.keys()
         }
-        return reconstructed_data, target_data, latent_dict, norm_factors
+        
+        norm_factors_data = torch.cat(norm_factors, dim=0) if args.normalize else torch.ones(
+            *reconstructed_data.shape[:-2], 1, reconstructed_data.shape[-1]
+        )
+        return reconstructed_data, target_data, latent_dict, norm_factors_data
 
     else:
         epoch_avg_loss = epoch_total_loss / len(loader)
