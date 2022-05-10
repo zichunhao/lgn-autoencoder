@@ -189,7 +189,7 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
         if for_test:
             latent_spaces.append({k: latent_features[k].squeeze(dim=2) for k in latent_features.keys()})
             if args.normalize:
-                norm_factors.append(norm_factor.squeeze(dim=2))
+                norm_factors.append(norm_factor.squeeze(dim=2).cpu().detach())
         else:
             batch_loss = get_loss(args, p4_recons, p4_target)
             epoch_total_loss += batch_loss.item()
