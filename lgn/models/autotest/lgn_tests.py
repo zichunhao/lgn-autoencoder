@@ -75,7 +75,10 @@ def covariance_test(encoder, decoder, data, test_type, axis='z', alpha_max=None,
 
 
 def permutation_invariance_test(encoder, decoder, data, *ignore):
-    mask = data['labels']
+    try:
+        mask = data['labels']
+    except KeyError:
+        mask = (data['p4'][..., 0] != 0).to(device=data['p4'].device, dtype=torch.uint8)
     batch_size, node_size = mask.shape
     perm = 1*torch.arange(node_size).expand(batch_size, -1)
 
