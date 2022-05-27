@@ -5,29 +5,29 @@ This directory shows the result of equivariance test (from [`../lgn/models/autot
 
 
 The relative deviations for a 4-vector output $p$ is defined as
-$$
+$
 \delta(\Lambda) = \max_{p \in J} \max_{\mu \in \{0,1,2,3\}} \frac{
     \Lambda^\mu_\nu \mathtt{LGN}(p)_\nu
     - \mathtt{LGN}(\Lambda \cdot p)_\mu
 }{\Lambda^\mu_\nu \mathtt{LGN}(p)_\nu},
-$$
+$
 and that for scalar output $s$ is defined as
 The plots show the relative deviations between the two results, defined as
-$$
+$
 \delta(\Lambda) = \max_{s \in J} \frac{
     \Lambda \cdot \mathtt{LGN}(s)
     - \mathtt{LGN}(\Lambda \cdot s)
 }{\Lambda \cdot \mathtt{LGN}(s)},
-$$
+$
 for scalars, where $J$ stands for a jet, and $\mathtt{LGN}$ is the LGN neural network. Relative deviations are plotted for both generated features and internal node features in the equivariance tests. Because of the sensitivity of the test to numerical precisions, the momenta are converted to PeV.
 
 Permutation invariance test is done by comparing the output of original data and the output of the shuffled data, which are expected to match exactly. Similarly, the relative deviation is defined as
-$$
+$
 \delta(\Pi) = \max_{p \in J} \max_{\mu \in \{0,1,2,3\}} \frac{
     \Pi \cdot \mathtt{LGN}(p)_\nu
     - \mathtt{LGN}(\Pi \cdot p)_\mu
 }{\Pi \cdot \mathtt{LGN}(p)_\nu},
-$$
+$
 where $\Pi$ is the permutation matrix.
 
 ## Summary of results
