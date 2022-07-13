@@ -54,7 +54,11 @@ def parse_model_settings(parser):
                         help='Multiplicity of 4-vectors per particle in the jet. Default: 1 for the hls4ml 150p data.')
 
     parser.add_argument('--map-to-latent', type=str, default='mean', metavar='',
-                        help="The method to map to latent space. Choice: ('sum', 'mix', 'mean', 'min', 'max', 'min_max', 'mean_min_max')")
+                        help="""
+                        The method to map to latent space. 
+                        Choice: ('sum', 'mix', 'mean', 'min', 'max') 
+                        or any combinations with '+' (for addition) or '&' (for concatenation).
+                        """)
     parser.add_argument('--tau-latent-scalars', type=int, default=3, metavar='',
                         help='Multiplicity of scalars per particle in the latent space.')
     parser.add_argument('--tau-latent-vectors', type=int, default=2, metavar='',

@@ -1,7 +1,9 @@
+from typing import Dict, List, Union
 import torch
 import logging
 
 from lgn.cg_lib import CGModule, ZonalFunctionsRel, ZonalFunctions
+from lgn.cg_lib.cg_dict import CGDict
 from lgn.cg_lib.zonal_functions import normsq4, rep_to_p
 from lgn.g_lib import GTau, GVec
 
@@ -12,84 +14,109 @@ from lgn.nn import MixReps
 from lgn.models.utils import adapt_var_list
 
 IMPLEMENTED_AGGREGATIONS = (
-    'mix', 'sum', 'mean', 'average', 'min', 'max', 'min_max', 'mean_min_max'
+    'mix', 'sum', 
+    'mean', 'average', 
+    'min', 'max'
 )
 
 class LGNEncoder(CGModule):
     """
     The encoder of the LGN autoencoder.
-
-    Attributes
-    ----------
-    num_input_particles : int
-        The number of input particles.
-    tau_input_scalars : int
-        The multiplicity of scalars per particle.
-        For the hls4ml 150-p jet data, it should be 1 (namely the particle invariant mass -p^2).
-    tau_input_vectors : int
-        The multiplicity of vectors per particle.
-        For the hls4ml 150-p jet data, it should be 1 (namely the particle 4-momentum).
-    tau_latent_scalars : int
-        Multiplicity of Lorentz scalars (0,0) in the latent_space.
-    tau_latent_vectors : int
-        Multiplicity of Lorentz 4-vectors (1,1) in the latent_space.
-    maxdim : list of int
-        Maximum weight in the output of CG products, expanded or truncated to list of
-        length len(num_channels) - 1.
-    num_basis_fn : int
-        The number of basis function to use.
-    num_channels : list of int
-        Number of channels that the outputs of each CG layer are mixed to.
-    max_zf : list of int
-        Maximum weight in the output of the spherical harmonics, expanded or truncated to list of
-        length len(num_channels) - 1.
-    weight_init : str
-        The type of weight initialization. The choices are 'randn' and 'rand'.
-    level_gain : list of `floats`
-        The gain at each level. (args.level_gain = [1.])
-    jet_features : bool
-        Optional, default: False
-        Whether to incorporate jet momenta into the model.
-    map_to_latent : str
-        Optional, default: 'mean'
-        The way of mapping the graph to latent space.
-        Choices:
-            - 'sum': sum over all nodes.
-            - 'mix': linearly mix each isotypic component of node features.
-            - 'mean': taking the mean over all nodes.
-    activation : str
-        Optional, default: 'leakyrelu'
-        The activation function for lgn.LGNCG
-    scale : float or int
-        Optional, default: 1.
-        Scaling parameter for input node features.
-    mlp : bool
-        Optional, default: True
-        Whether to include the extra MLP layer on scalar features in nodes.
-    mlp_depth : int
-        Optional, default: None
-        The number of hidden layers in CGMLP.
-    mlp_width : list of int
-        Optional, default: None
-        The number of perceptrons in each CGMLP layer
-    device : `torch.device`
-        Optional, default: None, in which case it will be set to
-            torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        The device to which the module is initialized.
-    dtype : `torch.dtype`
-        Optional, default: None, in which case it will be set to torch.float64
-        The data type to which the module is initialized.
-    cg_dict : `CGDict`
-        Optional, default: None
-        Clebsch-gordan dictionary for taking the CG decomposition.
     """
 
-    def __init__(self, num_input_particles, tau_input_scalars, tau_input_vectors,
-                 tau_latent_scalars, tau_latent_vectors, maxdim, num_basis_fn,
-                 num_channels, max_zf, weight_init, level_gain, jet_features=False,
-                 map_to_latent='sum', activation='leakyrelu',
-                 scale=1., mlp=True, mlp_depth=None, mlp_width=None,
-                 device=None, dtype=None, cg_dict=None):
+    def __init__(
+        self, 
+        num_input_particles: int, 
+        tau_input_scalars: int, 
+        tau_input_vectors: int,
+        tau_latent_scalars: int, 
+        tau_latent_vectors: int, 
+        maxdim: int, 
+        num_basis_fn: int,
+        num_channels: List[int], 
+        max_zf: List[int],
+        weight_init: List[float],
+        level_gain: List[float],
+        activation: str = 'leakyrelu',
+        mlp: bool = True,
+        mlp_depth: int = None,
+        mlp_width: int = None,
+        scale: float = 1.,
+        jet_features: bool = False,
+        map_to_latent: str = 'mean',
+        device: torch.device = None,
+        dtype: torch.dtype = None, 
+        cg_dict: CGDict = None
+    ):
+        '''
+        Parameters
+        ----------
+        num_input_particles : int
+            The number of input particles.
+        tau_input_scalars : int
+            The multiplicity of scalars per particle.
+            For the hls4ml 150-p jet data, it should be 1 (namely the particle invariant mass -p^2).
+        tau_input_vectors : int
+            The multiplicity of vectors per particle.
+            For the hls4ml 150-p jet data, it should be 1 (namely the particle 4-momentum).
+        tau_latent_scalars : int
+            Multiplicity of Lorentz scalars (0,0) in the latent_space.
+        tau_latent_vectors : int
+            Multiplicity of Lorentz 4-vectors (1,1) in the latent_space.
+        maxdim : list of int
+            Maximum weight in the output of CG products, expanded or truncated to list of
+            length len(num_channels) - 1.
+        num_basis_fn : int
+            The number of basis function to use.
+        num_channels : list of int
+            Number of channels that the outputs of each CG layer are mixed to.
+        max_zf : list of int
+            Maximum weight in the output of the spherical harmonics, expanded or truncated to list of
+            length len(num_channels) - 1.
+        weight_init : str
+            The type of weight initialization. The choices are 'randn' and 'rand'.
+        level_gain : list of floats
+            The gain at each level. (args.level_gain = [1.])
+        jet_features : bool
+            Optional, default: False
+            Whether to incorporate jet momenta into the model.
+        map_to_latent : str
+            Optional, default: 'mean'
+            The way of mapping the graph to latent space (aggregation method).
+            Choices:
+                - 'mix': linearly mix each isotypic component of node features.
+                - 'sum': sum over all nodes.
+                - 'mean': taking the mean over all nodes.
+                - 'min': taking the minimum over all nodes.
+                - 'max': taking the maximum over all nodes.
+                - Any combination of ('sum', 'mean', 'min', 'max') with '+' to add all features.
+                - Any combination of ('sum', 'mean', 'min', 'max') with '&' to concatenate all features.
+        activation : str
+            Optional, default: 'leakyrelu'
+            The activation function for lgn.LGNCG
+        scale : float or int
+            Optional, default: 1.
+            Scaling parameter for input node features.
+        mlp : bool
+            Optional, default: True
+            Whether to include the extra MLP layer on scalar features in nodes.
+        mlp_depth : int
+            Optional, default: None
+            The number of hidden layers in CGMLP.
+        mlp_width : list of int
+            Optional, default: None
+            The number of perceptrons in each CGMLP layer
+        device : torch.device
+            Optional, default: None, in which case it will be set to
+                torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            The device to which the module is initialized.
+        dtype : torch.dtype
+            Optional, default: None, in which case it will be set to torch.float64
+            The data type to which the module is initialized.
+        cg_dict : CGDict
+            Optional, default: None
+            Clebsch-gordan dictionary for taking the CG decomposition.
+        '''
 
         if device is None:
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -99,20 +126,21 @@ class LGNEncoder(CGModule):
 
         num_cg_levels = len(num_channels) - 1
 
-        if map_to_latent.lower() not in IMPLEMENTED_AGGREGATIONS:
-            raise NotImplementedError(
-                f"map_to_latent can only one of {IMPLEMENTED_AGGREGATIONS}. "
-                f"Found: {map_to_latent}"
-            )
+        # if map_to_latent.lower() not in IMPLEMENTED_AGGREGATIONS:
+        #     raise NotImplementedError(
+        #         f"map_to_latent can only one of {IMPLEMENTED_AGGREGATIONS}. "
+        #         f"Found: {map_to_latent}"
+        #     )
 
         level_gain = adapt_var_list(level_gain, num_cg_levels)
         maxdim = adapt_var_list(maxdim, num_cg_levels)
         max_zf = adapt_var_list(max_zf, num_cg_levels)
 
         super().__init__(maxdim=max(maxdim + max_zf), device=device, dtype=dtype, cg_dict=cg_dict)
+        misc_info = {'dtype': self.dtype, 'device': self.device}
         logging.info(f'Initializing encoder with device: {self.device} and dtype: {self.dtype}')
 
-        # Member varibles
+        # Member variables
         self.num_input_particles = num_input_particles
         self.input_basis = 'cartesian'
         self.num_cg_levels = num_cg_levels
@@ -129,16 +157,29 @@ class LGNEncoder(CGModule):
         if jet_features:
             self.num_input_particles += 1
 
-        # Express input momenta in the basis of spherical harmonics
-        self.zonal_fns_in = ZonalFunctions(max(self.max_zf), basis=self.input_basis,
-                                           dtype=dtype, device=device, cg_dict=cg_dict)
+        # Express input momenta in the canonical basis
+        self.zonal_fns_in = ZonalFunctions(
+            maxdim=max(self.max_zf), 
+            basis=self.input_basis,
+            cg_dict=cg_dict,
+            **misc_info
+        )
         # Relative position in momentum space
-        self.zonal_fns = ZonalFunctionsRel(max(self.max_zf), basis=self.input_basis,
-                                           dtype=dtype, device=device, cg_dict=cg_dict)
+        self.zonal_fns = ZonalFunctionsRel(
+            maxdim=max(self.max_zf), 
+            basis=self.input_basis,
+            cg_dict=cg_dict,
+            **misc_info
+        )
 
         # Position functions
-        self.rad_funcs = RadialFilters(self.max_zf, self.num_basis_fn, self.num_channels, self.num_cg_levels,
-                                       device=self.device, dtype=self.dtype)
+        self.rad_funcs = RadialFilters(
+            max_zf=self.max_zf, 
+            num_basis_fn=self.num_basis_fn, 
+            num_channels_out=self.num_channels,
+            num_levels=self.num_cg_levels,
+            **misc_info
+        )
         tau_pos = self.rad_funcs.tau
 
         # Input linear layer: Prepare input to the CG layers
@@ -150,14 +191,30 @@ class LGNEncoder(CGModule):
         self.tau_dict = {'input': tau_in}
         # tau_out = GTau({weight: num_channels[0] for weight in [(0, 0), (1, 1)]})
         tau_out = GTau({(l, l): num_channels[0] for l in range(max_zf[0] + 1)})
-        self.input_func_node = MixReps(tau_in, tau_out, device=device, dtype=dtype)
+        self.input_func_node = MixReps(
+            tau_in, tau_out, 
+            **misc_info
+        )
 
         tau_input_node = self.input_func_node.tau
 
         # CG layers
-        self.lgn_cg = LGNCG(maxdim, self.max_zf, tau_input_node, tau_pos, self.num_cg_levels, self.num_channels,
-                            level_gain, weight_init, mlp=self.mlp, mlp_depth=self.mlp_depth, mlp_width=self.mlp_width,
-                            activation=self.activation, device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)
+        self.lgn_cg = LGNCG(
+            maxdim=maxdim, 
+            max_zf=self.max_zf, 
+            tau_in=tau_input_node, 
+            tau_pos=tau_pos, 
+            num_cg_levels=self.num_cg_levels,
+            num_channels=self.num_channels,
+            level_gain=level_gain, 
+            weight_init=weight_init, 
+            mlp=self.mlp, 
+            mlp_depth=self.mlp_depth, 
+            mlp_width=self.mlp_width,
+            activation=self.activation, 
+            cg_dict=self.cg_dict,
+            **misc_info
+        )
 
         self.tau_cg_levels_node = self.lgn_cg.tau_levels_node
         self.tau_dict['cg_layers'] = self.tau_cg_levels_node.copy()
@@ -165,8 +222,10 @@ class LGNEncoder(CGModule):
         # Output layers
         # Mix to latent nodes
         if self.map_to_latent.lower() == 'mix':
-            self.tau_cg_levels_node[-1] = GTau({weight: int(value * num_input_particles)
-                                                for weight, value in self.tau_cg_levels_node[-1]})
+            self.tau_cg_levels_node[-1] = GTau({
+                weight: int(value * num_input_particles)
+                for weight, value in self.tau_cg_levels_node[-1]
+            })
 
         self.tau_output = {weight: 1 for weight in self.tau_cg_levels_node[-1].keys()}
         self.tau_output[(0, 0)] = tau_latent_scalars
@@ -175,7 +234,7 @@ class LGNEncoder(CGModule):
         self.mix_reps = MixReps(
             self.tau_cg_levels_node[-1], 
             self.tau_output, 
-            device=self.device, dtype=self.dtype
+            **misc_info
         )
 
         self.scale = scale
@@ -184,7 +243,11 @@ class LGNEncoder(CGModule):
         num_param = sum(p.nelement() for p in self.parameters() if p.requires_grad)
         logging.info(f'Encoder initialized. Number of parameters: {num_param}')
 
-    def forward(self, data, covariance_test=False):
+    def forward(
+        self, 
+        data: Dict[str, torch.Tensor], 
+        covariance_test: bool = False
+    ):
         '''
         The forward pass of the LGN GNN.
 
@@ -247,13 +310,16 @@ class LGNEncoder(CGModule):
         # Mix
         # node_all[-1] is the updated feature in the last layer
         latent_features = self.mix_reps(node_features)
-        latent_features = GVec({weight: latent_features[weight] for weight in [(0, 0), (1, 1)]})  # Truncate higher order irreps than (1, 1)
+        latent_features = GVec({
+            weight: latent_features[weight] 
+            for weight in [(0, 0), (1, 1)]
+        })  # Truncate higher order irreps than (1, 1)
 
         # latent_features = self._aggregate(latent_features)
 
         latent_features[(1, 1)] = rep_to_p(latent_features[(1, 1)])  # Convert to Cartesian coordinates
         
-        latent_features = self._aggregate(latent_features)
+        latent_features = aggregate(self.map_to_latent, latent_features)
         latent_features_canonical = GVec({
             weight: val.clone()
             for weight, val in latent_features.items()
@@ -310,75 +376,82 @@ class LGNEncoder(CGModule):
             scalars = torch.cat([scalars, data['scalars'].to(device=self.device, dtype=self.dtype)], dim=-1)
 
         return scalars, node_ps, node_mask, edge_mask
-
-    
-    def _aggregate(self, latent_features):
-        '''Aggregate to the latent space.'''
-        if self.map_to_latent.lower() == 'sum':
-            latent_features = GVec({
-                weight: torch.sum(value, dim=-3, keepdim=True).unsqueeze(dim=-3)
-                for weight, value in latent_features.items()
-            })
-            return latent_features
-        elif self.map_to_latent.lower() in ['mean', 'average']:
-            latent_features = GVec({
-                weight: torch.mean(value, dim=-3, keepdim=True)
-                for weight, value in latent_features.items()
-            })
-            return latent_features
-        elif self.map_to_latent.lower() == 'max':
-            p4 = latent_features[(1, 1)]
-            latent_features = GVec({
-                weight: get_max_features(value, p4)
-                for weight, value in latent_features.items()
-            })
-            return latent_features
-        elif self.map_to_latent.lower() == 'min':
-            p4 = latent_features[(1, 1)]
-            latent_features = GVec({
-                weight: get_min_features(value, p4)
-                for weight, value in latent_features.items()
-            })
-            return latent_features
-        elif 'min_max' in self.map_to_latent.lower():
-            p4 = latent_features[(1, 1)]
-            min_latent_features = GVec({
-                weight: get_min_features(value, p4)
-                for weight, value in latent_features.items()
-            })
-            max_latent_features = GVec({
-                weight: get_min_features(value, p4)
-                for weight, value in latent_features.items()
-            })
-            latent_features = GVec({
-                weight: min_latent_features[weight] + max_latent_features[weight] 
-                for weight in latent_features.keys()
-            })
-            return latent_features
-        elif 'mean_min_max' in self.map_to_latent.lower():
-            p4 = latent_features[(1, 1)]
-            min_latent_features = GVec({
-                weight: get_min_features(value, p4)
-                for weight, value in latent_features.items()
-            })
-            max_latent_features = GVec({
-                weight: get_max_features(value, p4)
-                for weight, value in latent_features.items()
-            })
-            mean_latent_features = latent_features = GVec({
-                weight: torch.mean(value, dim=-3, keepdim=True)
-                for weight, value in latent_features.items()
-            })
-            latent_features = GVec({
-                weight: min_latent_features[weight] + max_latent_features[weight] + mean_latent_features[weight]
-                for weight in latent_features.keys()
-            })
-            return latent_features
-        elif self.map_to_latent.lower() == 'mix':  # will be processed in the next step
-            return latent_features
-        else:
-            raise NotImplementedError(f'{self.map_to_latent} is not implemented.')
         
+        
+def aggregate(
+    map_to_latent: str, 
+    latent_features: Union[GVec, torch.Tensor]
+):
+    '''Aggregate to the latent space.'''
+    if map_to_latent.lower() == 'sum':
+        return GVec({
+            weight: torch.sum(value, dim=-3, keepdim=True).unsqueeze(dim=-3)
+            for weight, value in latent_features.items()
+        })
+
+    elif map_to_latent.lower() in ('mean', 'average'):
+        return GVec({
+            weight: torch.mean(value, dim=-3, keepdim=True)
+            for weight, value in latent_features.items()
+        })
+
+    elif map_to_latent.lower() == 'max':
+        p4 = latent_features[(1, 1)]
+        return GVec({
+            weight: get_max_features(value, p4)
+            for weight, value in latent_features.items()
+        })
+        
+
+    elif map_to_latent.lower() == 'min':
+        p4 = latent_features[(1, 1)]
+        return GVec({
+            weight: get_min_features(value, p4)
+            for weight, value in latent_features.items()
+        })
+
+    elif map_to_latent.lower() == 'mix':  # will be processed in the next step
+        return latent_features
+    
+    # simply add different latent features
+    # TODO: learnable parameters based on Lorentz scalars
+    elif '+' in map_to_latent.lower():
+        if 'mix' in map_to_latent.lower():
+            raise NotImplementedError(
+                'Adding with mix aggregation not implemented yet.'
+            )
+        methods = map_to_latent.split('+')
+        weights = latent_features.keys()
+        features = [
+            aggregate(method, latent_features)
+            for method in methods
+        ]
+        
+        return GVec({
+            weight: sum([feature[weight] for feature in features])
+            for weight in weights
+        })
+    
+    elif '&' in map_to_latent:
+        if 'mix' in map_to_latent.lower():
+            raise NotImplementedError(
+                'Concatenating with mix aggregation not implemented yet.'
+            )
+        methods = map_to_latent.split('&')
+        weights = latent_features.keys()
+        features = [
+            aggregate(method, latent_features)
+            for method in methods
+        ]
+        return GVec({
+            weight: torch.cat(
+                [feature[weight] for feature in features],
+                dim=3
+            ) for weight in weights
+        })
+    
+    else:
+        raise NotImplementedError(f'{map_to_latent} is not implemented.')
         
 def get_msq(p4: torch.Tensor, keep_dim=False):
     '''Get mass squared of a 4-momentum.'''
@@ -433,7 +506,7 @@ def get_min_features(
     scalar = get_msq(feature, keep_dim=False)
     indices = torch.min(scalar, dim=-2).indices.unsqueeze(-1)
 
-    aggregated_permuted = gather_righthand(features_permute, indices)
+    # aggregated_permuted = gather_righthand(features_permute, indices)
 
     # (2, batch_size, tau, num_particles, feature_dim)
     # -> (2, batch_size, num_particles, tau, feature_dim)
@@ -454,7 +527,7 @@ def get_max_features(
     scalar = get_msq(feature, keep_dim=False)
     indices = torch.min(scalar, dim=-2).indices.unsqueeze(-1)
     
-    aggregated_permuted = gather_righthand(features_permute, indices)
+    # aggregated_permuted = gather_righthand(features_permute, indices)
     
     # (2, batch_size, tau, num_particles, feature_dim) 
     # -> (2, batch_size, num_particles, tau, feature_dim)

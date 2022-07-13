@@ -16,10 +16,11 @@ import argparse
 def main(args):
     if args.load_to_train and args.load_epoch < 0:
         args.load_epoch = latest_epoch(args.load_path, num=args.load_epoch)
-    logging.info(args)
+    logging.info(f'{args=}')
     compression_rate = get_compression_rate(
-        args.tau_latent_scalars,
-        args.tau_latent_vectors,
+        ls=args.tau_latent_scalars,
+        lv=args.tau_latent_vectors,
+        map_to_latent=args.map_to_latent,
         vec_dim=4,
         num_particles=args.num_jet_particles
     )

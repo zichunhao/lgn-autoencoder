@@ -38,9 +38,9 @@ class CGDict():
     transpose: bool, optional
         Transpose the CG coefficient matrix for each :math:`(\ell_1, \ell_2)`.
         This cannot be modified after instantiation.
-    device: `torch.torch.device`, optional
+    device: `torch.device`, optional
         Device of CG dictionary.
-    dtype: `torch.torch.dtype`, optional
+    dtype: `torch.dtype`, optional
         Data type of CG dictionary.
 
     """
