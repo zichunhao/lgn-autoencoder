@@ -55,10 +55,10 @@ class LGNEncoder(CGModule):
             The number of input particles.
         tau_input_scalars : int
             The multiplicity of scalars per particle.
-            For the hls4ml 150-p jet data, it should be 1 (namely the particle invariant mass -p^2).
+            e.g. For the hls4ml 150p or 30p jet data, it is 1 (namely the particle invariant mass -p^2).
         tau_input_vectors : int
             The multiplicity of vectors per particle.
-            For the hls4ml 150-p jet data, it should be 1 (namely the particle 4-momentum).
+            e.g. For the hls4ml 150p or 30p jet data, it is 1 (namely the particle 4-momentum).
         tau_latent_scalars : int
             Multiplicity of Lorentz scalars (0,0) in the latent_space.
         tau_latent_vectors : int
@@ -421,6 +421,10 @@ def aggregate(
                 'Adding with mix aggregation not implemented yet.'
             )
         methods = map_to_latent.split('+')
+        if len(methods) < 1:
+            raise ValueError(
+                f'No aggregation method specified: {map_to_latent}.'
+            )
         weights = latent_features.keys()
         features = [
             aggregate(method, latent_features)
@@ -428,7 +432,7 @@ def aggregate(
         ]
         
         return GVec({
-            weight: sum([feature[weight] for feature in features])
+            weight: sum([feature[weight] for feature in features]) / len(methods)
             for weight in weights
         })
     
@@ -438,6 +442,10 @@ def aggregate(
                 'Concatenating with mix aggregation not implemented yet.'
             )
         methods = map_to_latent.split('&')
+        if len(methods) < 1:
+            raise ValueError(
+                f'No aggregation method specified: {map_to_latent}.'
+            )
         weights = latent_features.keys()
         features = [
             aggregate(method, latent_features)
