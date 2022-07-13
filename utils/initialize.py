@@ -47,29 +47,39 @@ def initialize_test_data(path, batch_size):
 
 
 def initialize_autoencoder(args):
-    encoder = LGNEncoder(num_input_particles=args.num_jet_particles,
-                         tau_input_scalars=args.tau_jet_scalars,
-                         tau_input_vectors=args.tau_jet_vectors,
-                         map_to_latent=args.map_to_latent,
-                         tau_latent_scalars=args.tau_latent_scalars,
-                         tau_latent_vectors=args.tau_latent_vectors,
-                         maxdim=args.maxdim, max_zf=[1],
-                         num_channels=args.encoder_num_channels,
-                         weight_init=args.weight_init, level_gain=args.level_gain,
-                         num_basis_fn=args.num_basis_fn, activation=args.activation, scale=args.scale,
-                         mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
-                         device=args.device, dtype=args.dtype)
-    decoder = LGNDecoder(tau_latent_scalars=args.tau_latent_scalars,
-                         tau_latent_vectors=args.tau_latent_vectors,
-                         num_output_particles=args.num_jet_particles,
-                         tau_output_scalars=args.tau_jet_scalars,
-                         tau_output_vectors=args.tau_jet_vectors,
-                         maxdim=args.maxdim, max_zf=[1],
-                         num_channels=args.decoder_num_channels,
-                         weight_init=args.weight_init, level_gain=args.level_gain,
-                         num_basis_fn=args.num_basis_fn, activation=args.activation,
-                         mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
-                         cg_dict=encoder.cg_dict, device=args.device, dtype=args.dtype)
+    encoder = LGNEncoder(
+        num_input_particles=args.num_jet_particles,
+        tau_input_scalars=args.tau_jet_scalars,
+        tau_input_vectors=args.tau_jet_vectors,
+        map_to_latent=args.map_to_latent,
+        tau_latent_scalars=args.tau_latent_scalars,
+        tau_latent_vectors=args.tau_latent_vectors,
+        maxdim=args.maxdim, max_zf=[1],
+        num_channels=args.encoder_num_channels,
+        weight_init=args.weight_init, level_gain=args.level_gain,
+        num_basis_fn=args.num_basis_fn, activation=args.activation, scale=args.scale,
+        mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
+        device=args.device, dtype=args.dtype
+    )
+    
+    # multiplicity gets larger when concatenation is used
+    mult = len(args.map_to_latent.split('&')) if '&' in args.map_to_latent else 1    
+    tau_latent_scalars = args.tau_latent_scalars * mult
+    tau_latent_vectors = args.tau_latent_vectors * mult
+    
+    decoder = LGNDecoder(
+        tau_latent_scalars=tau_latent_scalars,
+        tau_latent_vectors=tau_latent_vectors,
+        num_output_particles=args.num_jet_particles,
+        tau_output_scalars=args.tau_jet_scalars,
+        tau_output_vectors=args.tau_jet_vectors,
+        maxdim=args.maxdim, max_zf=[1],
+        num_channels=args.decoder_num_channels,
+        weight_init=args.weight_init, level_gain=args.level_gain,
+        num_basis_fn=args.num_basis_fn, activation=args.activation,
+        mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
+        cg_dict=encoder.cg_dict, device=args.device, dtype=args.dtype
+    )
     logging.info(f"{encoder=}")
     logging.info(f"{decoder=}")
 
@@ -84,6 +94,10 @@ def initialize_optimizers(args, encoder, decoder):
         optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.lr, eps=get_eps(args), momentum=0.9)
         optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.lr, eps=get_eps(args), momentum=0.9)
     else:
-        raise NotImplementedError("Other choices of optimizer are not implemented. "
-                                  f"Available choices are 'Adam' and 'RMSprop'. Found: {args.optimizer}.")
+        raise NotImplementedError(
+            f"""
+            Other choices of optimizer are not implemented. 
+            Available choices are 'Adam' and 'RMSprop'. Found: {args.optimizer}.
+            """
+        )
     return optimizer_encoder, optimizer_decoder

@@ -128,13 +128,16 @@ def arcsinh(z):
     return torch.log(z + torch.sqrt(1 + torch.pow(z, 2)))
 
 
-def get_compression_rate(ls, lv, vec_dim=4, num_particles=30):
+def get_compression_rate(ls, lv, map_to_latent, vec_dim=4, num_particles=30):
     """
     Get the compression rate based on the multiplicities of scalars and vectors in the latent space.
     """
     input_params = vec_dim * num_particles
     latent_params = 2 * (ls + 4 * lv)  # Complexified
-    return latent_params / input_params
+    ratio = latent_params / input_params
+    if '&' in map_to_latent:
+        return len(map_to_latent.split('&')) * ratio
+    return ratio
 
 
 def latest_epoch(model_path, num=-1):
