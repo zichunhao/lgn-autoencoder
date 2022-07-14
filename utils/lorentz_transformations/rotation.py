@@ -2,7 +2,14 @@ import torch
 import math
 import logging
 
-def rot(theta: float, dir: str = "z"):
+def rot(theta: float, dir: str = "z") -> torch.Tensor:
+    '''
+    Get the rotation matrix for a given angle and axis of spatial rotation.
+    
+    :param theta: angle of rotation
+    :param dir: axis of rotation. Default to 'z'.
+    :return: rotation matrix
+    '''
     dir = dir.lower()
     if dir == 'x':
         return rot_x(theta)

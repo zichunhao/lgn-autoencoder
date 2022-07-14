@@ -5,7 +5,15 @@ import logging
 ERROR_MSG = "A physical value of beta must be between -1 and 1 (exclusive)."
 
 
-def boost(beta: float, dir: str = "z"):
+def boost(beta: float, dir: str = "z") -> torch.Tensor:
+    '''
+    Get the boost matrix for a given rapidity :math:`beta = v / c` and axis of boost.
+    
+    :param beta: rapidity :math:`beta = v / c`
+    :param dir: axis of boost. Default to 'z'.
+    :raises ValueError: if :math:`beta` is not between -1 and 1 (exclusive).
+    :return: boost matrix
+    '''
     dir = dir.lower()
     if dir == 'x':
         return boost_x(beta)
