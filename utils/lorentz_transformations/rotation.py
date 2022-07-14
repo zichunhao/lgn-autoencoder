@@ -17,24 +17,24 @@ def rot(theta: float, dir: str = "z"):
 
 def rot_x(theta: float):
     return torch.tensor([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
+        [1, 0, 0,               0],
+        [0, 1, 0,               0],
         [0, 0, math.cos(theta), -math.sin(theta)],
         [0, 0, math.sin(theta), math.cos(theta)]
     ])
     
 def rot_y(theta: float):
     return torch.tensor([
-        [1, 0, 0, 0],
-        [0, math.cos(theta), 0, math.sin(theta)],
-        [0, 0, 1, 0],
+        [1, 0,                0, 0],
+        [0, math.cos(theta),  0, math.sin(theta)],
+        [0, 0,                1, 0],
         [0, -math.sin(theta), 0, math.cos(theta)]
     ])
     
 def rot_z(theta: float):
     return torch.tensor([
-        [1, 0, 0, 0],
+        [1, 0,               0,                0],
         [0, math.cos(theta), -math.sin(theta), 0],
-        [0, math.sin(theta), math.cos(theta), 0],
-        [0, 0, 0, 1]
+        [0, math.sin(theta), math.cos(theta),  0],
+        [0, 0,               0,                1]
     ])

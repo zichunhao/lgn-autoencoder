@@ -23,10 +23,10 @@ def boost_x(beta: float):
         raise ValueError(f"{ERROR_MSG}: {beta=}")
     gamma = 1 / math.sqrt(1 - beta**2)
     return torch.tensor([
-        [gamma, -gamma*beta, 0, 0],
-        [-gamma*beta, gamma, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1]
+        [gamma,       -gamma*beta, 0, 0],
+        [-gamma*beta, gamma,       0, 0],
+        [0,           0,           1, 0],
+        [0,           0,           0, 1]
     ])
     
 def boost_y(beta: float):
@@ -46,8 +46,8 @@ def boost_z(beta: float):
         raise ValueError(f"{ERROR_MSG}: {beta=}")
     gamma = 1 / math.sqrt(1 - beta**2)
     return torch.tensor([
-        [gamma, 0, 0, -gamma*beta],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
+        [gamma,       0, 0, -gamma*beta],
+        [0,           1, 0, 0],
+        [0,           0, 1, 0],
         [-gamma*beta, 0, 0, gamma]
     ])
