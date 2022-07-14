@@ -1,3 +1,4 @@
+from typing import Optional
 from utils.jet_analysis.utils import get_jet_name, NUM_BINS, PLOT_FONT_SIZE
 from utils.utils import make_dir
 import os.path as osp
@@ -36,15 +37,24 @@ RANGES_POLAR_REL_COORD = (
 )
 
 
-def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir,
-                         epoch=None, density=False, fill=True, show=False):
+def plot_jet_p_cartesian(
+   jet_features_target: np.ndarray, 
+   jet_features_recons: np.ndarray, 
+   abs_coord: bool,
+   save_dir: str,
+   jet_type: str = "",
+   epoch: Optional[int] = None, 
+   density: bool = False, 
+   fill: bool = True, 
+   show: bool = False
+):
     """Plot jet features (m, px, py, pz) distribution.
 
     Parameters
     ----------
     jet_features_target : `numpy.ndarray`
         The target jet momenta, with shape (num_jets, 4).
-    jet_features_gen : `numpy.ndarray`
+    jet_features_recons : `numpy.ndarray`
         The generated/reconstructed jet momenta, with shape (num_jets, 4).
     save_dir : str
         The directory to save the figure.
@@ -61,7 +71,7 @@ def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir,
         Whether to show plot.
         Optional, default: `False`
     """
-    if args.abs_coord:
+    if abs_coord:
         ranges = RANGES_CARTESIAN_ABS_COORD
         names = LABELS_CARTESIAN_ABS_COORD
     else:
@@ -69,14 +79,14 @@ def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir,
         names = LABELS_CARTESIAN_REL_COORD
 
     fig, axs = plt.subplots(1, 4, figsize=FIGSIZE, sharey=False)
-    for ax, p_target, p_gen, bins, name in zip(axs, jet_features_target, jet_features_gen, ranges, names):
+    for ax, p_target, p_recons, bins, name in zip(axs, jet_features_target, jet_features_recons, ranges, names):
         if not fill:
-            ax.hist(p_gen.flatten(), bins=bins, histtype='step', stacked=True,
+            ax.hist(p_recons.flatten(), bins=bins, histtype='step', stacked=True,
                     fill=False, label='reconstructed', density=density)
             ax.hist(p_target.flatten(), bins=bins, histtype='step',
                     stacked=True, fill=False, label='target', density=density)
         else:
-            ax.hist(p_gen.flatten(), bins=bins, alpha=0.6, label='reconstructed', density=density)
+            ax.hist(p_recons.flatten(), bins=bins, alpha=0.6, label='reconstructed', density=density)
             ax.hist(p_target.flatten(), bins=bins, alpha=0.6, label='target', density=density)
 
         ax.set_xlabel(f'Jet {name}')
@@ -93,8 +103,8 @@ def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir,
 
     fig.tight_layout()
 
-    jet_name = get_jet_name(args)
-    if args.abs_coord:
+    jet_name = get_jet_name(jet_type)
+    if abs_coord:
         fig.suptitle(fr'Distribution of target and reconstructed jet $M$, $P_x$, $P_y$, and $P_z$ of {jet_name} jet', y=1.03)
     else:
         fig.suptitle('Distribution of target and reconstructed jet ' +
@@ -104,11 +114,11 @@ def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir,
     if epoch is not None:
         save_dir = make_dir(osp.join(save_dir, 'jet_features/cartesian'))
         if fill:
-            save_dir = osp.join(save_dir, 'filled')
+            save_dir = make_dir(osp.join(save_dir, 'filled'))
     else:
         pass  # Save without creating a subdirectory
 
-    filename = f'jet_features_cartesian_{args.jet_type}_jet'
+    filename = f'jet_features_cartesian_{jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
     if density:
@@ -121,15 +131,24 @@ def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir,
     plt.close()
 
 
-def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir,
-                     epoch=None, density=False, fill=True, show=False):
+def plot_jet_p_polar(
+    jet_features_target: np.ndarray, 
+    jet_features_recons: np.ndarray,
+    abs_coord: bool,
+    save_dir: str,
+    jet_type: str = "",
+    epoch: Optional[int] = None, 
+    density: bool = False, 
+    fill: bool = True, 
+    show: bool = False
+) -> None:
     """Plot jet features (m, pt, eta, phi) distribution.
 
     Parameters
     ----------
     jet_features_target : `numpy.ndarray`
         The target jet data, with shape (num_particles, 4).
-    jet_features_gen : `numpy.ndarray`
+    jet_features_recons : `numpy.ndarray`
         The reconstructed jet data, with shape (num_particles, 4).
     save_dir : str
         The directory to save the figure.
@@ -146,7 +165,7 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir,
         Whether to show plot.
         Optional, default: `False`
     """
-    if args.abs_coord:
+    if abs_coord:
         ranges = RANGES_POLAR_ABS_COORD
         names = LABELS_POLAR_ABS_COORD
     else:
@@ -154,14 +173,14 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir,
         names = LABELS_POLAR_REL_COORD
 
     fig, axs = plt.subplots(1, 4, figsize=FIGSIZE, sharey=False)
-    for ax, p_target, p_gen, bins, name in zip(axs, jet_features_target, jet_features_gen, ranges, names):
+    for ax, p_target, p_recons, bins, name in zip(axs, jet_features_target, jet_features_recons, ranges, names):
         if not fill:
-            ax.hist(p_gen.flatten(), bins=bins, histtype='step', stacked=True,
+            ax.hist(p_recons.flatten(), bins=bins, histtype='step', stacked=True,
                     fill=False, label='reconstructed', density=density)
             ax.hist(p_target.flatten(), bins=bins, histtype='step',
                     stacked=True, fill=False, label='target', density=density)
         else:
-            ax.hist(p_gen.flatten(), bins=range, alpha=0.6, label='reconstructed', density=density)
+            ax.hist(p_recons.flatten(), bins=range, alpha=0.6, label='reconstructed', density=density)
             ax.hist(p_target.flatten(), bins=range, alpha=0.6, label='target', density=density)
 
         ax.set_xlabel(f'Jet {name}')
@@ -178,8 +197,8 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir,
 
     fig.tight_layout()
 
-    jet_name = get_jet_name(args)
-    if args.abs_coord:
+    jet_name = get_jet_name(jet_type)
+    if abs_coord:
         fig.suptitle(r'Distribution of target and reconstructed jet $M$, $P_\mathrm{T}$, $\eta$, and $\phi$ ' +
                      f'of {jet_name} jets', y=1.03)
     else:
@@ -193,7 +212,7 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir,
     else:
         pass  # Save without creating a subdirectory
 
-    filename = f'jet_features_polar_{args.jet_type}_jet'
+    filename = f'jet_features_polar_{jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
     if density:

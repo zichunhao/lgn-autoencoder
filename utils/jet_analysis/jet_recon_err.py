@@ -1,3 +1,4 @@
+from typing import Callable, Iterable, Optional, Tuple, Union
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,21 +20,32 @@ DEFAULT_BIN_RANGE = 2
 MAX_BIN_RANGE = 5
 
 
-def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target_polar, jet_gen_polar,
-                       save_dir, epoch=None, eps=1e-16, drop_zeros=True, ranges=None,
-                       get_rel_err=(lambda p_target, p_gen, eps: (p_target-p_gen)/(p_target+eps)),
-                       show=False):
+def plot_jet_recon_err(
+    jet_target_cartesian: np.ndarray, 
+    jet_recons_cartesian: np.ndarray, 
+    jet_target_polar: np.ndarray, 
+    jet_recons_polar: np.ndarray,
+    save_dir: str, 
+    abs_coord: bool,
+    custom_jet_recons_ranges: bool,
+    epoch: Optional[int] = None, 
+    eps: float = 1e-16, 
+    drop_zeros: bool = True, 
+    ranges: Optional[np.ndarray] = None,
+    get_rel_err: Callable = (lambda p_target, p_recons, eps: (p_target-p_recons)/(p_target+eps)),
+    show: bool = False
+) -> None:
     """Plot reconstruction errors for jet."""
     if drop_zeros:
-        jet_target_cartesian, jet_gen_cartesian = filter_out_zeros(jet_target_cartesian, jet_gen_cartesian)
-        jet_target_polar, jet_gen_polar = filter_out_zeros(jet_target_polar, jet_gen_polar)
+        jet_target_cartesian, jet_recons_cartesian = filter_out_zeros(jet_target_cartesian, jet_recons_cartesian)
+        jet_target_polar, jet_recons_polar = filter_out_zeros(jet_target_polar, jet_recons_polar)
 
-    rel_err_cartesian = [get_rel_err(jet_gen_cartesian[i], jet_target_cartesian[i], eps) for i in range(4)]
-    rel_err_polar = [get_rel_err(jet_gen_polar[i], jet_target_polar[i], eps) for i in range(4)]
-    if (not args.custom_particle_recons_ranges) or (ranges is None):
+    rel_err_cartesian = [get_rel_err(jet_recons_cartesian[i], jet_target_cartesian[i], eps) for i in range(4)]
+    rel_err_polar = [get_rel_err(jet_recons_polar[i], jet_target_polar[i], eps) for i in range(4)]
+    if (not custom_jet_recons_ranges) or (ranges is None):
         ranges = get_bins(NUM_BINS, rel_err_cartesian=rel_err_cartesian, rel_err_polar=rel_err_polar)
 
-    LABELS = LABELS_ABS_COORD if args.abs_coord else LABELS_REL_COORD
+    LABELS = LABELS_ABS_COORD if abs_coord else LABELS_REL_COORD
     err_dict = dict()
     for rel_err_coordinate, labels, coordinate, bin_tuple in zip((rel_err_cartesian, rel_err_polar), LABELS, COORDINATES, ranges):
         stats_coordinate_list = []
@@ -43,7 +55,7 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
             stats = get_stats(rel_err, bins)
             stats_coordinate_list.append(stats)
 
-            if not args.custom_particle_recons_ranges:
+            if not custom_jet_recons_ranges:
             # Find the range based on the FWHM
                 FWHM = stats['FWHM']
                 bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
@@ -84,15 +96,25 @@ def plot_jet_recon_err(args, jet_target_cartesian, jet_gen_cartesian, jet_target
     logging.debug(err_dict)
 
 
-def default_get_rel_err(p_target, p_gen, eps, alpha=0.01):
+def default_get_rel_err(
+    p_target: Union[np.ndarray, torch.Tensor], 
+    p_recons: Union[np.ndarray, torch.Tensor], 
+    eps: float = 1e-16, 
+    alpha: float = 0.01
+):
     if type(p_target) is torch.Tensor:
         p_target = p_target.cpu().detach().numpy()
-    if type(p_gen) is torch.Tensor:
-        p_gen = p_gen.cpu().detach().numpy()
-    return (p_target - p_gen) / (p_target + alpha*np.median(p_target) + eps)
+    if type(p_recons) is torch.Tensor:
+        p_recons = p_recons.cpu().detach().numpy()
+    return (p_target - p_recons) / (p_target + alpha*np.median(p_target) + eps)
 
 
-def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None):
+def get_bins(
+    num_bins: int, 
+    rel_err_cartesian: Optional[Tuple[float, float, float, float]] = None, 
+    rel_err_polar: Optional[Tuple[float, float, float, float]] = None
+) -> Tuple[Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+           Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]]:
     """Get bins for jet reconstruction error plots."""
     if rel_err_cartesian is None:
         cartesian_min_max = ((-1, 10), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE))
@@ -126,7 +148,10 @@ def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None):
     return ranges
 
 
-def get_legend(res, bins):
+def get_legend(
+    res: np.ndarray,
+    bins: np.ndarray
+) -> str:
     """Get legend for plots of jet reconstruction."""
     legend = r'$\mu$: ' + f'{np.mean(res) :.2E},\n'
     # legend += r'$\sigma$: ' + f'{np.std(res) :.3E} \n'
@@ -135,21 +160,25 @@ def get_legend(res, bins):
     return legend
 
 
-def filter_out_zeros(target, gen):
+def filter_out_zeros(
+    target: Iterable[np.ndarray], 
+    recons: Iterable[np.ndarray]
+) -> Tuple[Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+           Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]]:
     """Filter out jets with any zero component.
 
     Parameters
     ----------
     target : iterable of `numpy.ndarray`.
         Target jet components.
-    gen : iterable of `numpy.ndarray`.
+    recons : iterable of `numpy.ndarray`.
         Generated/reconstructed jet components.
 
     Returns
     -------
-    target_filtered, gen_filtered
+    target_filtered, recons_filtered
     """
     mask = (target[0] != 0) & (target[1] != 0) & (target[2] != 0) & (target[3] != 0)
     target_filtered = tuple([target[i][mask] for i in range(4)])
-    gen_filtered = tuple([gen[i][mask] for i in range(4)])
-    return target_filtered, gen_filtered
+    recons_filtered = tuple([recons[i][mask] for i in range(4)])
+    return target_filtered, recons_filtered
