@@ -2,7 +2,7 @@ import torch
 import math
 import logging
 
-ERROR_MSG = "A physical value of beta must be between -1 and 1"
+ERROR_MSG = "A physical value of beta must be between -1 and 1 (exclusive)."
 
 
 def boost(beta: float, dir: str = "z"):
@@ -20,7 +20,7 @@ def boost(beta: float, dir: str = "z"):
 
 def boost_x(beta: float):
     if abs(beta) >= 1:
-        raise ValueError(f"{ERROR_MSG}: {beta=}")
+        raise ValueError(ERROR_MSG + f" Found: {beta=}")
     gamma = 1 / math.sqrt(1 - beta**2)
     return torch.tensor([
         [gamma,       -gamma*beta, 0, 0],
@@ -31,7 +31,7 @@ def boost_x(beta: float):
     
 def boost_y(beta: float):
     if abs(beta) >= 1:
-        raise ValueError(f"{ERROR_MSG}: {beta=}")
+        raise ValueError(ERROR_MSG + f" Found: {beta=}")
     gamma = 1 / math.sqrt(1 - beta**2)
     return torch.tensor([
         [gamma,       0, -gamma*beta, 0],
