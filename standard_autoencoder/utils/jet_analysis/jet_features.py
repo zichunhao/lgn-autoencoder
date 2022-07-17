@@ -1,3 +1,4 @@
+from typing import Optional
 from .utils import get_jet_name, NUM_BINS, PLOT_FONT_SIZE
 from utils.utils import make_dir
 import os.path as osp
@@ -36,8 +37,17 @@ RANGES_POLAR_REL_COORD = (
 )
 
 
-def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir,
-                         epoch=None, density=False, fill=True, show=False):
+def plot_jet_p_cartesian(
+    jet_features_target: np.ndarray, 
+    jet_features_gen: np.ndarray, 
+    save_dir: str,
+    abs_coord: bool,
+    jet_type: str = '',
+    epoch: Optional[int] = None, 
+    density: bool = False, 
+    fill: bool = True, 
+    show: bool = False
+) -> None:
     """Plot jet features (m, px, py, pz) distribution.
 
     Parameters
@@ -61,7 +71,7 @@ def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir,
         Whether to show plot.
         Optional, default: `False`
     """
-    if args.abs_coord:
+    if abs_coord:
         ranges = RANGES_CARTESIAN_ABS_COORD
         names = LABELS_CARTESIAN_ABS_COORD
     else:
@@ -93,8 +103,8 @@ def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir,
 
     fig.tight_layout()
 
-    jet_name = get_jet_name(args)
-    if args.abs_coord:
+    jet_name = get_jet_name(jet_type)
+    if abs_coord:
         fig.suptitle(fr'Distribution of target and reconstructed jet $M$, $P_x$, $P_y$, and $P_z$ of {jet_name} jet', y=1.03)
     else:
         fig.suptitle('Distribution of target and reconstructed jet ' +
@@ -108,7 +118,7 @@ def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir,
     else:
         pass  # Save without creating a subdirectory
 
-    filename = f'jet_features_cartesian_{args.jet_type}_jet'
+    filename = f'jet_features_cartesian_{jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
     if density:
@@ -121,8 +131,17 @@ def plot_jet_p_cartesian(args, jet_features_target, jet_features_gen, save_dir,
     plt.close()
 
 
-def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir,
-                     epoch=None, density=False, fill=True, show=False):
+def plot_jet_p_polar(
+    jet_features_target, 
+    jet_features_gen, 
+    save_dir,
+    abs_coord: bool,
+    jet_type: str = '',
+    epoch=None, 
+    density=False, 
+    fill=True, 
+    show=False
+):
     """Plot jet features (m, pt, eta, phi) distribution.
 
     Parameters
@@ -146,7 +165,7 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir,
         Whether to show plot.
         Optional, default: `False`
     """
-    if args.abs_coord:
+    if abs_coord:
         ranges = RANGES_POLAR_ABS_COORD
         names = LABELS_POLAR_ABS_COORD
     else:
@@ -178,8 +197,8 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir,
 
     fig.tight_layout()
 
-    jet_name = get_jet_name(args)
-    if args.abs_coord:
+    jet_name = get_jet_name(jet_type)
+    if abs_coord:
         fig.suptitle(r'Distribution of target and reconstructed jet $M$, $P_\mathrm{T}$, $\eta$, and $\phi$ ' +
                      f'of {jet_name} jets', y=1.03)
     else:
@@ -193,7 +212,7 @@ def plot_jet_p_polar(args, jet_features_target, jet_features_gen, save_dir,
     else:
         pass  # Save without creating a subdirectory
 
-    filename = f'jet_features_polar_{args.jet_type}_jet'
+    filename = f'jet_features_polar_{jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
     if density:

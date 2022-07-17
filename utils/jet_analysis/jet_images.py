@@ -1,3 +1,4 @@
+from typing import Optional, Tuple, Union
 from utils.utils import make_dir
 import os.path as osp
 import numpy as np
@@ -7,9 +8,23 @@ import awkward as ak
 from coffea.nanoevents.methods import vector
 ak.behavior.update(vector.behavior)
 
+IMG_VMAX = 0.05
 
-def plot_jet_image(args, p_target, p_gen, save_dir, epoch,
-                   same_norm=True, maxR=0.5, vmin=1e-8, show=False):
+
+def plot_jet_image(
+    p_target: np.ndarray, 
+    p_recons: np.ndarray, 
+    save_dir: str, 
+    epoch: int,
+    num_jet_images: int,
+    jet_image_npix: int,
+    abs_coord: bool,
+    jet_type: bool = "",
+    same_norm: bool = True,
+    maxR: bool = 0.5, 
+    vmin: bool = 1e-8, 
+    show: bool = False
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Plot average jet image and one-to-one jet image
 
     Parameters
@@ -17,7 +32,7 @@ def plot_jet_image(args, p_target, p_gen, save_dir, epoch,
     p_target : np.ndarray
         Target jets in polar coordinates (pt, eta, phi).
         Shape : (num_jets, num_particles, 3)
-    p_gen : np.ndarray
+    p_recons : np.ndarray
         Generated/reconstructed jets by the model in polar coordinates (pt, eta, phi).
         Shape : (num_jets, num_particles, 3)
     save_dir : str
@@ -28,34 +43,56 @@ def plot_jet_image(args, p_target, p_gen, save_dir, epoch,
         Whether to use the same normalization.
         If true, reconstructed jets will be normalized based on the target.
         Default: True
-    vmin : float, optional
-        vmin for LogNorm of average jet image.
-        A positive number.
-        Default: 1e-8
     show : bool, optional
         Whether to show jet images.
 
     """
-    if same_norm and args.abs_coord:
-        target_pix_average, gen_pix_average = get_average_jet_image_same_norm(
-            p_target, p_gen, npix=args.jet_image_npix
+    if same_norm and abs_coord:
+        target_pix_average, recons_pix_average = get_average_jet_image_same_norm(
+            jet_target=p_target, 
+            jet_recons=p_recons, 
+            npix=jet_image_npix, 
+            maxR=maxR, 
         )
-        target_pix, gen_pix = get_n_jet_images_same_norm(
-            p_target, p_gen, num_jets=args.num_jet_images, npix=args.jet_image_npix
+        target_pix, recons_pix = get_n_jet_images_same_norm(
+            jet_target=p_target, 
+            jet_recons=p_recons, 
+            num_jets=num_jet_images, 
+            maxR=maxR,
+            npix=jet_image_npix
         )
     else:
-        target_pix_average = get_average_jet_image(p_target, npix=args.jet_image_npix,
-                                                   abs_coord=args.abs_coord)
-        gen_pix_average = get_average_jet_image(p_gen, npix=args.jet_image_npix,
-                                                abs_coord=args.abs_coord)
+        target_pix_average = get_average_jet_image(
+            jets=p_target, 
+            maxR=maxR,
+            npix=jet_image_npix,
+            abs_coord=abs_coord
+        )
+        recons_pix_average = get_average_jet_image(
+            jets=p_recons,
+            maxR=maxR, 
+            npix=jet_image_npix,
+            abs_coord=abs_coord
+        )
 
-        target_pix = get_n_jet_images(p_target, num_jets=args.num_jet_images, npix=args.jet_image_npix,
-                                      maxR=maxR, abs_coord=args.abs_coord)
-        gen_pix = get_n_jet_images(p_gen, num_jets=args.num_jet_images, npix=args.jet_image_npix,
-                                   maxR=maxR, abs_coord=args.abs_coord)
+        target_pix = get_n_jet_images(
+            jets=p_target, 
+            maxR=maxR,
+            num_jets=num_jet_images,
+            npix=jet_image_npix,
+            abs_coord=abs_coord
+        )
+        recons_pix = get_n_jet_images(
+            jets=p_recons, 
+            maxR=maxR,
+            num_jets=num_jet_images, 
+            npix=jet_image_npix,
+            abs_coord=abs_coord
+        )
 
     fig, axs = plt.subplots(
-        len(target_pix)+1, 2, figsize=get_one_to_one_jet_image_figsize(num_jets=len(target_pix))
+        len(target_pix)+1, 2, 
+        figsize=get_one_to_one_jet_image_figsize(num_jets=len(target_pix))
     )
 
     from copy import copy
@@ -65,28 +102,54 @@ def plot_jet_image(args, p_target, p_gen, save_dir, epoch,
     for i, axs_row in enumerate(axs):
         if i == 0:
             from matplotlib.colors import LogNorm
-            target = axs_row[0].imshow(target_pix_average, norm=LogNorm(vmin=vmin, vmax=1), origin='lower', cmap=cm,
-                                       interpolation='nearest', extent=[-maxR, maxR, -maxR, maxR])
+            target = axs_row[0].imshow(
+                target_pix_average, 
+                norm=LogNorm(vmin=vmin, vmax=1),
+                origin='lower', 
+                cmap=cm,
+                interpolation='nearest', 
+                extent=[-maxR, maxR, -maxR, maxR]
+            )
             axs_row[0].title.set_text('Average Target Jet')
 
-            gen = axs_row[1].imshow(gen_pix_average, norm=LogNorm(vmin=vmin, vmax=1), origin='lower', cmap=cm,
-                                    interpolation='nearest', extent=[-maxR, maxR, -maxR, maxR])
+            recons = axs_row[1].imshow(
+                recons_pix_average, 
+                norm=LogNorm(vmin=vmin, vmax=1), 
+                origin='lower', 
+                cmap=cm,
+                interpolation='nearest', 
+                extent=[-maxR, maxR, -maxR, maxR]
+            )
             axs_row[1].title.set_text('Average Reconstructed Jet')
 
             cbar_target = fig.colorbar(target, ax=axs_row[0])
-            cbar_gen = fig.colorbar(gen, ax=axs_row[1])
+            cbar_recons = fig.colorbar(recons, ax=axs_row[1])
         else:
-            target = axs_row[0].imshow(target_pix[i-1], origin='lower', cmap=cm, interpolation='nearest',
-                                       vmin=vmin, extent=[-maxR, maxR, -maxR, maxR], vmax=0.05)
+            target = axs_row[0].imshow(
+                target_pix[i-1], 
+                origin='lower', 
+                cmap=cm, 
+                interpolation='nearest',
+                vmin=vmin, 
+                extent=[-maxR, maxR, -maxR, maxR], 
+                vmax=IMG_VMAX
+            )
             axs_row[0].title.set_text('Target Jet')
 
-            gen = axs_row[1].imshow(gen_pix[i-1], origin='lower', cmap=cm, interpolation='nearest',
-                                    vmin=vmin, extent=[-maxR, maxR, -maxR, maxR], vmax=0.05)
+            recons = axs_row[1].imshow(
+                recons_pix[i-1], 
+                origin='lower', 
+                cmap=cm, 
+                interpolation='nearest',
+                vmin=vmin, 
+                extent=[-maxR, maxR, -maxR, maxR], 
+                vmax=IMG_VMAX
+            )
             axs_row[1].title.set_text('Reconstructed Jet')
             cbar_target = fig.colorbar(target, ax=axs_row[0])
-            cbar_gen = fig.colorbar(gen, ax=axs_row[1])
+            cbar_recons = fig.colorbar(recons, ax=axs_row[1])
 
-        for cbar in [cbar_target, cbar_gen]:
+        for cbar in [cbar_target, cbar_recons]:
             cbar.set_label(r'$p_\mathrm{T}$')
 
         for j in range(len(axs_row)):
@@ -96,26 +159,31 @@ def plot_jet_image(args, p_target, p_gen, save_dir, epoch,
     plt.tight_layout()
 
     if epoch is not None:
-        filename = f'{args.jet_type}_jet_images_epoch_{epoch+1}.pdf'
+        filename = f'{jet_type}_jet_images_epoch_{epoch+1}.pdf'
         if same_norm:
             save_dir = make_dir(osp.join(save_dir, 'jet_images_same_norm'))
         else:
             save_dir = make_dir(osp.join(save_dir, 'jet_images'))
     else:  # Save without creating a subdirectory
         if same_norm:
-            filename = f'{args.jet_type}_jet_images_same_norm.pdf'
+            filename = f'{jet_type}_jet_images_same_norm.pdf'
         else:
-            filename = f'{args.jet_type}_jet_images.pdf'
+            filename = f'{jet_type}_jet_images.pdf'
     plt.savefig(osp.join(save_dir, filename), bbox_inches="tight")
 
     if show:
         plt.show()
     plt.close()
 
-    return target_pix_average, gen_pix_average, target_pix, gen_pix
+    return target_pix_average, recons_pix_average, target_pix, recons_pix
 
 
-def pixelate(jet, mask=None, npix=64, maxR=1.0):
+def pixelate(
+    jet: np.ndarray, 
+    mask: Optional[np.ndarray] = None, 
+    npix: int = 64,
+    maxR: float = 1.0
+) -> np.ndarray:
     """Pixelate the jet with Raghav Kansal's method.
     Reference: https://github.com/rkansal47/mnist_graph_gan/blob/neurips21/jets/final_plots.py#L191-L204
 
@@ -153,7 +221,9 @@ def pixelate(jet, mask=None, npix=64, maxR=1.0):
     return jet_image
 
 
-def get_jet_rel(jets):
+def get_jet_rel(
+    jets: np.ndarray
+) -> np.ndarray:
     """Get jet momenta in relative coordinates (ptrel, etarel, phirel).
 
     Parameters
@@ -190,7 +260,12 @@ def get_jet_rel(jets):
     return jets
 
 
-def get_average_jet_image(jets, maxR=0.5, npix=64, abs_coord=True):
+def get_average_jet_image(
+    jets: Union[np.ndarray, torch.Tensor], 
+    maxR: float = 0.5, 
+    npix: int = 64, 
+    abs_coord: bool = True
+):
     """Get the average jet image from a collection of jets.
 
     Parameters
@@ -215,14 +290,22 @@ def get_average_jet_image(jets, maxR=0.5, npix=64, abs_coord=True):
 
     if abs_coord:
         jets = get_jet_rel(jets)
-    jet_image = [pixelate(jets[i], mask=None, npix=npix, maxR=maxR)
-                 for i in range(len(jets))]
+    jet_image = [
+        pixelate(jets[i], mask=None, npix=npix, maxR=maxR)
+        for i in range(len(jets))
+    ]
     jet_image = np.stack(jet_image, axis=0)
     jet_image = np.mean(jet_image, axis=0)
     return jet_image
 
 
-def get_n_jet_images(jets, num_jets=15, maxR=0.5, npix=24, abs_coord=True):
+def get_n_jet_images(
+    jets: Union[np.ndarray, torch.Tensor],
+    num_jets: int = 15, 
+    maxR: float = 0.5, 
+    npix: int = 24, 
+    abs_coord: int = True
+):
     """Get the first num_jets jet images from a collection of jets.
 
     Parameters
@@ -249,30 +332,37 @@ def get_n_jet_images(jets, num_jets=15, maxR=0.5, npix=24, abs_coord=True):
 
     if abs_coord:
         jets = get_jet_rel(jets)
-    jet_image = [pixelate(jets[i], mask=None, npix=npix, maxR=maxR)
-                 for i in range(min(num_jets, len(jets)))]
+    jet_image = [
+        pixelate(jets[i], mask=None, npix=npix, maxR=maxR)
+        for i in range(min(num_jets, len(jets)))
+    ]
     jet_image = np.stack(jet_image, axis=0)
     return jet_image
 
 
-def get_jet_rel_same_norm(jet_target, jet_gen):
-    """Get jet momenta in relative coordinates (ptrel, etarel, phirel) using the coordinates of target jet.
+def get_jet_rel_same_norm(
+    jet_target: Union[np.ndarray, torch.Tensor], 
+    jet_recons: Union[np.ndarray, torch.Tensor]
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Get jet momenta in relative coordinates 
+    (ptrel, etarel, phirel) 
+    using the coordinates of target jet.
 
     Parameters
     ----------
     jet_target : `numpy.ndarray` or `torch.Tensor`
         Target jet.
-    jet_gen : `numpy.ndarray` or `torch.Tensor`
+    jet_recons : `numpy.ndarray` or `torch.Tensor`
         Reconstructed jet.
 
     Returns
     -------
-    (jet_target, jet_gen) in relative coordinates.
+    (jet_target, jet_recons) in relative coordinates.
     """
     if isinstance(jet_target, torch.Tensor):
         jet_target = jet_target.detach().cpu().numpy()
-    if isinstance(jet_gen, torch.Tensor):
-        jet_gen = jet_gen.detach().cpu().numpy()
+    if isinstance(jet_recons, torch.Tensor):
+        jet_recons = jet_recons.detach().cpu().numpy()
 
     part_vecs = ak.zip(
         {
@@ -286,19 +376,24 @@ def get_jet_rel_same_norm(jet_target, jet_gen):
     jet_vecs = part_vecs.sum(axis=1)[:, :2]
 
     jet_target = normalize(jet_target, jet_vecs)
-    jet_gen = normalize(jet_gen, jet_vecs)
+    jet_recons = normalize(jet_recons, jet_vecs)
 
-    return jet_target, jet_gen
+    return jet_target, jet_recons
 
 
-def get_average_jet_image_same_norm(jet_target, jet_gen, maxR=0.5, npix=64):
+def get_average_jet_image_same_norm(
+    jet_target: Union[np.ndarray, torch.Tensor], 
+    jet_recons: Union[np.ndarray, torch.Tensor], 
+    maxR: float = 0.5, 
+    npix: int = 64
+):
     """Get the average jet image, in relative coordinate with respect to the target jet, from a collection of jets.
 
     Parameters
     ----------
     jet_target : `numpy.ndarray` or `torch.Tensor`
         A collection of target jets in polar coordinates.
-    jet_gen : `numpy.ndarray` or `torch.Tensor`
+    jet_recons : `numpy.ndarray` or `torch.Tensor`
         A collection of reconstructed/generated jets in polar coordinates.
     maxR : float
         Maximum radius.
@@ -309,30 +404,42 @@ def get_average_jet_image_same_norm(jet_target, jet_gen, maxR=0.5, npix=64):
 
     Returns
     -------
-    The average jet images (target, gen), in relative coordinates with respect to the target jets, over the collection.
+    The average jet images (target, recons), 
+    in relative coordinates with respect to the target jets, 
+    over the collection.
     """
-    jet_target, jet_gen = get_jet_rel_same_norm(jet_target, jet_gen)
-    target_image = [pixelate(jet_target[i], mask=None, npix=npix, maxR=maxR)
-                    for i in range(len(jet_target))]
+    jet_target, jet_recons = get_jet_rel_same_norm(jet_target, jet_recons)
+    target_image = [
+        pixelate(jet_target[i], mask=None, npix=npix, maxR=maxR)
+        for i in range(len(jet_target))
+    ]
     target_image = np.stack(target_image, axis=0)
     target_image = np.mean(target_image, axis=0)
 
-    gen_image = [pixelate(jet_gen[i], mask=None, npix=npix, maxR=maxR)
-                 for i in range(len(jet_gen))]
-    gen_image = np.stack(gen_image, axis=0)
-    gen_image = np.mean(gen_image, axis=0)
+    recons_image = [
+        pixelate(jet_recons[i], mask=None, npix=npix, maxR=maxR)
+        for i in range(len(jet_recons))
+    ]
+    recons_image = np.stack(recons_image, axis=0)
+    recons_image = np.mean(recons_image, axis=0)
 
-    return target_image, gen_image
+    return target_image, recons_image
 
 
-def get_n_jet_images_same_norm(jet_target, jet_gen, num_jets=15, maxR=0.5, npix=24):
+def get_n_jet_images_same_norm(
+    jet_target: Union[np.ndarray, torch.Tensor], 
+    jet_recons: Union[np.ndarray, torch.Tensor], 
+    num_jets: int = 15, 
+    maxR: float = 0.5, 
+    npix: int = 24
+) -> Tuple[np.ndarray, np.ndarray]:
     """Get the first num_jets jet images from a collection of jets.
 
     Parameters
     ----------
     jet_target : `numpy.ndarray` or `torch.Tensor`
         A collection of target jets in polar coordinates.
-    jet_gen : `numpy.ndarray` or `torch.Tensor`
+    jet_recons : `numpy.ndarray` or `torch.Tensor`
         A collection of reconstructed/generated jets in polar coordinates.
     num_jets : int
         The number of jet images to produce.
@@ -345,22 +452,29 @@ def get_n_jet_images_same_norm(jet_target, jet_gen, num_jets=15, maxR=0.5, npix=
 
     Returns
     -------
-    (target_image, gen_image) : The first num_jets jet images.
+    (target_image, recons_image) : The first num_jets jet images.
     """
-    jet_target, jet_gen = get_jet_rel_same_norm(jet_target, jet_gen)
+    jet_target, jet_recons = get_jet_rel_same_norm(jet_target, jet_recons)
 
-    target_image = [pixelate(jet_target[i], mask=None, npix=npix, maxR=maxR)
-                    for i in range(min(num_jets, len(jet_target)))]
+    target_image = [
+        pixelate(jet_target[i], mask=None, npix=npix, maxR=maxR)
+        for i in range(min(num_jets, len(jet_target)))
+    ]
     target_image = np.stack(target_image, axis=0)
 
-    gen_image = [pixelate(jet_gen[i], mask=None, npix=npix, maxR=maxR)
-                 for i in range(min(num_jets, len(jet_gen)))]
-    gen_image = np.stack(gen_image, axis=0)
+    recons_image = [
+        pixelate(jet_recons[i], mask=None, npix=npix, maxR=maxR)
+        for i in range(min(num_jets, len(jet_recons)))
+    ]
+    recons_image = np.stack(recons_image, axis=0)
 
-    return target_image, gen_image
+    return target_image, recons_image
 
 
-def normalize(jet, jet_vecs):
+def normalize(
+    jet: np.ndarray, 
+    jet_vecs: ak.Array
+) -> np.ndarray:
     """Normalize jet based on jet_vecs.
 
     Parameters
@@ -376,6 +490,8 @@ def normalize(jet, jet_vecs):
     return jet
 
 
-def get_one_to_one_jet_image_figsize(num_jets=15):
+def get_one_to_one_jet_image_figsize(
+    num_jets: int = 15
+) -> Tuple[float, float]:
     """Returns the figure size of one-to-one jet images"""
     return (7.5, 3*num_jets)

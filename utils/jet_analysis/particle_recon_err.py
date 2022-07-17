@@ -1,3 +1,4 @@
+from typing import Optional, Tuple, Union
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,8 +15,22 @@ LABELS_REL_COORD = ((r'$p_x^\mathrm{rel}$', r'$p_y^\mathrm{rel}$', r'$p_z^\mathr
                     (r'$p_\mathrm{T}^\mathrm{rel}$', r'$\eta^\mathrm{rel}$', r'$\phi^\mathrm{rel}$'))
 
 
-def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
-                            eps=1e-16, save_dir=None, epoch=None, show=False):
+def plot_particle_recon_err(
+    p_target: Union[np.ndarray, torch.Tensor], 
+    p_recons: Union[np.ndarray, torch.Tensor], 
+    abs_coord: bool,
+    custom_particle_recons_ranges: bool,
+    find_match: bool = True, 
+    ranges: Optional[Tuple[
+        Tuple[Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray], 
+              Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]],
+        Tuple[Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray], 
+              Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]]
+    ]] = None,
+    save_dir: Optional[str] = None, 
+    epoch: Optional[int] = None, 
+    show: bool = False
+) -> None:
     """Plot the error for reconstruction of particle features.
         - For real/nonpadded particles, relative error will be plotted.
         - For padded particles, distribution will be plotted.
@@ -24,17 +39,15 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
     ----------
     p_target : `torch.Tensor` or `numpy.ndarray`
         Target particle momenta, in Cartesian coordinates, of target real/nonpadded particles.
-    p_gen : `torch.Tensor` or `numpy.ndarray`
+    p_recons : `torch.Tensor` or `numpy.ndarray`
         Reconstructed particle momenta, in Cartesian coordinates, of real/nonpadded particles.
     find_match : bool, optional
         Whether matching needs to be done. Used for permutation invariant loss.
         Default: True
-    ranges : iterable of iterable of iterable of iterable of np.ndarray
+    ranges : tuple of tuple of tuple of tuple of np.ndarray
         Ranges of plots: ((ranges_rel_err_cartesian, ranges_padded_recons_cartesian), (ranges_rel_err_polar, ranges_padded_recons_polar)),
         where each of ranges_rel_err_cartesian, ranges_padded_recons_cartesian,
         ranges_rel_err_polar, and ranges_padded_recons_polar is a tuple of numpy.ndarray.
-    eps : float, optional
-        Default: 1e-16
     save_dir : str, optional
         Default: None
     epoch : None or int, optional
@@ -46,16 +59,16 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
 
     # Get inputs
     p_target_cartesian = p_target if (p_target.shape[-1] == 3) else p_target[..., 1:]
-    p_gen_cartesian = p_gen if (p_gen.shape[-1] == 3) else p_gen[..., 1:]
+    p_recons_cartesian = p_recons if (p_recons.shape[-1] == 3) else p_recons[..., 1:]
     p_target_polar = get_p_polar_tensor(p_target)
-    p_gen_polar = get_p_polar_tensor(p_gen)
+    p_recons_polar = get_p_polar_tensor(p_recons)
 
     if not find_match:
-        rel_err_cartesian = get_rel_err(p_target_cartesian, p_gen_cartesian).view(-1, 3)
-        rel_err_polar = get_rel_err(p_target_polar, p_gen_polar).view(-1, 3)
+        rel_err_cartesian = get_rel_err(p_target_cartesian, p_recons_cartesian).view(-1, 3)
+        rel_err_polar = get_rel_err(p_target_polar, p_recons_polar).view(-1, 3)
     else:
         rel_err_cartesian, rel_err_polar = get_rel_err_find_match(
-            p_target_cartesian, p_gen_cartesian, p_target_polar, p_gen_polar
+            p_target_cartesian, p_recons_cartesian, p_target_polar, p_recons_polar
         )
 
     is_padded = torch.any(rel_err_cartesian.isinf(), dim=-1)
@@ -64,13 +77,12 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
     rel_err_polar = rel_err_polar[~is_padded]
 
     # Padded particle features
-    p_padded_recons_cartesian = p_gen_cartesian.view(-1, 3)[is_padded]
-    p_padded_recons_polar = p_gen_polar.view(-1, 3)[is_padded]
+    p_padded_recons_cartesian = p_recons_cartesian.view(-1, 3)[is_padded]
+    p_padded_recons_polar = p_recons_polar.view(-1, 3)[is_padded]
 
-    LABELS = LABELS_ABS_COORD if args.abs_coord else LABELS_REL_COORD
-    if (not args.custom_particle_recons_ranges) or (ranges is None):
+    LABELS = LABELS_ABS_COORD if abs_coord else LABELS_REL_COORD
+    if (not custom_particle_recons_ranges) or (ranges is None):
         ranges = get_bins(
-            NUM_BINS,
             rel_err_cartesian=rel_err_cartesian.numpy(),
             rel_err_polar=rel_err_polar.numpy(),
             p_padded_recons_cartesian=p_padded_recons_cartesian.numpy(),
@@ -98,7 +110,7 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
             stats = get_stats(res, bins)
             err_dict_coordinate['rel_err'].append(stats)
 
-            if not args.custom_particle_recons_ranges:
+            if not custom_particle_recons_ranges:
                 # Find the range based on the FWHM
                 FWHM = stats['FWHM']
                 bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
@@ -124,7 +136,7 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
             stats = get_stats(p, bins)
             err_dict_coordinate['pad_recons'].append(stats)
 
-            if not args.custom_particle_recons_ranges:
+            if not custom_particle_recons_ranges:
                 # Find the range based on the FWHM
                 FWHM = stats['FWHM']
                 bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
@@ -132,7 +144,7 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
             else:
                 ax.hist(p, histtype='step', stacked=True, bins=bins)
 
-            if args.abs_coord:
+            if abs_coord:
                 if ('eta' in label.lower()) or ('phi' in label.lower()):
                     # eta and phi are dimensionless
                     ax.set_xlabel(f'Reconstructed padded {label}')
@@ -174,8 +186,19 @@ def plot_particle_recon_err(args, p_target, p_gen, find_match=True, ranges=None,
         logging.debug(err_dict)
 
 
-def get_rel_err_find_match(p_target_cartesian, p_recons_cartesian, p_target_polar, p_recons_polar, gpu=True):
-    """Get relative errors after finding the match between target and reconstructed/generated jet."""
+def get_rel_err_find_match(
+    p_target_cartesian: torch.Tensor, 
+    p_recons_cartesian: torch.Tensor, 
+    p_target_polar: torch.Tensor, 
+    p_recons_polar: torch.Tensor, 
+    gpu: bool = True
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Get relative errors after finding the match 
+    between target and reconstructed/generated jet.
+    
+    :return: (rel_err_cartesian, rel_err_polar)
+    """
     if gpu:
         p_target_cartesian = p_target_cartesian.to(DEVICE)
         p_recons_cartesian = p_recons_cartesian.to(DEVICE)
@@ -199,7 +222,10 @@ def get_rel_err_find_match(p_target_cartesian, p_recons_cartesian, p_target_pola
     return rel_err_cartesian, rel_err_polar
 
 
-def get_min_max(err, alpha=1.5):
+def get_min_max(
+    err: np.ndarray, 
+    alpha: float=1.5
+) -> Tuple[Tuple[float, float], ...]:
     num_components = err.shape[-1]
     means = [np.mean(err[..., i]) for i in range(num_components)]
     std_devs = [np.std(err[..., i]) for i in range(num_components)]
@@ -209,8 +235,12 @@ def get_min_max(err, alpha=1.5):
     ])
 
 
-def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None,
-             p_padded_recons_cartesian=None, p_padded_recons_polar=None):
+def get_bins(
+    rel_err_cartesian: Optional[np.ndarray] = None, 
+    rel_err_polar: Optional[np.ndarray] = None, 
+    p_padded_recons_cartesian: Optional[np.ndarray] = None, 
+    p_padded_recons_polar: Optional[np.ndarray] = None
+):
     """Get bins for reconstruction error plots."""
     if rel_err_cartesian is None:
         cartesian_real_min_max = ((-20, 20),)*3,
@@ -257,11 +287,14 @@ def get_bins(num_bins, rel_err_cartesian=None, rel_err_polar=None,
     return ranges
 
 
-def get_rel_err(target, recons):
+def get_rel_err(
+    target: Union[np.ndarray, torch.Tensor], 
+    recons: Union[np.ndarray, torch.Tensor], 
+):
     return ((recons - target) / target).view(-1, target.shape[-1])
 
 
-def get_legend_rel_err(res):
+def get_legend_rel_err(res: np.ndarray) -> str:
     """Get legend for plots of real/nonpadded particle reconstruction."""
     legend = r'$\mu$: ' + f'{np.mean(res) :.4f},\n'
     legend += r'$\sigma$: ' + f'{np.std(res) :.4f},\n'
@@ -269,7 +302,7 @@ def get_legend_rel_err(res):
     return legend
 
 
-def get_legend_padded(p):
+def get_legend_padded(p: np.ndarray) -> str:
     """Get legend for plots of padded particle reconstruction."""
     legend = r'$\mu$: ' + f'{np.mean(p) :.5f} GeV,\n'
     legend += r'$\sigma$: ' + f'{np.std(p) :.5f} GeV,\n'

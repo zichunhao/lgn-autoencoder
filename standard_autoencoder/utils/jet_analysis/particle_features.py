@@ -1,3 +1,4 @@
+from typing import Optional, Tuple, Union
 from .utils import get_jet_name
 from utils.utils import make_dir
 import os.path as osp
@@ -33,8 +34,17 @@ RANGES_POLAR_REL_COORD = (
 )
 
 
-def plot_p_cartesian(args, p_targets, p_gens, save_dir, epoch=None,
-                     density=False, fill=False, show=False):
+def plot_p_cartesian(
+    p_targets: Union[np.ndarray, Tuple[np.ndarray, np.ndarray, np.ndarray]],
+    p_gens: Union[np.ndarray, Tuple[np.ndarray, np.ndarray, np.ndarray]],
+    save_dir: str,
+    abs_coord: bool,
+    jet_type: str = "",
+    epoch: Optional[int] = None,
+    density: bool = False, 
+    fill: bool = False, 
+    show: bool = False
+) -> None:
     """Plot p distribution in Cartesian coordinates.
 
     Parameters
@@ -59,7 +69,7 @@ def plot_p_cartesian(args, p_targets, p_gens, save_dir, epoch=None,
         Optional, default: `False`
     """
 
-    if args.abs_coord:
+    if abs_coord:
         ranges = RANGES_CARTESIAN_ABS_COORD
         labels = LABELS_CARTESIAN_ABS_COORD
     else:
@@ -91,7 +101,7 @@ def plot_p_cartesian(args, p_targets, p_gens, save_dir, epoch=None,
 
     fig.tight_layout()
 
-    jet_name = get_jet_name(args)
+    jet_name = get_jet_name(jet_type)
     fig.suptitle(fr'Distribution of target and reconstructed particle $p_x$, $p_y$, and $p_z$ of {jet_name} jets', y=1.03)
 
     if epoch is not None:
@@ -101,7 +111,7 @@ def plot_p_cartesian(args, p_targets, p_gens, save_dir, epoch=None,
     else:
         pass  # Save without creating a subdirectory
 
-    filename = f'p_cartesian_{args.jet_type}_jet'
+    filename = f'p_cartesian_{jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
     if density:
@@ -115,8 +125,17 @@ def plot_p_cartesian(args, p_targets, p_gens, save_dir, epoch=None,
     plt.close()
 
 
-def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir,
-                 epoch=None, density=False, fill=True, show=False):
+def plot_p_polar(
+    p_polar_target: Union[np.ndarray, Tuple[np.ndarray, np.ndarray, np.ndarray]],
+    p_polar_gen: Union[np.ndarray, Tuple[np.ndarray, np.ndarray, np.ndarray]],
+    save_dir: str,
+    abs_coord: bool,
+    jet_type: str = "",
+    epoch: Optional[int] = None, 
+    density: bool = False, 
+    fill: bool = True, 
+    show: bool = False
+) -> None:
     """Plot p distribution in polar coordinates (pt, eta, phi)
 
     Parameters
@@ -141,12 +160,12 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir,
         Optional, default: `False`
     """
 
-    pt_target, eta_target, phi_target = p_polar_target
-    pt_gen, eta_gen, phi_gen = p_polar_gen
+    # pt_target, eta_target, phi_target = p_polar_target
+    # pt_gen, eta_gen, phi_gen = p_polar_gen
 
     fig, axs = plt.subplots(1, 3, figsize=FIGSIZE, sharey=False)
 
-    if args.abs_coord:
+    if abs_coord:
         ranges = RANGES_POLAR_ABS_COORD
         labels = LABELS_POLAR_ABS_COORD
     else:
@@ -177,8 +196,8 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir,
 
     fig.tight_layout()
 
-    jet_name = get_jet_name(args)
-    if args.abs_coord:
+    jet_name = get_jet_name(jet_type)
+    if abs_coord:
         fig.suptitle(r'Distribution of target and reconstructed particle $p_\mathrm{T}$, $\eta$, and $\phi$ ' +
                      f'of {jet_name} jets', y=1.03)
     else:
@@ -192,7 +211,7 @@ def plot_p_polar(args, p_polar_target, p_polar_gen, save_dir,
     else:
         pass  # Save without creating a subdirectory
 
-    filename = f'p_polar_{args.jet_type}_jet'
+    filename = f'p_polar_{jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
     if density:
