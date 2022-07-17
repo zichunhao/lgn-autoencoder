@@ -1,3 +1,4 @@
+from typing import Optional
 import torch
 from lgn.cg_lib.zonal_functions import p_cplx_to_rep, repdot
 from utils.utils import get_p_polar
@@ -235,3 +236,34 @@ def pairwise_distance_sq_real(p, q, eps=1e-16, device=torch.device('cuda' if tor
         dist = norm_sq_p3(p1-q1)
 
     return torch.sqrt(dist + eps)
+
+
+def cdist(
+    x1: torch.Tensor, 
+    x2: torch.Tensor, 
+    p: int = 2,
+    eps: Optional[float] = 1e-16,
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+) -> torch.Tensor:
+    if eps is None:
+        return torch.cdist(x1, x2, p=2)
+    
+    x1 = x1.to(device)
+    x2 = x2.to(device)
+    
+    if x1.shape[-1] == 4 and x2.shape[-1] == 4:
+        diffs = - (torch.unsqueeze(x1[..., 1:], -2) -
+                   torch.unsqueeze(x2[..., 1:], -3))
+    elif x1.shape[-1] == 3 and x2.shape[-1] == 3:
+        diffs = - (torch.unsqueeze(x1, -2) -
+                   torch.unsqueeze(x2, -3))
+    else:
+        raise ValueError(
+            f"x1 and x2 must be both 3- or 4-vectors. Found: {x1.shape[-1]=} and {x2.shape[-1]=}."
+        )
+    if (p % 2 == 0):
+        dist_sq = torch.sum(diffs ** p, dim=-1)
+    else:
+        dist_sq = torch.sum(torch.abs(diffs + eps) ** p, dim=-1)
+    return torch.pow(dist_sq + eps, 1/p)
+    

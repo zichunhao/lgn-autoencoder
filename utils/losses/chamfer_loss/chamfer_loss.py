@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from .distance_sq import convert_to_complex, pairwise_distance_sq, norm_sq
+from .distance_sq import convert_to_complex, pairwise_distance_sq, norm_sq, cdist
 
 
 class ChamferLoss(nn.Module):
@@ -41,7 +41,8 @@ class ChamferLoss(nn.Module):
 
         self.loss_norm_choice = loss_norm_choice
         self.im = im
-        self.device = device if (device is not None) else torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = device if (device is not None) else torch.device(
+            'cuda' if torch.cuda.is_available() else 'cpu')
 
     def forward(self, p, q, jet_features=False, take_sqrt=True):
         """
@@ -61,7 +62,9 @@ class ChamferLoss(nn.Module):
         """
 
         if (len(p.shape) != 4) or (p.shape[0] != 2):
-            raise ValueError(f'Invalid dimension: {p.shape}. The first argument should be complex generated momenta.')
+            raise ValueError(
+                f'Invalid dimension: {p.shape}. The first argument should be complex generated momenta.'
+            )
         if self.im:
             # complexify if necessary
             if len(q.shape) == 3:
@@ -82,7 +85,16 @@ class ChamferLoss(nn.Module):
                 p3 = p[..., 1:]
             if q.shape[-1] == 4:
                 q3 = q[..., 1:]
-            dist = torch.cdist(p3, q3, p=2)
+            dist = cdist(p3, q3, device=self.device)
+
+            # (2, batch_size, num_particles, 3)
+            if (len(p3.shape) == 4) and (len(q3.shape) == 4):
+                if not self.im:
+                    dist = dist[0]
+                else:
+                    dist = torch.sqrt(
+                        dist[0]**2 + dist[1]**2 + 1e-16
+                    )
 
         else:  # Other cases
             dist = pairwise_distance_sq(
@@ -92,10 +104,11 @@ class ChamferLoss(nn.Module):
                 device=self.device
             )
             if self.loss_norm_choice == 'p3':  # Euclidean norm
-                dist = torch.sqrt(dist + 1e-12)
+                dist = torch.sqrt(dist + 1e-16)
 
         min_dist_pq = torch.min(dist, dim=-1)
-        min_dist_qp = torch.min(dist, dim=-2)  # Equivalent to permuting the last two axis
+        # Equivalent to permuting the last two axis
+        min_dist_qp = torch.min(dist, dim=-2)
 
         # Adapted from Steven Tsan
         # https://github.com/stsan9/AnomalyDetection4Jets/blob/b31a9a2af927a79093079911070a45f14a833c14/code/loss_util.py#L27-L31
