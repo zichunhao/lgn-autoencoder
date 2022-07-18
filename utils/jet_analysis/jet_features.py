@@ -45,31 +45,31 @@ def plot_jet_p_cartesian(
    jet_type: str = "",
    epoch: Optional[int] = None, 
    density: bool = False, 
-   fill: bool = True, 
+   fill: bool = False, 
    show: bool = False
 ):
     """Plot jet features (m, px, py, pz) distribution.
 
-    Parameters
-    ----------
-    jet_features_target : `numpy.ndarray`
-        The target jet momenta, with shape (num_jets, 4).
-    jet_features_recons : `numpy.ndarray`
-        The generated/reconstructed jet momenta, with shape (num_jets, 4).
-    save_dir : str
-        The directory to save the figure.
-    epoch : int
-        The epoch number of the evaluated model.
-        Optional, default: `None`
-    density : bool
-        Whether to plot distribution density instead of absolute number.
-        Optional, default: `False`
-    fill : bool
-        Whether bins are filled.
-        Optional, default: `False`
-    show : bool
-        Whether to show plot.
-        Optional, default: `False`
+    :param jet_features_target: target jet momenta, with shape (num_jets, 4).
+    :type jet_features_target: np.ndarray
+    :param jet_features_recons: enerated/reconstructed jet momenta, with shape (num_jets, 4).
+    :type jet_features_recons: np.ndarray
+    :param abs_coord: whether to use absolute coordinates.
+        If False, use relative coordinates.
+    :type abs_coord: bool
+    :param save_dir: directory to save the figure.
+    :type save_dir: str
+    :param jet_type: the string description of jet, defaults to "".
+        Example: 'g' for gluon jets and 't' for top quark jets.
+    :type jet_type: str, optional
+    :param epoch: current epoch, defaults to None
+    :type epoch: Optional[int], optional
+    :param density: whether to plot distribution density, defaults to False.
+    :type density: bool, optional
+    :param fill: whether bins are filled., defaults to True
+    :type fill: bool, optional
+    :param show: whether to show plot, defaults to False
+    :type show: bool, optional
     """
     if abs_coord:
         ranges = RANGES_CARTESIAN_ABS_COORD
@@ -144,27 +144,29 @@ def plot_jet_p_polar(
 ) -> None:
     """Plot jet features (m, pt, eta, phi) distribution.
 
-    Parameters
-    ----------
-    jet_features_target : `numpy.ndarray`
-        The target jet data, with shape (num_particles, 4).
-    jet_features_recons : `numpy.ndarray`
-        The reconstructed jet data, with shape (num_particles, 4).
-    save_dir : str
-        The directory to save the figure.
-    epoch : int
-        The epoch number of the evaluated model.
-        Optional, default: `None`
-    density : bool
-        Whether to plot distribution density instead of absolute number.
-        Optional, default: `False`
-    fill : bool
-        Whether bins are filled.
-        Optional, default: `False`
-    show : bool
-        Whether to show plot.
-        Optional, default: `False`
+    :param jet_features_target: target jet momenta, with shape (num_jets, 4).
+    :type jet_features_target: np.ndarray
+    :param jet_features_recons: enerated/reconstructed jet momenta, with shape (num_jets, 4).
+    :type jet_features_recons: np.ndarray
+    :param abs_coord: whether to use absolute coordinates.
+        If False, use relative coordinates.
+    :type abs_coord: bool
+    :param save_dir: directory to save the figure.
+    :type save_dir: str
+    :param jet_type: the string description of jet, defaults to "".
+        Example: 'g' for gluon jets and 't' for top quark jets.
+    :type jet_type: str, optional
+    :param epoch: current epoch, defaults to None
+    :type epoch: Optional[int], optional
+    :param density: whether to plot distribution density, defaults to False.
+    :type density: bool, optional
+    :param fill: whether bins are filled., defaults to True
+    :type fill: bool, optional
+    :param show: whether to show plot, defaults to False
+    :type show: bool, optional
     """
+    
+    
     if abs_coord:
         ranges = RANGES_POLAR_ABS_COORD
         names = LABELS_POLAR_ABS_COORD

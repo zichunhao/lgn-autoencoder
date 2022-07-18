@@ -1,6 +1,7 @@
 """
 Slightly adapted from Raghav Kansal's code (https://github.com/rkansal47/emd_loss)
 """
+from typing import Optional, Tuple, Union
 import torch
 import torch.nn as nn
 from utils.losses.emd_loss.qpth.qp import QPFunction
@@ -8,7 +9,16 @@ from utils.utils import get_p_polar
 
 
 # derived from https://github.com/icoz69/DeepEMD/blob/master/Models/models/emd_utils.py
-def emd_inference_qpth(distance_matrix, weight1, weight2, device, form='QP', l2_strength=0.0001, add_energy_diff=True, eps=1e-12):
+def emd_inference_qpth(
+    distance_matrix: torch.Tensor, 
+    weight1: torch.Tensor, 
+    weight2: torch.Tensor, 
+    device: torch.device, 
+    form: str = 'QP', 
+    l2_strength: float = 0.0001, 
+    add_energy_diff: bool = True, 
+    eps: float=1e-12
+) -> Tuple[torch.Tensor, torch.Tensor]:
     """
     to use the QP solver QPTH to derive EMD (LP problem),
     one can transform the LP problem to QP,
@@ -74,8 +84,16 @@ def emd_inference_qpth(distance_matrix, weight1, weight2, device, form='QP', l2_
     return emd_score, flow.view(-1, nelement_weight1, nelement_weight2)
 
 
-def emd_loss(jet_out, jet_target, eps=1e-12, form='L2', l2_strength=0.0001,
-             return_flow=False, device=None):
+def emd_loss(
+    jet_out: torch.Tensor, 
+    jet_target: torch.Tensor, 
+    eps: float = 1e-12, 
+    form: str = 'L2', 
+    l2_strength: float = 0.0001,
+    return_flow: bool = False, 
+    device: Optional[torch.device] = None
+) -> Union[Tuple[torch.Tensor, torch.Tensor], 
+         torch.Tensor]:
     """
     batched Energy Mover's Distance between jet_out and jet_target
 

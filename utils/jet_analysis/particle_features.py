@@ -43,32 +43,34 @@ def plot_p_cartesian(
     jet_type : str = "",
     epoch: Optional[int] = None, 
     density: bool = False, 
-    fill: bool = True, 
+    fill: bool = False, 
     show: bool = False
 ) -> None:
     """Plot p distribution in Cartesian coordinates.
 
-    Parameters
-    ----------
-    p3_targets : iterable of `numpy.ndarray` or `numpy.ndarray`
-        The target jet momentum components, each with shape (num_particles, 3).
-    p3_recons : iterable of `numpy.ndarray` or `numpy.ndarray`
-        The reconstructed jet momentum components, each with shape (num_particles, 3).
-    save_dir : str
-        The directory to save the figure.
-    epoch : int
-        The epoch number of the evaluated model.
-        Optional, default: `None`
-    density : bool
-        Whether to plot distribution density instead of absolute number.
-        Optional, default: `False`
-    fill : bool
-        Whether bins are filled.
-        Optional, default: `False`
-    show : bool
-        Whether to show plot.
-        Optional, default: `False`
-    """
+    :param p3_targets: target jet momentum components, each with shape (num_particles, 3).
+    :type p3_targets: np.ndarray or a tuple of 3 np.ndarray
+    :param p3_recons: _description_
+    :type p3_recons: np.ndarray or a tuple of 3 np.ndarray
+    :param abs_coord: whether to use absolute or relative coordinates.
+        If False, use relative coordinates.
+    :type abs_coord: bool
+    :param save_dir: directory to save the plots.
+    :type save_dir: str
+    :param jet_type: string description of the jet, defaults to ""
+        Example: 'g' for gluon jets and 't' for top quark jets.
+    :type jet_type: str, optional
+    :param epoch: current epoch, defaults to None
+    :type epoch: Optional[int], optional
+    :param density: whether to plot distribution density, defaults to False
+    :type density: bool, optional
+    :param fill: whether to fill the bins, defaults to True
+    :type fill: bool, optional
+    :param show: whether to show the plot, defaults to False
+    :type show: bool, optional
+    :raises ValueError: if p3_targets and p3_recons do not consist of 3-vectors.
+    :raises TypeError: if p3_targets or p3_recons is not an np.ndarray or a tuple of 3 np.ndarray.
+    """    
 
     if abs_coord:
         ranges = RANGES_CARTESIAN_ABS_COORD
@@ -166,32 +168,34 @@ def plot_p_polar(
     jet_type: str = "",
     epoch: Optional[int] = None, 
     density: bool = False, 
-    fill: bool = True, 
+    fill: bool = False, 
     show: bool = False
 ) -> None:
     """Plot p distribution in polar coordinates (pt, eta, phi)
 
-    Parameters
-    ----------
-    p3_polar_target : (tuple of 3 `numpy.ndarray`) or (`numpy.ndarray`)
-        The target jet data in polar coordinates (pt, eta, phi).
-    p3_polar_recons : (tuple of 3 `numpy.ndarray`) or (`numpy.ndarray`)
-        The reconstructed jet data in polar coordinates (pt, eta, phi).
-    save_dir : str
-        The directory to save the figure.
-    epoch : int
-        The epoch number of the evaluated model.
-        Optional, default: `None`
-    density : bool
-        Whether to plot distribution density instead of absolute number.
-        Optional, default: `False`
-    fill : bool
-        Whether bins are filled.
-        Optional, default: `False`
-    show : bool
-        Whether to show plot.
-        Optional, default: `False`
-    """
+    :param p3_polar_target: target jet data in polar coordinates (pt, eta, phi).
+    :type p3_polar_target: np.ndarray or a tuple of 3 np.ndarray
+    :param p3_polar_recons: reconstructed jet data in polar coordinates (pt, eta, phi).
+    :type p3_polar_recons: np.ndarray or a tuple of 3 np.ndarray
+    :param abs_coord: whether to use absolute or relative coordinates.
+        If False, use relative coordinates.
+    :type abs_coord: bool
+    :param save_dir: directory to save the plots.
+    :type save_dir: str
+    :param jet_type: string description of the jet, defaults to ""
+        Example: 'g' for gluon jets and 't' for top quark jets.
+    :type jet_type: str, optional
+    :param epoch: current epoch, defaults to None
+    :type epoch: Optional[int], optional
+    :param density: whether to plot distribution density, defaults to False
+    :type density: bool, optional
+    :param fill: whether to fill the bins, defaults to True
+    :type fill: bool, optional
+    :param show: whether to show the plot, defaults to False
+    :type show: bool, optional
+    :raises ValueError: if p3_targets and p3_recons do not consist of 3-vectors.
+    :raises TypeError: if p3_targets or p3_recons is not an np.ndarray or a tuple of 3 np.ndarray.
+    """    
     
     if isinstance(p3_polar_target, np.ndarray):
         if p3_polar_target.shape[-1] != 3:
@@ -278,7 +282,7 @@ def plot_p_polar(
 
     filename = f'p_polar_{jet_type}_jet'
     if epoch is not None:
-        filename = f'{filename}_epoch{epoch+1}'
+        filename = f'{filename}_epoch_{epoch+1}'
     if density:
         filename = f'{filename}_density'
     if fill:

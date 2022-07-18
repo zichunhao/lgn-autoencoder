@@ -1,4 +1,7 @@
+from argparse import Namespace
+from typing import Optional, Tuple
 from lgn.models import LGNEncoder, LGNDecoder
+from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from utils.data.dataset import JetDataset
 from utils.utils import get_eps
@@ -7,7 +10,12 @@ import logging
 import torch
 
 
-def initialize_data(path, batch_size, train_fraction, num_val=None):
+def initialize_data(
+    path: str, 
+    batch_size: int, 
+    train_fraction: float, 
+    num_val: Optional[int] = None
+) -> Tuple[DataLoader, DataLoader]:
     data = torch.load(path)
 
     jet_data = JetDataset(data, shuffle=True)  # The original data is not shuffled yet
@@ -40,13 +48,18 @@ def initialize_data(path, batch_size, train_fraction, num_val=None):
     return train_loader, valid_loader
 
 
-def initialize_test_data(path, batch_size):
+def initialize_test_data(
+    path: str, 
+    batch_size: int
+) -> DataLoader:
     data = torch.load(path)
     jet_data = JetDataset(data, shuffle=False)
     return DataLoader(jet_data, batch_size=batch_size, shuffle=False)
 
 
-def initialize_autoencoder(args):
+def initialize_autoencoder(
+    args: Namespace
+) -> Tuple[LGNEncoder, LGNDecoder]:
     encoder = LGNEncoder(
         num_input_particles=args.num_jet_particles,
         tau_input_scalars=args.tau_jet_scalars,
@@ -86,7 +99,11 @@ def initialize_autoencoder(args):
     return encoder, decoder
 
 
-def initialize_optimizers(args, encoder, decoder):
+def initialize_optimizers(
+    args: Namespace, 
+    encoder: LGNEncoder, 
+    decoder: LGNDecoder
+) -> Tuple[Optimizer, Optimizer]:
     if args.optimizer.lower() == 'adam':
         optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.lr)
         optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.lr)

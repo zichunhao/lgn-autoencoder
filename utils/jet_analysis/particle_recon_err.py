@@ -31,31 +31,32 @@ def plot_particle_recon_err(
     epoch: Optional[int] = None, 
     show: bool = False
 ) -> None:
-    """Plot the error for reconstruction of particle features.
+    """
+    Plot the error for reconstruction of particle features.
         - For real/nonpadded particles, relative error will be plotted.
         - For padded particles, distribution will be plotted.
 
-    Parameters
-    ----------
-    p_target : `torch.Tensor` or `numpy.ndarray`
-        Target particle momenta, in Cartesian coordinates, of target real/nonpadded particles.
-    p_recons : `torch.Tensor` or `numpy.ndarray`
-        Reconstructed particle momenta, in Cartesian coordinates, of real/nonpadded particles.
-    find_match : bool, optional
-        Whether matching needs to be done. Used for permutation invariant loss.
-        Default: True
-    ranges : tuple of tuple of tuple of tuple of np.ndarray
-        Ranges of plots: ((ranges_rel_err_cartesian, ranges_padded_recons_cartesian), (ranges_rel_err_polar, ranges_padded_recons_polar)),
+    :param p_target: target particle momenta, in Cartesian coordinates, of target real/nonpadded particles.
+    :type p_target: Union[np.ndarray, torch.Tensor]
+    :param p_recons: reconstructed particle momenta, in Cartesian coordinates, of real/nonpadded particles.
+    :type p_recons: Union[np.ndarray, torch.Tensor]
+    :param abs_coord: whether to use absolute coordinates.
+        If False, use relative coordinates.
+    :type abs_coord: bool
+    :param custom_particle_recons_ranges: whether to use a custom ranges for particle reconstruction.
+    :type custom_particle_recons_ranges: bool
+    :param find_match: whether , defaults to True
+    :type find_match: bool, optional
+    :param ranges: Ranges of plots: ((ranges_rel_err_cartesian, ranges_padded_recons_cartesian), (ranges_rel_err_polar, ranges_padded_recons_polar)),
         where each of ranges_rel_err_cartesian, ranges_padded_recons_cartesian,
-        ranges_rel_err_polar, and ranges_padded_recons_polar is a tuple of numpy.ndarray.
-    save_dir : str, optional
-        Default: None
-    epoch : None or int, optional
-        Default: None
-    show : bool, optional
-        Whether to show plot.
-        Default: False
-    """
+        ranges_rel_err_polar, and ranges_padded_recons_polar is a tuple of numpy.ndarray, defaults to None.
+    :param save_dir: directory to save plots, defaults to None
+    :type save_dir: Optional[str], optional
+    :param epoch: current epoch, defaults to None
+    :type epoch: Optional[int], optional
+    :param show: whether to show plot, defaults to False
+    :type show: bool, optional
+    """    
 
     # Get inputs
     p_target_cartesian = p_target if (p_target.shape[-1] == 3) else p_target[..., 1:]

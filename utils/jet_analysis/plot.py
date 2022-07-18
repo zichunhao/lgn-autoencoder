@@ -1,3 +1,8 @@
+from argparse import Namespace
+from typing import Optional, Tuple
+
+import torch
+import numpy as np
 from .jet_features import plot_jet_p_cartesian, plot_jet_p_polar
 from .particle_features import plot_p_cartesian, plot_p_polar
 from .jet_images import plot_jet_image
@@ -9,7 +14,36 @@ from .jet_recon_err import plot_jet_recon_err
 from utils.utils import get_eps
 
 
-def plot_p(args, p4_target, p4_recons, save_dir, cutoff=1e-6, epoch=None, show=False):
+def plot_p(
+    args: Namespace, 
+    p4_target: torch.Tensor, 
+    p4_recons: torch.Tensor, 
+    save_dir: str, 
+    cutoff: float = 1e-6, 
+    epoch: Optional[int] = None, 
+    show: bool = False
+) -> Tuple[np.ndarray, ...]:
+    """
+    Plot particle features, jet features, reconstruction errors, and jet images.
+
+    :param p4_target: target jets with shape (num_jets, num_particles, 4)
+    :type p4_target: torch.Tensor
+    :param p4_recons: generated/reconstructed jets with shape (num_jets, num_particles, 4)
+    :type p4_recons: torch.Tensor
+    :param save_dir: directory to save plots to.
+    :type save_dir: str
+    :param cutoff: cutoff value for |p| = sqrt(px^2 + py^2 + pz^2), defaults to 1e-6.
+        Particle momentum lower than `cutoff` will be considered padded particles and thus dropped.
+        Used for plotting particle distributions to avoid big spikes due to padding.
+        Default: 1e-6
+    :type cutoff: float, optional
+    :param epoch: current epoch, defaults to None
+    :type epoch: Optional[int], optional
+    :param show: whether to show plot, defaults to False
+    :type show: bool, optional
+    :return: the jet images.
+    :rtype: _type_
+    """    
     """Plot particle features, jet features, and jet images.
 
     Parameters
