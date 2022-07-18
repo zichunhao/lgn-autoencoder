@@ -1,16 +1,18 @@
+from argparse import Namespace
 import os
 import os.path as osp
+from typing import List, Optional, Tuple, Union
 import torch
 import matplotlib.pyplot as plt
 import glob
 
 
-def create_model_folder(args):
+def create_model_folder(args: Namespace) -> str:
     make_dir(args.save_dir)
     return make_dir(osp.join(args.save_dir, get_model_fname(args)))
 
 
-def get_model_fname(args):
+def get_model_fname(args: Namespace) -> str:
     encoder_cg = ''
     decoder_cg = ''
     for i in range(len(args.encoder_num_channels)):
@@ -23,12 +25,18 @@ def get_model_fname(args):
     return model_fname
 
 
-def make_dir(path):
+def make_dir(path: str) -> str:
     os.makedirs(path, exist_ok=True)
     return path
 
 
-def save_data(data, data_name, is_train, outpath, epoch=-1):
+def save_data(
+    data: Union[Tuple[float], List[float]],
+    data_name: str, 
+    is_train: bool, 
+    outpath: str, 
+    epoch: int = -1
+):
     '''
     Save data like losses and dts. If epoch is -1, the data will be considered a global data, such as
     the losses over all epochs.
@@ -56,7 +64,13 @@ def save_data(data, data_name, is_train, outpath, epoch=-1):
             torch.save(data, osp.join(outpath, f'valid_{data_name}.pkl'))
 
 
-def plot_eval_results(args, data, data_name, outpath, start=None):
+def plot_eval_results(
+    args: Namespace, 
+    data: Union[Tuple[float], List[float]], 
+    data_name: str, 
+    outpath: str, 
+    start: Optional[int] = None
+):
     '''
     Plot evaluation results
     '''
@@ -91,14 +105,15 @@ def plot_eval_results(args, data, data_name, outpath, start=None):
     plt.close()
 
 
-def get_eps(args):
-    if args.dtype in [torch.float64, torch.double]:
-        return 1e-16
-    else:
-        return 1e-12
+def get_eps(args: Namespace) -> float:
+    return 1e-16 if args.dtype in (torch.float64, torch.double) else 1e-12
 
 
-def get_p_polar(p, eps=1e-16, keep_p0=False):
+def get_p_polar(
+    p: torch.Tensor, 
+    eps: float = 1e-16, 
+    keep_p0: bool = False
+) -> torch.Tensor:
     """
     (E, px, py, pz) -> (eta, phi, pt) or (E, eta, phi, pt)
 
@@ -128,7 +143,13 @@ def arcsinh(z):
     return torch.log(z + torch.sqrt(1 + torch.pow(z, 2)))
 
 
-def get_compression_rate(ls, lv, map_to_latent, vec_dim=4, num_particles=30):
+def get_compression_rate(
+    ls: int, 
+    lv: int, 
+    map_to_latent: str, 
+    vec_dim: int = 4, 
+    num_particles: int = 30
+) -> float:
     """
     Get the compression rate based on the multiplicities of scalars and vectors in the latent space.
     """
@@ -140,7 +161,10 @@ def get_compression_rate(ls, lv, map_to_latent, vec_dim=4, num_particles=30):
     return ratio
 
 
-def latest_epoch(model_path, num=-1):
+def latest_epoch(
+    model_path: str, 
+    num: int = -1
+) -> int:
     path = osp.join(model_path, 'weights_decoder/*pth')
     file_list = glob.glob(path)
     epochs = [[int(s) for s in filename.split('_') if s.isdigit()] for filename in file_list]

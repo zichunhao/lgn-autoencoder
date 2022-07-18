@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 
-def get_bool(arg):
+def get_bool(arg: argparse.Namespace) -> bool:
     """Parse boolean from input string.
     Adapted from https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     """
@@ -14,13 +14,15 @@ def get_bool(arg):
     elif arg.lower() in ('false', 'f', '0'):
         return False
     else:
-        raise argparse.ArgumentTypeError("Boolean value expected. "
-                                         "Options: For True, anything in ('true', 't', '1') can be used. "
-                                         "For False, anything in ('false', 'f', '0') can be used. "
-                                         "Cases are ignored.")
+        raise argparse.ArgumentTypeError(
+            "Boolean value expected. "
+            "Options: For True, anything in ('true', 't', '1') can be used. "
+            "For False, anything in ('false', 'f', '0') can be used. "
+            "Cases are ignored."
+        )
 
 
-def get_device(arg):
+def get_device(arg: argparse.Namespace) -> torch.dtype:
     """Parse torch.device from input string"""
     if arg is None:
         return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -31,7 +33,7 @@ def get_device(arg):
     return device
 
 
-def get_dtype(arg):
+def get_dtype(arg: argparse.Namespace) -> torch.dtype:
     """Parse torch.dtype from input string"""
     if arg is None:
         return torch.float64
@@ -45,7 +47,7 @@ def get_dtype(arg):
     return dtype
 
 
-def parse_model_settings(parser):
+def parse_model_settings(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument('--num-jet-particles', type=int, default=30, metavar='',
                         help='Number of particles per jet (batch) in the input. Default: 30 for the hls4ml 30-p data.')
     parser.add_argument('--tau-jet-scalars', type=int, default=1, metavar='',
@@ -89,7 +91,7 @@ def parse_model_settings(parser):
     return parser
 
 
-def parse_plot_settings(parser):
+def parse_plot_settings(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument('--plot-freq', type=int, default=10, metavar='',
                         help='How frequent to plot. Used when --loss-choice is not EMD. Default: 10.')
     parser.add_argument('--plot-start-epoch', type=int, default=50, metavar='',
@@ -114,7 +116,7 @@ def parse_plot_settings(parser):
     return parser
 
 
-def _parse_particle_recons_err_settings(parser):
+def _parse_particle_recons_err_settings(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument('--custom-particle-recons-ranges', default=False, action='store_true',
                         help='Whether to manually set the ranges of particle reconstruction errors when plotting the histograms. '
                         'Call --custom-particle-recons-ranges to set true.')
@@ -138,7 +140,7 @@ def _parse_particle_recons_err_settings(parser):
     return parser
 
 
-def _parse_jet_recons_err_settings(parser):
+def _parse_jet_recons_err_settings(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument('--custom-jet-recons-ranges', default=False, action='store_true',
                         help='Whether to manually set the ranges of jet reconstruction errors when plotting the histograms. '
                         'Call --custom-jet-recons-ranges to set true.')
@@ -153,7 +155,7 @@ def _parse_jet_recons_err_settings(parser):
     return parser
 
 
-def parse_covariance_test_settings(parser):
+def parse_covariance_test_settings(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument('--equivariance-test', default=False, action='store_true',
                         help='Whether to take the equivariance test after all trainings on the last model. True only when it is called.'
                         'Default: False.')
@@ -169,7 +171,10 @@ def parse_covariance_test_settings(parser):
     return parser
 
 
-def parse_data_settings(parser, training=True):
+def parse_data_settings(
+    parser: argparse.ArgumentParser, 
+    training: bool = True
+) -> argparse.ArgumentParser:
     parser.add_argument('-j', '--jet-type', type=str, required=True, metavar='',
                         help="The jet type to train. Options: ('g', 'q', 't', 'w', 'z').")
     parser.add_argument('--data-path', type=str, default='hls4ml/g_jets_30p_p4.pt', metavar='',
