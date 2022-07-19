@@ -1,6 +1,12 @@
+from argparse import Namespace
 import logging
 from os import mkdir
+from typing import Optional, Tuple, Union
 import numpy as np
+from lgn.models.lgn_decoder import LGNDecoder
+from lgn.models.lgn_encoder import LGNEncoder
+from torch.utils.data import DataLoader
+from torch.optim import Optimizer
 from utils.jet_analysis import plot_p
 from utils.utils import make_dir, save_data, plot_eval_results, get_eps
 import time
@@ -19,8 +25,41 @@ if not sys.warnoptions:
 BLOW_UP_THRESHOLD = 1e8
 
 
-def train_loop(args, train_loader, valid_loader, encoder, decoder,
-               optimizer_encoder, optimizer_decoder, outpath, device=None):
+def train_loop(
+    args: Namespace, 
+    train_loader: DataLoader, 
+    valid_loader: DataLoader,
+    encoder: LGNEncoder, 
+    decoder: LGNDecoder,
+    optimizer_encoder: Optimizer, 
+    optimizer_decoder: Optimizer, 
+    outpath: str, 
+    device: Optional[torch.device] = None
+) -> int:
+    """Train the autoencoder.
+
+    :type args: Namespace
+    :param train_loader: Dataloader for training data
+    :type train_loader: torch.utils.data.DataLoader
+    :param valid_loader: DataLoader for validation data
+    :type valid_loader: torch.utils.data.DataLoader
+    :param encoder: Encoder model.
+    :type encoder: LGNEncoder
+    :param decoder: Decoder model.
+    :type decoder: LGNDecoder
+    :param optimizer_encoder: Optimizer for encoder.
+    :type optimizer_encoder: torch.optim.Optimizer
+    :param optimizer_decoder: Optimizer for decoder.
+    :type optimizer_decoder: torch.optim.Optimizer
+    :param outpath: Output directory for saving models and results.
+    :type outpath: str
+    :param device: device on which the model is trained and validated, defaults to None.
+        If None, GPU if available, else CPU.
+    :type device: Optional[torch.device], optional
+    :raises ValueError: if args.device is not specified.
+    :return: best epoch (in terms of the validation loss)
+    :rtype: int
+    """
 
     if device is None:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -141,8 +180,19 @@ def train_loop(args, train_loader, valid_loader, encoder, decoder,
     return best_epoch
 
 
-def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
-          epoch, outpath, is_train=True, for_test=False, device=None):
+def train(
+    args: Namespace, 
+    loader: DataLoader, 
+    encoder: LGNEncoder, 
+    decoder: LGNDecoder, 
+    optimizer_encoder: Optimizer, 
+    optimizer_decoder: Optimizer,
+    epoch: int, 
+    outpath: dir, 
+    is_train: bool = True, 
+    for_test: bool = False, 
+    device: torch.device = None
+):
     
     if args.normalize:
         eps = get_eps(args)
@@ -244,7 +294,16 @@ def train(args, loader, encoder, decoder, optimizer_encoder, optimizer_decoder,
 
 
 @torch.no_grad()
-def validate(args, loader, encoder, decoder, epoch, outpath, device, for_test=False):
+def validate(
+    args: Namespace, 
+    loader: DataLoader, 
+    encoder: LGNEncoder, 
+    decoder: LGNDecoder, 
+    epoch: int, 
+    outpath: str, 
+    device: torch.device, 
+    for_test: bool = False
+):
     return train(
         args, loader=loader, encoder=encoder, decoder=decoder,
         optimizer_encoder=None, optimizer_decoder=None,
@@ -252,7 +311,11 @@ def validate(args, loader, encoder, decoder, epoch, outpath, device, for_test=Fa
     )
 
 
-def get_loss(args, p4_recons, p4_target):
+def get_loss(
+    args: Namespace, 
+    p4_recons: torch.Tensor, 
+    p4_target: torch.Tensor
+) -> torch.Tensor:
     loss_choice = args.loss_choice.lower()
 
     # Chamfer loss
