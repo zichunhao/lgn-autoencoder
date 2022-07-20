@@ -263,7 +263,8 @@ def cdist(
     eps: Optional[float] = 1e-16,
     device: torch.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 ) -> torch.Tensor:
-    """self implemented version of torch.cdist that does not result in gradient clipping by adding eps.
+    """self implemented version of torch.cdist for 3- and 4-vectors
+    that does not result in gradient clipping by adding eps.
 
     :param x1: input tensor of shape :math:`B \times P \times M`
     :type x1: torch.Tensor
@@ -276,7 +277,7 @@ def cdist(
     :type eps: float, optional
     :param device: the device to use, defaults gpu if available or cpu if not
     :type device: torch.device, optional
-    :raises ValueError: _description_
+    :raises ValueError: if x1 or x2 are not 3- or 4-vectors.
     :return: batched the p-norm distance between each pair of the two collections of row vectors.
     :rtype: torch.Tensor
     """
