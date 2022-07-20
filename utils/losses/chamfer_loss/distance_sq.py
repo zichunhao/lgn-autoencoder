@@ -297,8 +297,9 @@ def cdist(
             f"x1 and x2 must be both 3- or 4-vectors. Found: {x1.shape[-1]=} and {x2.shape[-1]=}."
         )
     if (p % 2 == 0):
-        dist_sq = torch.sum(diffs ** p, dim=-1)
+        return torch.sum(diffs ** p, dim=-1)
     else:
-        dist_sq = torch.sum(torch.abs(diffs + eps) ** p, dim=-1)
-    return torch.pow(dist_sq + eps, 1/p)
+        return torch.sum(torch.abs(diffs + eps) ** p, dim=-1)
+        
+    # return torch.pow(dist_sq + eps, 1/p)
     
