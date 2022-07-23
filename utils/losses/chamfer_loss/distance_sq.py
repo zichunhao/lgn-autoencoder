@@ -287,16 +287,14 @@ def cdist(
     x1 = x1.to(device)
     x2 = x2.to(device)
     
-    if x1.shape[-1] == 4 and x2.shape[-1] == 4:
-        diffs = - (torch.unsqueeze(x1[..., 1:], -2) -
-                   torch.unsqueeze(x2[..., 1:], -3))
-    elif x1.shape[-1] == 3 and x2.shape[-1] == 3:
+    if x1.shape[-1] in (3, 4) or x2.shape[-1] in (3, 4):
         diffs = - (torch.unsqueeze(x1, -2) -
                    torch.unsqueeze(x2, -3))
     else:
         raise ValueError(
             f"x1 and x2 must be both 3- or 4-vectors. Found: {x1.shape[-1]=} and {x2.shape[-1]=}."
         )
+    
     if (p % 2 == 0):
         return torch.sum(diffs ** p, dim=-1)
     else:

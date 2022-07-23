@@ -60,8 +60,7 @@ class ChamferLoss(nn.Module):
         self, 
         p: torch.Tensor, 
         q: torch.Tensor, 
-        jet_features: bool = False, 
-        take_sqrt: bool = True
+        jet_features: bool = False
     ) -> torch.Tensor:
         """The forward pass to compute the chamfer loss of the point-cloud like jets.
 
@@ -74,44 +73,49 @@ class ChamferLoss(nn.Module):
         :param jet_features: whether the differences in jet momenta 
         are taken into account, defaults to False
         :type jet_features: bool, optional
-        :param take_sqrt: ether to take the square root of the loss, defaults to True.
-            Used only when `self.loss_norm_choice` is 'p3'.
         :type take_sqrt: bool, optional
-        :return: chamfer loss.
+        :raises ValueError: if p or q are not 3- or 4- vectors.
+        :raises ValueError: if p or q do not have dimensions (2, batch_size, num_particles, 4) or (batch_size, num_particles, 4)
+        :return: chamfer loss between p and q.
         :rtype: torch.Tensor
         """
-
-        # if (len(p.shape) != 4) or (p.shape[0] != 2):
-        #     raise ValueError(
-        #         f'Invalid dimension: {p.shape}. The first argument should be complex generated momenta.'
-        #     )
-        if self.im:
-            # complexify if necessary
-            if len(q.shape) == 3:
+                
+        if len(p.shape) == 4 and p.shape[0] == 2:
+            if not self.im:
+                p = p[0]
+        elif len(p.shape) == 3:
+            if self.im:
                 p = convert_to_complex(p)
-            if len(q.shape) == 3:
+        else:
+            raise ValueError(f'Invalid dimension: {p.shape=}.')
+        
+        if len(q.shape) == 4 and q.shape[0] == 2:
+            if not self.im:
+                q = q[0]
+        elif len(q.shape) == 3:
+            if self.im:
                 q = convert_to_complex(q)
         else:
-            # take the real part if necessary
-            if len(p.shape) == 4:
-                p = p[0]
-            if len(q.shape) == 4:
-                p = q[0]
+            raise ValueError(f'Invalid dimension: {q.shape=}.')
 
         # standard Euclidean distance
-        if ('p3' in self.loss_norm_choice.lower()) and (take_sqrt and not self.im):
+        if ('p3' in self.loss_norm_choice.lower()):
             # Take (px, py, pz) from (E, px, py, pz) if necessary
             if p.shape[-1] == 4:
                 p3 = p[..., 1:]
+            else:
+                raise ValueError(f'p must be 4-vectors. Found: {p.shape[-1]=}')
             if q.shape[-1] == 4:
                 q3 = q[..., 1:]
+            else:
+                raise ValueError(f'q must be 4-vectors. Found: {q.shape[-1]=}')
+            
             dist = cdist(p3, q3, device=self.device)
-
             # (2, batch_size, num_particles, 3)
             if (len(p3.shape) == 4) and (len(q3.shape) == 4):
                 if not self.im:
                     dist = dist[0]
-                else:
+                else:  # norm
                     dist = torch.sqrt(
                         dist[0]**2 + dist[1]**2 + 1e-16
                     )
@@ -126,19 +130,19 @@ class ChamferLoss(nn.Module):
             if self.loss_norm_choice == 'p3':  # Euclidean norm
                 dist = torch.sqrt(dist + 1e-16)
 
-        min_dist_pq = torch.min(dist, dim=-1)
+        # Computer chamfer loss
+        min_dist_pq = torch.min(dist, dim=-1).values
         # Equivalent to permuting the last two axis
-        min_dist_qp = torch.min(dist, dim=-2)
+        min_dist_qp = torch.min(dist, dim=-2).values
 
         # Adapted from Steven Tsan
         # https://github.com/stsan9/AnomalyDetection4Jets/blob/b31a9a2af927a79093079911070a45f14a833c14/code/loss_util.py#L27-L31
-        chamfer_loss = torch.sum((min_dist_pq.values + min_dist_qp.values) / 2)
+        chamfer_loss = torch.sum((min_dist_pq + min_dist_qp) / 2)
 
         if jet_features:
             jet_p = torch.sum(p, dim=-2)
             jet_q = torch.sum(q, dim=-2)
             jet_loss = norm_sq(jet_p - jet_q).sum()
+            return chamfer_loss + jet_loss
         else:
-            jet_loss = 0
-
-        return chamfer_loss + jet_loss
+            return chamfer_loss
