@@ -43,30 +43,7 @@ def plot_p(
     :type show: bool, optional
     :return: the jet images.
     :rtype: _type_
-    """    
-    """Plot particle features, jet features, and jet images.
-
-    Parameters
-    ----------
-    p4_target :  `torch.Tensor`
-        The target jets.
-        Shape: (num_jets, num_particles, 4)
-    p4_recons :  `torch.Tensor`
-        The generated/reconstructed jets by model.
-        Shape: (num_jets, num_particles, 4)
-    save_dir : str
-        The saving directories for figures.
-    cutoff : float, optional
-        The cutoff value for |p| = sqrt(px^2 + py^2 + pz^2).
-        Particle momentum lower than `cutoff` will be considered padded particles and thus dropped.
-        Default: 1e-6
-    epoch : int, optional
-        The epoch number.
-        Default: None
-    show : bool, optional
-        Whether to show plots.
-        Default: False
-    """
+    """ 
 
     EPS = get_eps(args)
     

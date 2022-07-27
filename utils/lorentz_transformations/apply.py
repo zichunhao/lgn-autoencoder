@@ -36,8 +36,10 @@ def apply_lorentz_transformation(
             p4 = torch.cat((E, p4), dim=-1)
         else:
             raise ValueError(f"p4 must be 4-vectors. Found: {p4.shape[-1]=}")
-    else:
-        raise ValueError(f"p4 must be 4-vectors. Found: {p4.shape[-1]=}")
+    else:  # correct dimensions
+        pass
+    
+    mat = mat.to(p4.device, p4.dtype)
 
     # apply transformation
     if len(p4.shape) == 3:  # (batch_size, num_particles, 4)

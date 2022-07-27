@@ -25,23 +25,7 @@ def plot_jet_image(
     vmin: bool = 1e-8, 
     show: bool = False
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Plot average jet image and one-to-one jet image
-
-    Parameters
-    ----------
-    p_recons : np.ndarray
-        Generated/reconstructed jets by the model in polar coordinates (pt, eta, phi).
-        Shape : (num_jets, num_particles, 3)
-    save_dir : str
-        Parent directory for plots.
-    epoch : int
-        The current epoch.
-    same_norm : bool, optional
-        Whether to use the same normalization.
-        If true, reconstructed jets will be normalized based on the target.
-        Default: True
-    show : bool, optional
-        Whether to show jet images.
+    """Plot average jet image and one-to-one jet images
 
     :param p_target: target jets in polar coordinates (pt, eta, phi).
         Shape : (num_jets, num_particles, 3)
@@ -127,7 +111,7 @@ def plot_jet_image(
     cm.set_under(color='white')
 
     for i, axs_row in enumerate(axs):
-        if i == 0:
+        if i == 0:  # average jet image
             from matplotlib.colors import LogNorm
             target = axs_row[0].imshow(
                 target_pix_average, 
@@ -284,25 +268,6 @@ def get_average_jet_image(
 ):
     """Get the average jet image from a collection of jets.
 
-    Parameters
-    ----------
-    jets : `numpy.ndarray` or `torch.Tensor`
-        A collection of jets in polar coordinates.
-    maxR : float
-        Maximum radius.
-        Default: 0.5
-    npix : int
-        Number of pixels.
-        Default: 64
-    abs_coord : bool
-        Whether jets are in absolute coordinates.
-        Default: True
-
-    Returns
-    -------
-    jet_image : `numpy.ndarray`
-        The average jet image over the collection.
-
     :param jets: collection of jets in polar coordinates.
     :type jets: Union[np.ndarray, torch.Tensor]
     :param maxR: DeltaR of the jet, defaults to 0.5
@@ -313,8 +278,7 @@ def get_average_jet_image(
     :type abs_coord: bool, optional
     :return: _description_
     :rtype: _type_
-    """    """"""
-
+    """
     if abs_coord:
         jets = get_jet_rel(jets)
     jet_image = [
@@ -348,8 +312,7 @@ def get_n_jet_images(
     :type abs_coord: int, optional
     :return: The first `num_jets` jet images with shape (num_jets, npix, npix).
     :rtype: np.ndarray
-    """    """"""
-
+    """
     if abs_coord:
         jets = get_jet_rel(jets)
     jet_image = [
@@ -375,8 +338,7 @@ def get_jet_rel_same_norm(
     :type jet_recons: Union[np.ndarray, torch.Tensor]
     :return: (target_jet_image, reconstructed_jet_image)
     :rtype: Tuple[np.ndarray, np.ndarray]
-    """    
- 
+    """
     if isinstance(jet_target, torch.Tensor):
         jet_target = jet_target.detach().cpu().numpy()
     if isinstance(jet_recons, torch.Tensor):
@@ -421,7 +383,6 @@ def get_average_jet_image_same_norm(
     :return: (target_jet_image, reconstructed_jet_image)
     :rtype: Tuple[np.ndarray, np.ndarray]
     """    
-
     jet_target, jet_recons = get_jet_rel_same_norm(jet_target, jet_recons)
     target_image = [
         pixelate(jet_target[i], mask=None, npix=npix, maxR=maxR)
@@ -492,15 +453,6 @@ def normalize(
     :return: _description_
     :rtype: np.ndarray
     """    
-    """Normalize jet based on jet_vecs.
-
-    Parameters
-    ----------
-    jet : numpy.ndarray
-        The jet to normalize.
-    jet_vecs : awkward.array
-        Jet vectors
-    """
     jet[:, :, 1] -= ak.to_numpy(jet_vecs.eta)
     jet[:, :, 2] -= ak.to_numpy(jet_vecs.phi)
     jet[:, :, 0] /= ak.to_numpy(jet_vecs.pt)

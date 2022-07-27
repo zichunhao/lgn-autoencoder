@@ -263,7 +263,8 @@ def cdist(
     eps: Optional[float] = 1e-16,
     device: torch.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 ) -> torch.Tensor:
-    """self implemented version of torch.cdist that does not result in gradient clipping by adding eps.
+    """self implemented version of torch.cdist for 3- and 4-vectors
+    that does not result in gradient clipping by adding eps.
 
     :param x1: input tensor of shape :math:`B \times P \times M`
     :type x1: torch.Tensor
@@ -276,7 +277,7 @@ def cdist(
     :type eps: float, optional
     :param device: the device to use, defaults gpu if available or cpu if not
     :type device: torch.device, optional
-    :raises ValueError: _description_
+    :raises ValueError: if x1 or x2 are not 3- or 4-vectors.
     :return: batched the p-norm distance between each pair of the two collections of row vectors.
     :rtype: torch.Tensor
     """
@@ -286,19 +287,18 @@ def cdist(
     x1 = x1.to(device)
     x2 = x2.to(device)
     
-    if x1.shape[-1] == 4 and x2.shape[-1] == 4:
-        diffs = - (torch.unsqueeze(x1[..., 1:], -2) -
-                   torch.unsqueeze(x2[..., 1:], -3))
-    elif x1.shape[-1] == 3 and x2.shape[-1] == 3:
+    if x1.shape[-1] in (3, 4) or x2.shape[-1] in (3, 4):
         diffs = - (torch.unsqueeze(x1, -2) -
                    torch.unsqueeze(x2, -3))
     else:
         raise ValueError(
             f"x1 and x2 must be both 3- or 4-vectors. Found: {x1.shape[-1]=} and {x2.shape[-1]=}."
         )
+    
     if (p % 2 == 0):
-        dist_sq = torch.sum(diffs ** p, dim=-1)
+        return torch.sum(diffs ** p, dim=-1)
     else:
-        dist_sq = torch.sum(torch.abs(diffs + eps) ** p, dim=-1)
-    return torch.pow(dist_sq + eps, 1/p)
+        return torch.sum(torch.abs(diffs + eps) ** p, dim=-1)
+        
+    # return torch.pow(dist_sq + eps, 1/p)
     
