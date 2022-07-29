@@ -1,3 +1,4 @@
+from typing import Tuple
 import torch
 import numpy as np
 from lgn.cg_lib import CGDict
@@ -9,8 +10,8 @@ def rotate_part(D, z, side='left', autoconvert=True, conjugate=False):
         D = D.to(z.device, z.dtype)
     if conjugate:
         D = dagger(D)
-    Dr, Di = D.unbind(0)
-    zr, zi = z.unbind(0)
+    Dr, Di = unbind_cplx_tensor(D)
+    zr, zi = unbind_cplx_tensor(z)
 
     if side == 'left':
         return torch.stack((torch.matmul(zr, Dr) + torch.matmul(zi, Di),
@@ -20,7 +21,6 @@ def rotate_part(D, z, side='left', autoconvert=True, conjugate=False):
                             - torch.matmul(Di, zr) + torch.matmul(Dr, zi)), 0)
     else:
         raise ValueError('Must choose side: left/right.')
-
 
 def rotate_rep(rep, alpha, beta, gamma, side='left', conjugate=False, cg_dict=None):
     """ Apply a part-wise left/right sided D-matrix to a (matrix) representation. """
@@ -94,8 +94,9 @@ def LorentzD(key, alpha, beta, gamma, numpy_test=False, dtype=torch.float64, dev
     D = complex_tensor_prod(WignerD(k / 2, alpha, beta, gamma, numpy_test=numpy_test, dtype=dtype, device=device),
                             conj(WignerD(n / 2, -alpha, beta, -gamma, numpy_test=numpy_test, dtype=dtype, device=device)))
     cg_mat = cg_dict[((k, 0), (0, n))][(k, n)]
-    D_re = torch.matmul(torch.matmul(cg_mat, D.unbind(0)[0]), cg_mat.t())
-    D_im = torch.matmul(torch.matmul(cg_mat, D.unbind(0)[1]), cg_mat.t())
+    D_re, D_im = unbind_cplx_tensor(D)
+    D_re = torch.matmul(torch.matmul(cg_mat, D_re), cg_mat.t())
+    D_im = torch.matmul(torch.matmul(cg_mat, D_im), cg_mat.t())
     D = torch.stack((D_re, D_im), 0)
     return D
 
@@ -121,8 +122,8 @@ def complex_from_numpy(z, dtype=torch.float64, device=torch.device('cpu')):
 
 
 def complex_tensor_prod(d1, d2):
-    d1_re, d1_im = d1.unbind(0)
-    d2_re, d2_im = d2.unbind(0)
+    d1_re, d1_im = unbind_cplx_tensor(d1, zdim=0)
+    d2_re, d2_im = unbind_cplx_tensor(d2, zdim=0)
     s1 = d1.shape[1:]
     s2 = d2.shape[1:]
     assert len(s1) == 2 and len(s2) == 2, "Both tensors must be of rank 2 (and complex)!"
@@ -131,3 +132,40 @@ def complex_tensor_prod(d1, d2):
     d_im = d1_re.view(s1[0], 1, s1[1], 1) * d2_im.view(1, s2[0], 1, s2[1]) + \
         d1_im.view(s1[0], 1, s1[1], 1) * d2_re.view(1, s2[0], 1, s2[1])
     return torch.stack((d_re, d_im), 0).view(2, s1[0] * s2[0], s1[1] * s2[1])
+
+def unbind_cplx_tensor(
+    z: torch.Tensor,
+    zdim: int = 0,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Unbind a complex tensor z into its real and imaginary components.
+
+    :param z: complex tensor to unbind
+    :type z: torch.Tensor
+    :param zdim: dimension of z to unbind
+    :type zdim: int
+    :return: real and imaginary components of z
+    :rtype: Tuple[torch.Tensor, torch.Tensor]
+    """    
+    # some common dimensions to prevent UnbindBackward error
+    if zdim == 0:
+        return (z[0], z[1])
+    elif zdim == 1:
+        return (z[:, 0], z[:, 1])
+    elif zdim == 2:
+        return (z[:, :, 0], z[:, :, 1])
+    elif zdim == 3:
+        return (z[:, :, :, 0], z[:, :, :, 1])
+    elif zdim == 4:
+        return (z[:, :, :, :, 0], z[:, :, :, :, 1])
+    elif zdim == 5:
+        return (z[:, :, :, :, :, 0], z[:, :, :, :, :, 1])
+    elif zdim == 6:
+        return (z[:, :, :, :, :, :, 0], z[:, :, :, :, :, :, 1])
+    elif zdim == -1:
+        return (z[..., 0], z[..., 1])
+    elif zdim == -2:
+        return (z[..., 0, :], z[..., 1, :])
+    elif zdim == -3:
+        return (z[..., 0, :, :], z[..., 1, :, :])
+    else:
+        return z.unbind(zdim)

@@ -1,3 +1,4 @@
+from typing import Tuple
 import torch
 
 #########  Weight mixing  ###########
@@ -15,11 +16,13 @@ def mix_zweight_zvec(weight, part, zdim=0):
         Part of `GVec` to multiply by scalars.
 
     """
-    weight_r, weight_i = weight.unbind(zdim)
-    part_r, part_i = part.unbind(zdim)
+    weight_r, weight_i = unbind_cplx_tensor(weight, zdim)
+    part_r, part_i = unbind_cplx_tensor(part, zdim)
 
-    return torch.stack([weight_r@part_r - weight_i@part_i,
-                        weight_i@part_r + weight_r@part_i], dim=zdim)
+    return torch.stack([
+        weight_r@part_r - weight_i@part_i,
+        weight_i@part_r + weight_r@part_i
+    ], dim=zdim)
 
 
 def mix_zweight_zscalar(weight, part, zdim=0):
@@ -35,12 +38,14 @@ def mix_zweight_zscalar(weight, part, zdim=0):
 
     """
     # Must permute first two dimensions
-    weight_r, weight_i = weight.transpose(0, 1).unbind(zdim)
-    part_r, part_i = part.unbind(zdim)
+    weight_r, weight_i = unbind_cplx_tensor(weight.transpose(0, 1), zdim)
+    part_r, part_i = unbind_cplx_tensor(part, zdim)
 
     # # Since the dimension to be mixed in part is the right-most,
-    return torch.stack([part_r@weight_r - part_i@weight_i,
-                        part_r@weight_i + part_i@weight_r], dim=zdim)
+    return torch.stack([
+        part_r@weight_r - part_i@weight_i,
+        part_r@weight_i + part_i@weight_r
+    ], dim=zdim)
 
 
 #########  Multiply  ###########
@@ -57,11 +62,13 @@ def mul_zscalar_zirrep(scalar, part, rdim=-1, zdim=0):
         Part of `GVec` to multiply by scalars.
 
     """
-    scalar_r, scalar_i = scalar.unsqueeze(rdim).unbind(zdim)
-    part_r, part_i = part.unbind(zdim)
+    scalar_r, scalar_i = unbind_cplx_tensor(scalar.unsqueeze(rdim), zdim)
+    part_r, part_i = unbind_cplx_tensor(part, zdim)
 
-    return torch.stack([part_r * scalar_r - part_i * scalar_i,
-                        part_r * scalar_i + part_i * scalar_r], dim=zdim)
+    return torch.stack([
+        part_r * scalar_r - part_i * scalar_i,
+        part_r * scalar_i + part_i * scalar_r
+    ], dim=zdim)
 
 
 def mul_zscalar_zscalar(scalar1, scalar2, zdim=0):
@@ -80,8 +87,50 @@ def mul_zscalar_zscalar(scalar1, scalar2, zdim=0):
 
 
     """
-    scalar1_r, scalar1_i = scalar1.unbind(zdim)
-    scalar2_r, scalar2_i = scalar2.unbind(zdim)
+    scalar1_r, scalar1_i = unbind_cplx_tensor(scalar1, zdim)
+    scalar2_r, scalar2_i = unbind_cplx_tensor(scalar2, zdim)
 
-    return torch.stack([scalar1_r*scalar2_r - scalar1_i*scalar2_i,
-                        scalar1_r*scalar2_i + scalar1_i*scalar2_r], dim=zdim)
+    return torch.stack([
+        scalar1_r*scalar2_r - scalar1_i*scalar2_i,
+        scalar1_r*scalar2_i + scalar1_i*scalar2_r
+    ], dim=zdim)
+    
+
+def unbind_cplx_tensor(
+    z: torch.Tensor,
+    zdim: int = 0,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Unbind a complex tensor z into its real and imaginary components.
+
+    :param z: complex tensor to unbind
+    :type z: torch.Tensor
+    :param zdim: dimension of z to unbind
+    :type zdim: int
+    :return: real and imaginary components of z
+    :rtype: Tuple[torch.Tensor, torch.Tensor]
+    """    
+    # some common dimensions to prevent UnbindBackward error
+    if zdim == 0:
+        return (z[0], z[1])
+    elif zdim == 1:
+        return (z[:, 0], z[:, 1])
+    elif zdim == 2:
+        return (z[:, :, 0], z[:, :, 1])
+    elif zdim == 3:
+        return (z[:, :, :, 0], z[:, :, :, 1])
+    elif zdim == 4:
+        return (z[:, :, :, :, 0], z[:, :, :, :, 1])
+    elif zdim == 5:
+        return (z[:, :, :, :, :, 0], z[:, :, :, :, :, 1])
+    elif zdim == 6:
+        return (z[:, :, :, :, :, :, 0], z[:, :, :, :, :, :, 1])
+    elif zdim == -1:
+        return (z[..., 0], z[..., 1])
+    elif zdim == -2:
+        return (z[..., 0, :], z[..., 1, :])
+    elif zdim == -3:
+        return (z[..., 0, :, :], z[..., 1, :, :])
+    else:
+        return z.unbind(zdim)
+
+
