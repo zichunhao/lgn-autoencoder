@@ -22,7 +22,7 @@ sys.path.insert(1, 'lgn/')
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
-BLOW_UP_THRESHOLD = 1e8
+BLOW_UP_THRESHOLD = 1e32
 
 
 def train_loop(
@@ -87,14 +87,18 @@ def train_loop(
         # Training
         start = time.time()
         train_avg_loss, train_recons, train_target = train(
-            args, train_loader, encoder, decoder,
-            optimizer_encoder, optimizer_decoder, epoch,
-            outpath, is_train=True, device=device
+            args, train_loader, 
+            encoder, decoder,
+            optimizer_encoder, optimizer_decoder, 
+            epoch, outpath, is_train=True, device=device
         )
 
         # Validation
-        valid_avg_loss, valid_recons, valid_target = validate(args, valid_loader, encoder, decoder,
-                                                           epoch, outpath, device=device)
+        valid_avg_loss, valid_recons, valid_target = validate(
+            args, valid_loader, 
+            encoder, decoder,
+            epoch, outpath, device=device
+        )
         if (abs(valid_avg_loss) < best_loss):
             best_loss = valid_avg_loss
             num_stale_epochs = 0
