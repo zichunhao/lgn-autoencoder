@@ -252,6 +252,7 @@ def train(
             batch_loss = get_loss(
                 args, 
                 p4_recons, p4_target, 
+                regularization=is_train,
                 encoder=encoder, decoder=decoder
             )
             epoch_total_loss += batch_loss.item()
@@ -327,6 +328,7 @@ def get_loss(
     args: Namespace,
     p4_recons: torch.Tensor,
     p4_target: torch.Tensor,
+    regularization: bool,
     encoder: Optional[LGNEncoder] = None, 
     decoder: Optional[LGNDecoder] = None,
 ) -> torch.Tensor:
@@ -386,15 +388,16 @@ def get_loss(
         raise NotImplementedError(err_msg)
     
     # regularizations
-    if (args.l1_lambda is not None) and (args.l1_lambda > 0):
-        if encoder is None:
-            raise ValueError('encoder is None.')
-        batch_loss += args.l1_lambda * (encoder.l1_norm() + decoder.l1_norm())
+    if regularization:
+        if (args.l1_lambda is not None) and (args.l1_lambda > 0):
+            if encoder is None:
+                raise ValueError('encoder is None.')
+            batch_loss += args.l1_lambda * (encoder.l1_norm() + decoder.l1_norm())
+            
         
-    
-    if (args.l2_lambda is not None) and (args.l2_lambda > 0):
-        if decoder is None:
-            raise ValueError('decoder is None.')
-        batch_loss += args.l2_lambda * (encoder.l2_norm() + decoder.l2_norm())
+        if (args.l2_lambda is not None) and (args.l2_lambda > 0):
+            if decoder is None:
+                raise ValueError('decoder is None.')
+            batch_loss += args.l2_lambda * (encoder.l2_norm() + decoder.l2_norm())
 
     return batch_loss
