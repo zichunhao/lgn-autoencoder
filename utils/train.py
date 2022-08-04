@@ -1,7 +1,6 @@
 from argparse import Namespace
 import logging
-from os import mkdir
-from typing import Optional, Tuple, Union
+from typing import Optional
 import numpy as np
 from lgn.models.lgn_decoder import LGNDecoder
 from lgn.models.lgn_encoder import LGNEncoder
@@ -202,7 +201,8 @@ def train(
         eps = get_eps(args)
 
     if is_train:
-        assert (optimizer_encoder is not None) and (optimizer_decoder is not None), "Please specify the optimizers."
+        if (optimizer_encoder is None) or (optimizer_decoder is None):
+            raise ValueError("Please specify the optimizers.")
         encoder.train()
         decoder.train()
         encoder_weight_path = make_dir(osp.join(outpath, "weights_encoder"))
@@ -223,7 +223,8 @@ def train(
     for i, batch in enumerate(tqdm(loader)):
 
         if args.normalize:
-            norm_factor = torch.abs(batch['p4']).amax(dim=-2, keepdim=True).to(batch['p4'].device)
+            norm_factor = torch.abs(batch['p4']).amax(dim=-2, keepdim=True)
+            norm_factor = norm_factor.to(batch['p4'].device)
             batch['p4'] /= (norm_factor + eps)
 
         latent_features = encoder(batch, covariance_test=False)
@@ -241,11 +242,18 @@ def train(
             target_data.append(p4_target.cpu().detach())
 
         if for_test:
-            latent_spaces.append({k: latent_features[k].squeeze(dim=2) for k in latent_features.keys()})
+            latent_spaces.append({
+                k: latent_features[k].squeeze(dim=2) 
+                for k in latent_features.keys()
+            })
             if args.normalize:
                 norm_factors.append(norm_factor.squeeze(dim=2).cpu().detach())
         else:
-            batch_loss = get_loss(args, p4_recons, p4_target)
+            batch_loss = get_loss(
+                args, 
+                p4_recons, p4_target, 
+                encoder=encoder, decoder=decoder
+            )
             epoch_total_loss += batch_loss.item()
 
             # Backward propagation
@@ -316,17 +324,25 @@ def validate(
 
 
 def get_loss(
-    args: Namespace, 
-    p4_recons: torch.Tensor, 
-    p4_target: torch.Tensor
+    args: Namespace,
+    p4_recons: torch.Tensor,
+    p4_target: torch.Tensor,
+    encoder: Optional[LGNEncoder] = None, 
+    decoder: Optional[LGNDecoder] = None,
 ) -> torch.Tensor:
     loss_choice = args.loss_choice.lower()
 
     # Chamfer loss
     if 'chamfer' in loss_choice:
         from utils.losses import ChamferLoss
-        chamferloss = ChamferLoss(loss_norm_choice=args.chamfer_loss_norm_choice, im=args.chamfer_im)
-        batch_loss = chamferloss(p4_recons, p4_target, jet_features=args.chamfer_jet_features)  # output, target
+        chamferloss = ChamferLoss(
+            loss_norm_choice=args.chamfer_loss_norm_choice, 
+            im=args.chamfer_im
+        )
+        batch_loss = chamferloss(
+            p4_recons, p4_target, 
+            jet_features=args.chamfer_jet_features
+        )  # output, target
 
     # EMD loss
     elif 'emd' in loss_choice:
@@ -337,9 +353,15 @@ def get_loss(
     # Hybrid of Chamfer loss and EMD loss
     elif loss_choice in ('hybrid', 'combined', 'mix'):
         from utils.losses import ChamferLoss, EMDLoss
-        chamfer_loss = ChamferLoss(loss_norm_choice=args.chamfer_loss_norm_choice, im=args.chamfer_im)
+        chamfer_loss = ChamferLoss(
+            loss_norm_choice=args.chamfer_loss_norm_choice, 
+            im=args.chamfer_im
+        )
         emd_loss = EMDLoss(eps=get_eps(args))
-        batch_loss = args.chamfer_loss_weight * chamfer_loss(p4_recons, p4_target, jet_features=args.chamfer_jet_features)
+        batch_loss = args.chamfer_loss_weight * chamfer_loss(
+            p4_recons, p4_target, 
+            jet_features=args.chamfer_jet_features
+        )
         batch_loss += emd_loss(p4_recons, p4_target)
 
     # MSE loss
@@ -352,11 +374,27 @@ def get_loss(
         from utils.losses import HungarianMSELoss
         hungarian_mse = HungarianMSELoss()
         # TODO: implement different metric for calculating distance
-        batch_loss = hungarian_mse(p4_recons[0], p4_target, abs_coord=args.hungarian_abs_coord, polar_coord=args.hungarian_polar_coord)
+        batch_loss = hungarian_mse(
+            p4_recons[0], p4_target, 
+            abs_coord=args.hungarian_abs_coord, 
+            polar_coord=args.hungarian_polar_coord
+        )
 
     else:
         err_msg = f'Current loss choice ({args.loss_choice}) is not implemented. '
         err_msg += "The current available options are ('chamfer', 'emd', 'hybrid', 'mse', 'hungarian')"
         raise NotImplementedError(err_msg)
+    
+    # regularizations
+    if (args.l1_lambda is not None) and (args.l1_lambda > 0):
+        if encoder is None:
+            raise ValueError('encoder is None.')
+        batch_loss += args.l1_lambda * (encoder.l1_norm() + decoder.l1_norm())
+        
+    
+    if (args.l2_lambda is not None) and (args.l2_lambda > 0):
+        if decoder is None:
+            raise ValueError('decoder is None.')
+        batch_loss += args.l2_lambda * (encoder.l2_norm() + decoder.l2_norm())
 
     return batch_loss

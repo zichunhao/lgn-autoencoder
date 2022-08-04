@@ -242,6 +242,12 @@ class LGNEncoder(CGModule):
 
         num_param = sum(p.nelement() for p in self.parameters() if p.requires_grad)
         logging.info(f'Encoder initialized. Number of parameters: {num_param}')
+        
+    def l1_norm(self):
+        return sum(p.abs().sum() for p in self.parameters())
+
+    def l2_norm(self):
+        return sum(torch.pow(p, 2).sum() for p in self.parameters())
 
     def forward(
         self, 

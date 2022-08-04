@@ -208,6 +208,12 @@ class LGNDecoder(CGModule):
 
         logging.info(f'Decoder initialized. Number of parameters: {sum(p.nelement() for p in self.parameters() if p.requires_grad)}')
 
+    def l1_norm(self):
+        return sum(p.abs().sum() for p in self.parameters())
+    
+    def l2_norm(self):
+        return sum(torch.pow(p, 2).sum() for p in self.parameters())
+    
     def forward(self, latent_features, covariance_test=False, nodes_all=None):
         '''
         The forward pass of the LGN GNN.
@@ -288,7 +294,6 @@ class LGNDecoder(CGModule):
                 nodes_all.append(decoder_cg_nodes[i])
             nodes_all.append(generated_features)
             return generated_features, nodes_all
-
 
     def _prepare_input(self, latent_features):
         """
