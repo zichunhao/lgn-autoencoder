@@ -240,8 +240,7 @@ class LGNEncoder(CGModule):
         self.scale = scale
         self.tau_latent = self.tau_output
 
-        num_param = sum(p.nelement() for p in self.parameters() if p.requires_grad)
-        logging.info(f'Encoder initialized. Number of parameters: {num_param}')
+        self.__num_param = sum(p.nelement() for p in self.parameters() if p.requires_grad)
         
     def l1_norm(self):
         return sum(p.abs().sum() for p in self.parameters())
@@ -383,6 +382,9 @@ class LGNEncoder(CGModule):
 
         return scalars, node_ps, node_mask, edge_mask
         
+    @property
+    def num_learnable_parameters(self) -> int:
+        return self.__num_param
         
 def aggregate(
     map_to_latent: str, 

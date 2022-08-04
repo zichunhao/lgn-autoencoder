@@ -206,7 +206,7 @@ class LGNDecoder(CGModule):
             **misc_info
         )
 
-        logging.info(f'Decoder initialized. Number of parameters: {sum(p.nelement() for p in self.parameters() if p.requires_grad)}')
+        self.__num_param = sum(p.nelement() for p in self.parameters() if p.requires_grad)
 
     def l1_norm(self):
         return sum(p.abs().sum() for p in self.parameters())
@@ -333,3 +333,7 @@ class LGNDecoder(CGModule):
 
         node_ps = p_cplx_to_rep(node_ps)[(1, 1)].to(device=self.device)  # Convert to canonical basis
         return node_ps, node_scalars, node_mask, edge_mask
+    
+    @property
+    def num_learnable_parameters(self) -> int:
+        return self.__num_param
