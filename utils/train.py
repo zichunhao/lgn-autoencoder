@@ -158,7 +158,7 @@ def train_loop(
             logging.info(f'Number of stale epochs reached the set patience ({args.patience}). Training breaks.')
             return best_epoch
 
-        if (abs(valid_avg_loss) > BLOW_UP_THRESHOLD) or (abs(train_avg_loss) > BLOW_UP_THRESHOLD):
+        if abs(train_avg_loss) > BLOW_UP_THRESHOLD:
             logging.error('Loss blows up. Training breaks.')
             
             error_path = make_dir(osp.join(outpath, 'errors'))
