@@ -406,7 +406,7 @@ def aggregate(
     elif map_to_latent.lower() == 'max':
         p4 = latent_features[(1, 1)]
         return GVec({
-            weight: get_max_features(value, p4)
+            weight: get_max_features(value)
             for weight, value in latent_features.items()
         })
         
@@ -414,7 +414,7 @@ def aggregate(
     elif map_to_latent.lower() == 'min':
         p4 = latent_features[(1, 1)]
         return GVec({
-            weight: get_min_features(value, p4)
+            weight: get_min_features(value)
             for weight, value in latent_features.items()
         })
 
@@ -511,15 +511,18 @@ def gather_righthand(src, index, check=True):
     return torch.gather(src, dim=t_dim, index=index_expand)
 
 
-def get_min_features(
-    feature: torch.Tensor, 
-    p4: torch.Tensor, 
-    map_func = get_msq
-):
+def get_min_features(feature: torch.Tensor):
     # (2, batch_size, num_particles, tau, feature_dim)
     # -> (2, batch_size, tau, num_particles, feature_dim)
     features_permute = feature.permute(0, 1, 3, 2, 4)
-    scalar = get_msq(feature, keep_dim=False)
+    if feature.shape[-1] == 1:
+        scalar = feature.min(dim=-1).values
+    elif feature.shape[-1] == 4:
+        scalar = get_msq(feature, keep_dim=False)
+    else:
+        raise NotImplementedError(
+            f'feature dimension {feature.shape[-1]} not supported yet'
+        )
     indices = torch.min(scalar, dim=-2).indices.unsqueeze(-1)
 
     # aggregated_permuted = gather_righthand(features_permute, indices)
@@ -529,11 +532,7 @@ def get_min_features(
     return gather_righthand(features_permute, indices).permute(0, 1, 3, 2, 4)
 
 
-def get_max_features(
-    feature: torch.Tensor, 
-    ref: torch.Tensor, 
-    map_func = get_msq
-):
+def get_max_features(feature: torch.Tensor):
     '''
     Get the maximum features per tau based on the reference and a map function.
     '''
@@ -541,7 +540,15 @@ def get_max_features(
     # -> (2, batch_size, tau, num_particles, feature_dim)
     features_permute = feature.permute(0, 1, 3, 2, 4)
     scalar = get_msq(feature, keep_dim=False)
-    indices = torch.min(scalar, dim=-2).indices.unsqueeze(-1)
+    indices = torch.max(scalar, dim=-2).indices.unsqueeze(-1)
+    if feature.shape[-1] == 1:
+        scalar = feature.max(dim=-1).values
+    elif feature.shape[-1] == 4:
+        scalar = get_msq(feature, keep_dim=False)
+    else:
+        raise NotImplementedError(
+            f'feature dimension {feature.shape[-1]} not supported yet'
+        )
     
     # aggregated_permuted = gather_righthand(features_permute, indices)
     
