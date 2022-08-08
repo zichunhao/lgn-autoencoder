@@ -58,7 +58,8 @@ def initialize_test_data(
 
 
 def initialize_autoencoder(
-    args: Namespace
+    args: Namespace,
+    print_models: bool = True
 ) -> Tuple[LGNEncoder, LGNDecoder]:
     encoder = LGNEncoder(
         num_input_particles=args.num_jet_particles,
@@ -74,6 +75,7 @@ def initialize_autoencoder(
         mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
         device=args.device, dtype=args.dtype
     )
+    logging.info(f"LGNEncoder initialized with {encoder.num_learnable_parameters} learnable parameters.")
     
     # multiplicity gets larger when concatenation is used
     mult = len(args.map_to_latent.split('&')) if '&' in args.map_to_latent else 1    
@@ -93,8 +95,11 @@ def initialize_autoencoder(
         mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
         cg_dict=encoder.cg_dict, device=args.device, dtype=args.dtype
     )
-    logging.info(f"{encoder=}")
-    logging.info(f"{decoder=}")
+    logging.info(f"LGNDecoder initialized with {encoder.num_learnable_parameters} learnable parameters.")
+    
+    if print_models:
+        logging.info(f"{encoder=}")
+        logging.info(f"{decoder=}")
 
     return encoder, decoder
 

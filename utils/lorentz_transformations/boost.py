@@ -4,7 +4,6 @@ import logging
 
 ERROR_MSG = "A physical value of beta must be between -1 and 1 (exclusive)."
 
-
 def boost(beta: float, dir: str = "z") -> torch.Tensor:
     '''
     Get the boost matrix for a given rapidity :math:`beta = v / c` and axis of boost.
@@ -26,7 +25,7 @@ def boost(beta: float, dir: str = "z") -> torch.Tensor:
     return boost_z(beta)
 
 
-def boost_x(beta: float):
+def boost_x(beta: float) -> torch.Tensor:
     if abs(beta) >= 1:
         raise ValueError(ERROR_MSG + f" Found: {beta=}")
     gamma = 1 / math.sqrt(1 - beta**2)
@@ -37,7 +36,7 @@ def boost_x(beta: float):
         [0,           0,           0, 1]
     ])
     
-def boost_y(beta: float):
+def boost_y(beta: float) -> torch.Tensor:
     if abs(beta) >= 1:
         raise ValueError(ERROR_MSG + f" Found: {beta=}")
     gamma = 1 / math.sqrt(1 - beta**2)
@@ -49,7 +48,7 @@ def boost_y(beta: float):
     ])
     
     
-def boost_z(beta: float):
+def boost_z(beta: float) -> torch.Tensor:
     if abs(beta) >= 1:
         raise ValueError(f"{ERROR_MSG}: {beta=}")
     gamma = 1 / math.sqrt(1 - beta**2)

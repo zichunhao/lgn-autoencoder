@@ -162,6 +162,12 @@ def setup_argparse():
     parser.add_argument('--save-freq', type=int, default=500, metavar='',
                         help='How frequent the model weights are saved in each epoch (EMD only). Default: 500.')
 
+    # regularizations
+    parser.add_argument('--l1-lambda', type=float, default=1e-8, metavar='',
+                        help='penalty for L1 regularization.')
+    parser.add_argument('--l2-lambda', type=float, default=0, metavar='',
+                        help='penalty for L2 regularization.')
+
     # Loading existing models
     parser.add_argument('--load-to-train', default=False, action='store_true',
                         help='Whether to load existing (trained) model for training.')
