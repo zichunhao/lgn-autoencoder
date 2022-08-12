@@ -274,11 +274,6 @@ def train(
                     raise e
                 optimizer_encoder.step()
                 optimizer_decoder.step()
-                
-                # save model
-                if ('emd' in args.loss_choice.lower()) and ((i % args.save_freq) == 0 and i > 0):
-                    torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
-                    torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
 
     reconstructed_data = torch.cat(reconstructed_data, dim=0)
     target_data = torch.cat(target_data, dim=0)
