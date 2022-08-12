@@ -134,7 +134,7 @@ def plot_jet_image(
             axs_row[1].title.set_text('Average Reconstructed Jet')
 
             cbar_target = fig.colorbar(target, ax=axs_row[0])
-            cbar_recons = fig.colorbar(recons, ax=axs_row[1])
+            cbar_recons = fig.colorbar(target, ax=axs_row[1])
         else:
             target = axs_row[0].imshow(
                 target_pix[i-1],
@@ -158,7 +158,7 @@ def plot_jet_image(
             )
             axs_row[1].title.set_text('Reconstructed Jet')
             cbar_target = fig.colorbar(target, ax=axs_row[0])
-            cbar_recons = fig.colorbar(recons, ax=axs_row[1])
+            cbar_recons = fig.colorbar(target, ax=axs_row[1])
 
         for cbar in [cbar_target, cbar_recons]:
             cbar.set_label(r'$p_\mathrm{T}$')
@@ -328,8 +328,8 @@ def get_jet_rel_same_norm(
     jet_recons: Union[np.ndarray, torch.Tensor]
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Get jet momenta in relative coordinates 
-    (ptrel, etarel, phirel) 
+    Get jet momenta in relative coordinates
+    (ptrel, etarel, phirel)
     using the coordinates of target jet.
 
     :param jet_target: target jet.
@@ -382,7 +382,7 @@ def get_average_jet_image_same_norm(
     :type npix: int, optional
     :return: (target_jet_image, reconstructed_jet_image)
     :rtype: Tuple[np.ndarray, np.ndarray]
-    """    
+    """
     jet_target, jet_recons = get_jet_rel_same_norm(jet_target, jet_recons)
     target_image = [
         pixelate(jet_target[i], mask=None, npix=npix, maxR=maxR)
@@ -422,7 +422,7 @@ def get_n_jet_images_same_norm(
     :type npix: int, optional
     :return: (target_jet_image, reconstructed_jet_image)
     :rtype: Tuple[np.ndarray, np.ndarray]
-    """    
+    """
     jet_target, jet_recons = get_jet_rel_same_norm(jet_target, jet_recons)
 
     target_image = [
@@ -452,7 +452,7 @@ def normalize(
     :type jet_vecs: ak.Array
     :return: particle features in relative polar coordinates (pt_rel, eta_rel, phi_rel).
     :rtype: np.ndarray
-    """    
+    """
     # pt
     jet[:, :, 0] /= ak.to_numpy(jet_vecs.pt)
     # eta
