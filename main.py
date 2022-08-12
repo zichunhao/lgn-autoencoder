@@ -174,7 +174,8 @@ def setup_argparse():
     parser.add_argument('--load-path', type=str, default=None, metavar='',
                         help='Path of the trained model to load.')
     parser.add_argument('--load-epoch', type=int, default=-1, metavar='',
-                        help='Epoch number of the trained model to load. -1 for loading weights in the lastest model.')
+                        help='Epoch number of the trained model to load. '
+                        'Set to -1 for loading weights in the latest model.')
 
     parse_plot_settings(parser)
     parse_covariance_test_settings(parser)

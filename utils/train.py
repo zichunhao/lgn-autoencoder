@@ -191,7 +191,7 @@ def train(
     optimizer_encoder: Optimizer, 
     optimizer_decoder: Optimizer,
     epoch: int, 
-    outpath: dir, 
+    outpath: str, 
     is_train: bool = True, 
     for_test: bool = False, 
     device: torch.device = None
