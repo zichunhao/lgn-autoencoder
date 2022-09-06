@@ -1,6 +1,6 @@
 from utils.argparse_utils import get_bool, get_device, get_dtype
 from utils.argparse_utils import parse_model_settings, parse_plot_settings, parse_covariance_test_settings, parse_data_settings
-from utils.utils import create_model_folder, latest_epoch, get_compression_rate
+from utils.utils import create_model_folder, best_epoch, get_compression_rate
 from utils.train import train_loop
 from utils.initialize import initialize_autoencoder, initialize_data, initialize_test_data, initialize_optimizers
 
@@ -15,7 +15,7 @@ import argparse
 
 def main(args):
     if args.load_to_train and args.load_epoch < 0:
-        args.load_epoch = latest_epoch(args.load_path, num=args.load_epoch)
+        args.load_epoch = best_epoch(args.load_path, num=args.load_epoch)
     logging.info(f'{args=}')
     compression_rate = get_compression_rate(
         ls=args.tau_latent_scalars,
@@ -51,10 +51,16 @@ def main(args):
     # Load existing model
     if args.load_to_train:
         outpath = args.load_path
-        encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'),
-                                           map_location=args.device))
-        decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'),
-                                           map_location=args.device))
+        try:
+            encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/best_encoder_weights.pth'),
+                                            map_location=args.device))
+            decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/best_decoder_weights.pth'),
+                                            map_location=args.device))
+        except FileNotFoundError:
+            encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'),
+                                            map_location=args.device))
+            decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'),
+                                            map_location=args.device))
     # Create new model
     else:
         import json
@@ -174,7 +180,8 @@ def setup_argparse():
     parser.add_argument('--load-path', type=str, default=None, metavar='',
                         help='Path of the trained model to load.')
     parser.add_argument('--load-epoch', type=int, default=-1, metavar='',
-                        help='Epoch number of the trained model to load. -1 for loading weights in the lastest model.')
+                        help='Epoch number of the trained model to load. '
+                        'Set to -1 for loading weights in the latest model.')
 
     parse_plot_settings(parser)
     parse_covariance_test_settings(parser)

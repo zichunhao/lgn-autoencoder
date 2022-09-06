@@ -3,7 +3,7 @@ from lgn.models.autotest.utils import plot_all_dev
 
 from utils.argparse_utils import get_device, get_dtype, parse_model_settings, parse_data_settings
 from utils.initialize import initialize_autoencoder, initialize_test_data
-from utils.utils import latest_epoch
+from utils.utils import best_epoch
 
 import argparse
 import torch
@@ -60,7 +60,7 @@ def setup_argparse():
     args = parser.parse_args()
 
     if args.load_epoch < 0:
-        args.load_epoch = latest_epoch(args.model_path, num=args.load_epoch)
+        args.load_epoch = best_epoch(args.model_path, num=args.load_epoch)
     if args.model_path is None:
         raise ValueError('--model-path needs to be specified.')
 

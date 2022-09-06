@@ -1,3 +1,4 @@
+from .anomaly_detection import *
 from .jet_features import *
 from .jet_images import *
 from .jet_recon_err import *

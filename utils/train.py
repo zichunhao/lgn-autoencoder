@@ -74,8 +74,13 @@ def train_loop(
 
     outpath_train_jet_plots = make_dir(osp.join(outpath, 'jet_plots/train'))
     outpath_valid_jet_plots = make_dir(osp.join(outpath, 'jet_plots/valid'))
-    best_loss = math.inf
-    best_epoch = 1
+    try:
+        info = torch.load(osp.join(outpath, "trained_info.pt"))
+        best_epoch = info['best_epoch']
+        best_loss = info['best_loss']
+    except FileNotFoundError:
+        best_loss = math.inf
+        best_epoch = 1
     num_stale_epochs = 0
 
     total_epoch = args.num_epochs if not args.load_to_train else args.num_epochs + args.load_epoch
@@ -104,6 +109,10 @@ def train_loop(
             best_epoch = epoch + 1
             torch.save(encoder.state_dict(), osp.join(outpath, "weights_encoder/best_encoder_weights.pth"))
             torch.save(decoder.state_dict(), osp.join(outpath, "weights_decoder/best_decoder_weights.pth"))
+            torch.save({
+               "best_epoch": epoch,
+               "best_loss": best_loss
+            }, osp.join(outpath, "trained_info.pt"))
         else:
             num_stale_epochs += 1
 
@@ -191,7 +200,7 @@ def train(
     optimizer_encoder: Optimizer, 
     optimizer_decoder: Optimizer,
     epoch: int, 
-    outpath: dir, 
+    outpath: str, 
     is_train: bool = True, 
     for_test: bool = False, 
     device: torch.device = None
@@ -274,11 +283,6 @@ def train(
                     raise e
                 optimizer_encoder.step()
                 optimizer_decoder.step()
-                
-                # save model
-                if ('emd' in args.loss_choice.lower()) and ((i % args.save_freq) == 0 and i > 0):
-                    torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch+1}_encoder_weights.pth"))
-                    torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch+1}_decoder_weights.pth"))
 
     reconstructed_data = torch.cat(reconstructed_data, dim=0)
     target_data = torch.cat(target_data, dim=0)

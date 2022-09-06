@@ -6,9 +6,12 @@ import numpy as np
 from .jet_features import plot_jet_p_cartesian, plot_jet_p_polar
 from .particle_features import plot_p_cartesian, plot_p_polar
 from .jet_images import plot_jet_image
-from .utils import get_p_polar, get_p_cartesian
-from .utils import get_jet_feature_polar, get_jet_feature_cartesian, get_p4_cartesian_from_polar
-from .utils import get_p_polar_tensor, get_recons_err_ranges
+from .utils import (
+    get_p_polar, get_p_cartesian,
+    get_jet_feature_polar, get_jet_feature_cartesian, 
+    get_p4_cartesian_from_polar, get_p_polar_tensor, 
+    get_recons_err_ranges
+)
 from .particle_recon_err import plot_particle_recon_err
 from .jet_recon_err import plot_jet_recon_err
 from utils.utils import get_eps
@@ -102,7 +105,7 @@ def plot_p(
         jet_type=args.jet_type,
         epoch=epoch, 
         density=False, 
-        fill=True, 
+        fill=False, 
         show=show
     )
     
