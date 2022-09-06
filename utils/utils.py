@@ -167,7 +167,6 @@ def latest_epoch(
 ) -> int:
     path = osp.join(model_path, 'weights_decoder/*.pth')
     file_list = glob.glob(path)
-    print(f"{path=}, {file_list=}")
     epochs = [[int(s) for s in filename.split('_') if s.isdigit()] for filename in file_list]
     epochs.sort()
     try:
