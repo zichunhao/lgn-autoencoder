@@ -30,18 +30,21 @@ def main(args):
                                                  batch_size=args.batch_size,
                                                  train_fraction=args.train_fraction,
                                                  num_val=args.num_valid)
-    test_loader = initialize_test_data(path=args.test_data_path, batch_size=args.test_batch_size)
+    test_loader = initialize_test_data(
+        path=args.test_data_path, batch_size=args.test_batch_size)
 
     """Initializations"""
     encoder, decoder = initialize_autoencoder(args)
-    optimizer_encoder, optimizer_decoder = initialize_optimizers(args, encoder, decoder)
+    optimizer_encoder, optimizer_decoder = initialize_optimizers(
+        args, encoder, decoder)
 
     # Both on gpu
     if (next(encoder.parameters()).is_cuda and next(encoder.parameters()).is_cuda):
         logging.info('The models are initialized on GPU...')
     # One on cpu and the other on gpu
     elif (next(encoder.parameters()).is_cuda or next(encoder.parameters()).is_cuda):
-        raise RuntimeError("The encoder and decoder are not trained on the same device!")
+        raise RuntimeError(
+            "The encoder and decoder are not trained on the same device!")
     # Both on cpu
     else:
         logging.info('The models are initialized on CPU...')
@@ -53,14 +56,14 @@ def main(args):
         outpath = args.load_path
         try:
             encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/best_encoder_weights.pth'),
-                                            map_location=args.device))
+                                    map_location=args.device))
             decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/best_decoder_weights.pth'),
-                                            map_location=args.device))
+                                    map_location=args.device))
         except FileNotFoundError:
             encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'),
-                                            map_location=args.device))
+                                    map_location=args.device))
             decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'),
-                                            map_location=args.device))
+                                    map_location=args.device))
     # Create new model
     else:
         import json
@@ -68,16 +71,17 @@ def main(args):
         args_dir = osp.join(outpath, "args_cache.json")
         with open(args_dir, "w") as f:
             json.dump({k: str(v) for k, v in vars(args).items()}, f)
-            
+
     if args.equivariance_test:
         dev = lgn_tests(args, encoder, decoder, test_loader, alpha_max=args.alpha_max, theta_max=args.theta_max,
                         cg_dict=encoder.cg_dict, unit=args.unit)
-        plot_all_dev(dev, osp.join(outpath, 'model_evaluations/equivariance_tests/initial'))
+        plot_all_dev(dev, osp.join(
+            outpath, 'model_evaluations/equivariance_tests/initial'))
 
     best_epoch = train_loop(
-        args, train_loader, valid_loader, 
-        encoder, decoder, 
-        optimizer_encoder, optimizer_decoder, 
+        args, train_loader, valid_loader,
+        encoder, decoder,
+        optimizer_encoder, optimizer_decoder,
         outpath, args.device
     )
     logging.info(f"Training completed! Best epoch: {best_epoch}")
@@ -95,9 +99,11 @@ def main(args):
             decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{best_epoch}_decoder_weights.pth'),
                                                map_location=args.test_device))
 
-        dev = lgn_tests(args, encoder, decoder, test_loader, alpha_max=args.alpha_max, theta_max=args.theta_max,
+        dev = lgn_tests(args, encoder, decoder, test_loader,
+                        alpha_max=args.alpha_max, theta_max=args.theta_max,
                         cg_dict=encoder.cg_dict, unit=args.unit)
-        plot_all_dev(dev, osp.join(outpath, 'model_evaluations/equivariance_tests'))
+        plot_all_dev(dev, osp.join(
+            outpath, 'model_evaluations/equivariance_tests'))
 
     if args.test_best_model:
         args.load_epoch = best_epoch
@@ -192,7 +198,9 @@ def setup_argparse():
     args = parser.parse_args()
 
     if args.load_to_train and ((args.load_path is None) or (args.load_epoch is None)):
-        raise ValueError("--load-to-train requires --load-model-path and --load-epoch.")
+        raise ValueError(
+            "--load-to-train requires --load-model-path and --load-epoch."
+        )
     if args.patience < 0:
         import math
         args.patience = math.inf
