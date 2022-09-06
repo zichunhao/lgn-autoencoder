@@ -51,10 +51,16 @@ def main(args):
     # Load existing model
     if args.load_to_train:
         outpath = args.load_path
-        encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'),
-                                           map_location=args.device))
-        decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'),
-                                           map_location=args.device))
+        try:
+            encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/best_encoder_weights.pth'),
+                                            map_location=args.device))
+            decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/best_decoder_weights.pth'),
+                                            map_location=args.device))
+        except FileNotFoundError:
+            encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'),
+                                            map_location=args.device))
+            decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'),
+                                            map_location=args.device))
     # Create new model
     else:
         import json
