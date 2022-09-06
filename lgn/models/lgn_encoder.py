@@ -369,6 +369,12 @@ class LGNEncoder(CGModule):
         if 'labels' in data:
             node_mask = data['labels'].to(device=self.device)
             node_mask = node_mask.to(torch.uint8)
+        elif 'masks' in data:
+            node_mask = data['masks'].to(device=self.device)
+            node_mask = node_mask.to(torch.uint8)
+        elif 'mask' in data:
+            node_mask = data['mask'].to(device=self.device)
+            node_mask = node_mask.to(torch.uint8)
         else:
             node_mask = data['p4'][..., 0] != 0
             node_mask = node_mask.to(device=self.device, dtype=torch.uint8)
@@ -378,7 +384,11 @@ class LGNEncoder(CGModule):
         scalars = normsq4(node_ps).abs().sqrt().unsqueeze(-1)
 
         if 'scalars' in data.keys():
-            scalars = torch.cat([scalars, data['scalars'].to(device=self.device, dtype=self.dtype)], dim=-1)
+            # (0,0) representation
+            scalars = torch.cat([
+                scalars, 
+                data['scalars'].to(device=self.device, dtype=self.dtype)
+            ], dim=-1)
 
         return scalars, node_ps, node_mask, edge_mask
         
