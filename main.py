@@ -1,6 +1,6 @@
 from utils.argparse_utils import get_bool, get_device, get_dtype
 from utils.argparse_utils import parse_model_settings, parse_plot_settings, parse_covariance_test_settings, parse_data_settings
-from utils.utils import create_model_folder, latest_epoch, get_compression_rate
+from utils.utils import create_model_folder, best_epoch, get_compression_rate
 from utils.train import train_loop
 from utils.initialize import initialize_autoencoder, initialize_data, initialize_test_data, initialize_optimizers
 
@@ -15,7 +15,7 @@ import argparse
 
 def main(args):
     if args.load_to_train and args.load_epoch < 0:
-        args.load_epoch = latest_epoch(args.load_path, num=args.load_epoch)
+        args.load_epoch = best_epoch(args.load_path, num=args.load_epoch)
     logging.info(f'{args=}')
     compression_rate = get_compression_rate(
         ls=args.tau_latent_scalars,

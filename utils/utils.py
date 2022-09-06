@@ -161,19 +161,23 @@ def get_compression_rate(
     return ratio
 
 
-def latest_epoch(
+def best_epoch(
     model_path: str, 
     num: int = -1
 ) -> int:
-    path = osp.join(model_path, 'weights_decoder/*.pth')
-    file_list = glob.glob(path)
-    epochs = [[int(s) for s in filename.split('_') if s.isdigit()] for filename in file_list]
-    epochs.sort()
     try:
-        latest = epochs[num][0]
-    except IndexError:
+        info = torch.load(osp.join(model_path, 'trained_info.pt'))
+        return info['epoch']
+    except FileNotFoundError:
+        path = osp.join(model_path, 'weights_decoder/*.pth')
+        file_list = glob.glob(path)
+        epochs = [[int(s) for s in filename.split('_') if s.isdigit()] for filename in file_list]
+        epochs.sort()
         try:
-            latest = epochs[-1][0]
+            latest = epochs[num][0]
         except IndexError:
-            raise RuntimeError(f"Model does not exist in {model_path}")
-    return latest
+            try:
+                latest = epochs[-1][0]
+            except IndexError:
+                raise RuntimeError(f"Model does not exist in {model_path}")
+        return latest

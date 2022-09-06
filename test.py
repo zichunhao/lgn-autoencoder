@@ -9,7 +9,7 @@ from utils.jet_analysis import plot_p, anomaly_detection_ROC_AUC
 from lgn.models.autotest.lgn_tests import lgn_tests
 from lgn.models.autotest.utils import plot_all_dev
 from utils.initialize import initialize_autoencoder, initialize_test_data
-from utils.utils import make_dir, latest_epoch
+from utils.utils import make_dir, best_epoch
 from utils.train import validate
 
 
@@ -202,7 +202,7 @@ def setup_argparse():
     args = parser.parse_args()
 
     if args.load_epoch < 0:
-        args.load_epoch = latest_epoch(args.model_path, num=args.load_epoch)
+        args.load_epoch = best_epoch(args.model_path, num=args.load_epoch)
     if args.model_path is None:
         raise ValueError('--model-path needs to be specified.')
 
