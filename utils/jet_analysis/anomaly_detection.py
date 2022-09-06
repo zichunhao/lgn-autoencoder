@@ -116,7 +116,7 @@ def anomaly_detection_ROC_AUC(
             
         plt.legend()
         if save_path is not None:
-            plt.savefig(save_path / 'ROC_curves.pdf')
+            plt.savefig(save_path / 'roc_curves.pdf')
         else:
             plt.show()
 

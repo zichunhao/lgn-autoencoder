@@ -19,8 +19,8 @@ def test(args):
     # Load models
     encoder, decoder = initialize_autoencoder(args)
     try:
-        encoder_path = osp.join(args.model_path, f'weights_encoder/best_encoder_weights.pth')
-        decoder_path = osp.join(args.model_path, f'weights_decoder/best_decoder_weights.pth')
+        encoder_path = osp.join(args.model_path, 'weights_encoder/best_encoder_weights.pth')
+        decoder_path = osp.join(args.model_path, 'weights_decoder/best_decoder_weights.pth')
         encoder.load_state_dict(torch.load(encoder_path, map_location=args.device))
         decoder.load_state_dict(torch.load(decoder_path, map_location=args.device))
     except FileNotFoundError:
@@ -28,7 +28,7 @@ def test(args):
         decoder_path = osp.join(args.model_path, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth')
         encoder.load_state_dict(torch.load(encoder_path, map_location=args.device))
         decoder.load_state_dict(torch.load(decoder_path, map_location=args.device))
-    
+
     if args.plot_only:
         test_path = osp.join(args.model_path, f'test_{args.jet_type}_jets')
         try:
@@ -71,21 +71,26 @@ def test(args):
     logging.info('Plots finished.')
 
     # anomaly detection
-    if (args.anomaly_detection) and (len(args.signal_paths) > 0):   
-        logging.info(f"Anomaly detection started. Signal paths: {args.signal_paths}")  
+    if (args.anomaly_detection) and (len(args.signal_paths) > 0):
+        logging.info(f"Anomaly detection started. Signal paths: {args.signal_paths}")
         path_ad = Path(make_dir(osp.join(test_path, "anomaly_detection")))
         eps = 1e-16
         bkg_recons, bkg_target, bkg_norms = recons, target, norm_factors
         bkg_recons_normalized = bkg_recons / (bkg_norms + eps)
         bkg_target_normalized = bkg_target / (bkg_norms + eps)
-        
+
+        torch.save(bkg_recons, path_ad / f"{args.jet_type}_recons.pt")
+        torch.save(bkg_target, path_ad / f"{args.jet_type}_target.pt")
+        torch.save(bkg_norms, path_ad / f"{args.jet_type}_norms.pt")
+        torch.save(latent, path_ad / f"{args.jet_type}_latent.pt")
+
         sig_recons_list = []
         sig_target_list = []
         sig_norms_list = []
         sig_recons_normalized_list = []
         sig_target_normalized_list = []
-        
-        
+
+
         for signal_path, signal_type in zip(args.signal_paths, args.signal_types):
             # background vs single signal
             path_ad_single = path_ad / f"single_signals/{signal_type}"
@@ -94,49 +99,49 @@ def test(args):
                 args, sig_loader, encoder, decoder, args.load_epoch,
                 args.model_path, args.device, for_test=True
             )
-            
+
             sig_recons_normalized = sig_recons / (sig_norms + eps)
             sig_target_normalized = sig_target / (sig_norms + eps)
-            
+
             anomaly_detection_ROC_AUC(
                 sig_recons, sig_target, sig_recons_normalized, sig_target_normalized,
                 bkg_recons, bkg_target, bkg_recons_normalized, bkg_target_normalized,
                 include_emd=True, save_path=path_ad_single
             )
-            
+
             # add to list
             sig_recons_list.append(sig_recons)
             sig_target_list.append(sig_target)
             sig_norms_list.append(sig_norms)
             sig_recons_normalized_list.append(sig_recons_normalized)
             sig_target_normalized_list.append(sig_target_normalized)
-            
+
             # save results
             torch.save(sig_recons, path_ad_single / f"{signal_type}_recons.pt")
             torch.save(sig_target, path_ad_single / f"{signal_type}_target.pt")
             torch.save(sig_norms, path_ad_single / f"{signal_type}_norms.pt")
             torch.save(sig_latent, path_ad_single / f"{signal_type}_latent.pt")
-            
+
         # bkg vs. all signals
         sig_recons = torch.cat(sig_recons_list, dim=0)
         sig_target = torch.cat(sig_target_list, dim=0)
         sig_norms = torch.cat(sig_norms_list, dim=0)
         sig_recons_normalized = torch.cat(sig_recons_normalized_list, dim=0)
         sig_target_normalized = torch.cat(sig_target_normalized_list, dim=0)
-        
+
         anomaly_detection_ROC_AUC(
             sig_recons, sig_target, sig_recons_normalized, sig_target_normalized,
             bkg_recons, bkg_target, bkg_recons_normalized, bkg_target_normalized,
             include_emd=True, save_path=path_ad
         )
-          
+
     elif (args.anomaly_detection) and (len(args.signal_paths) > 0):
         logging.error("No signal paths given for anomaly detection.")
-        
+
     # Lorentz group equivariance tests
     if args.equivariance_test:
         dev = lgn_tests(
-            args, encoder, decoder, test_loader, 
+            args, encoder, decoder, test_loader,
             alpha_max=args.alpha_max, theta_max=args.theta_max,
             cg_dict=encoder.cg_dict, unit=args.unit
         )
@@ -188,7 +193,7 @@ def setup_argparse():
 
     # Convariance tests
     parse_covariance_test_settings(parser)
-    parser.add_argument('--anomaly-detection', action='store_true', default=False, 
+    parser.add_argument('--anomaly-detection', action='store_true', default=False,
                         help='Whether to run anomaly detection.')
     parser.add_argument('--signal-paths', nargs="+", type=str, metavar='', default=[],
                         help='Paths to all signal files')
