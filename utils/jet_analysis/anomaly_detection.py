@@ -1,5 +1,5 @@
 from sklearn import metrics
-from typing import Callable, Dict, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 from matplotlib import pyplot as plt
 from .utils import arcsinh
 from pathlib import Path
@@ -35,7 +35,8 @@ def anomaly_detection_ROC_AUC(
     include_emd: bool = True,
     save_path: Union[str, Path] = None,
     plot_rocs: bool = True,
-    plot_num_rocs: Optional[int] = -1
+    plot_num_rocs: Optional[int] = -1,
+    rocs_hlines: List[float] = [1e-1, 1e-2]
 ) -> Tuple[Dict[str, Tuple[np.ndarray]], Dict[str, Tuple[np.ndarray]]]:
     """Compute get AUC and ROC curves in the anomaly detection.
 
@@ -64,6 +65,9 @@ def anomaly_detection_ROC_AUC(
     (after sorted by AUC), defaults to -1.
     If the value takes one of {None, 0, -1}, all ROC curves are kept.
     :type plot_num_rocs: int, optional
+    :param rocs_hlines: Horizontal lines (and intercept) to plot on the ROC curves, 
+    defaults to [1e-1, 1e-2].
+    :type rocs_hlines: List[float], optional
     :return: (`roc_curves`, `aucs`), 
     where `roc_curves` is a dictionary {kind: roc_curve}, 
     and `aucs` is a dictionary {kind: auc}.
@@ -104,15 +108,16 @@ def anomaly_detection_ROC_AUC(
                 
             fpr, tpr, thresholds = roc_curves[kind]
             ax.plot(tpr, fpr, label=f'{kind} (AUC: {auc:.5f})')
-            ax.plot(
-                np.linspace(0, 1, 100), [0.01] * 100,
-                '--', c='gray', linewidth=1 
-            )
-            ax.vlines(
-                x=tpr[np.searchsorted(fpr, 0.01)],
-                ymin=0, ymax=0.01,
-                linestyles="--", colors="gray", linewidth=1
-            )
+            for y_value in rocs_hlines:
+                ax.plot(
+                    np.linspace(0, 1, 100), [y_value] * 100,
+                    '--', c='gray', linewidth=1 
+                )
+                ax.vlines(
+                    x=tpr[np.searchsorted(fpr, y_value)],
+                    ymin=0, ymax=y_value,
+                    linestyles="--", colors="gray", linewidth=1
+                )
             
         plt.legend()
         if save_path is not None:
