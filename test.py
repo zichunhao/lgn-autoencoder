@@ -1,10 +1,11 @@
 import os.path as osp
 import argparse
 import logging
+from pathlib import Path
 import torch
 from utils.argparse_utils import get_bool, get_device, get_dtype
 from utils.argparse_utils import parse_model_settings, parse_plot_settings, parse_covariance_test_settings, parse_data_settings
-from utils.jet_analysis.plot import plot_p
+from utils.jet_analysis import plot_p, anomaly_detection_ROC_AUC
 from lgn.models.autotest.lgn_tests import lgn_tests
 from lgn.models.autotest.utils import plot_all_dev
 from utils.initialize import initialize_autoencoder, initialize_test_data
@@ -64,11 +65,77 @@ def test(args):
     torch.save(jet_images, osp.join(test_path, 'jet_images.pt'))
     logging.info('Plots finished.')
 
+    # anomaly detection
+    if (args.anomaly_detection) and (len(args.signal_paths) > 0):   
+        logging.info(f"Anomaly detection started. Signal paths: {args.signal_paths}")  
+        path_ad = Path(make_dir(osp.join(test_path, "anomaly_detection")))
+        eps = 1e-16
+        bkg_recons, bkg_target, bkg_norms = recons, target, norm_factors
+        bkg_recons_normalized = bkg_recons / (bkg_norms + eps)
+        bkg_target_normalized = bkg_target / (bkg_norms + eps)
+        
+        sig_recons_list = []
+        sig_target_list = []
+        sig_norms_list = []
+        sig_recons_normalized_list = []
+        sig_target_normalized_list = []
+        
+        
+        for signal_path, signal_type in zip(args.signal_paths, args.signal_types):
+            # background vs single signal
+            path_ad_single = path_ad / f"single_signals/{signal_type}"
+            sig_loader = initialize_test_data(path=signal_path, batch_size=args.test_batch_size)
+            sig_recons, sig_target, sig_latent, sig_norms = validate(
+                args, sig_loader, encoder, decoder, args.load_epoch,
+                args.model_path, args.device, for_test=True
+            )
+            
+            sig_recons_normalized = sig_recons / (sig_norms + eps)
+            sig_target_normalized = sig_target / (sig_norms + eps)
+            
+            anomaly_detection_ROC_AUC(
+                sig_recons, sig_target, sig_recons_normalized, sig_target_normalized,
+                bkg_recons, bkg_target, bkg_recons_normalized, bkg_target_normalized,
+                include_emd=True, save_path=path_ad_single
+            )
+            
+            # add to list
+            sig_recons_list.append(sig_recons)
+            sig_target_list.append(sig_target)
+            sig_norms_list.append(sig_norms)
+            sig_recons_normalized_list.append(sig_recons_normalized)
+            sig_target_normalized_list.append(sig_target_normalized)
+            
+            # save results
+            torch.save(sig_recons, path_ad_single / f"{signal_type}_recons.pt")
+            torch.save(sig_target, path_ad_single / f"{signal_type}_target.pt")
+            torch.save(sig_norms, path_ad_single / f"{signal_type}_norms.pt")
+            torch.save(sig_latent, path_ad_single / f"{signal_type}_latent.pt")
+            
+        # bkg vs. all signals
+        sig_recons = torch.cat(sig_recons_list, dim=0)
+        sig_target = torch.cat(sig_target_list, dim=0)
+        sig_norms = torch.cat(sig_norms_list, dim=0)
+        sig_recons_normalized = torch.cat(sig_recons_normalized_list, dim=0)
+        sig_target_normalized = torch.cat(sig_target_normalized_list, dim=0)
+        
+        anomaly_detection_ROC_AUC(
+            sig_recons, sig_target, sig_recons_normalized, sig_target_normalized,
+            bkg_recons, bkg_target, bkg_recons_normalized, bkg_target_normalized,
+            include_emd=True, save_path=path_ad
+        )
+          
+    elif (args.anomaly_detection) and (len(args.signal_paths) > 0):
+        logging.error("No signal paths given for anomaly detection.")
+        
+    # Lorentz group equivariance tests
     if args.equivariance_test:
-        dev = lgn_tests(args, encoder, decoder, test_loader, alpha_max=args.alpha_max, theta_max=args.theta_max,
-                        cg_dict=encoder.cg_dict, unit=args.unit)
+        dev = lgn_tests(
+            args, encoder, decoder, test_loader, 
+            alpha_max=args.alpha_max, theta_max=args.theta_max,
+            cg_dict=encoder.cg_dict, unit=args.unit
+        )
         plot_all_dev(dev, osp.join(test_path, 'equivariance_tests'))
-
 
 def setup_argparse():
     parser = argparse.ArgumentParser(description='LGN Autoencoder on Test Dataset')
@@ -116,6 +183,16 @@ def setup_argparse():
 
     # Convariance tests
     parse_covariance_test_settings(parser)
+    parser.add_argument('--anomaly-detection', action='store_true', default=False, 
+                        help='Whether to run anomaly detection.')
+    parser.add_argument('--signal-paths', nargs="+", type=str, metavar='', default=[],
+                        help='Paths to all signal files')
+    parser.add_argument('--signal-types', nargs="+", type=str, metavar='', default=[],
+                        help='Types of jets in the signal files')
+    parser.add_argument('--plot-num-rocs', type=int, metavar='', default=-1,
+                        help='Number of ROC curves to keep when plotting (after sorted by AUC). '
+                        'If the value takes one of {0, -1}, all ROC curves are kept.'
+                        )
 
     args = parser.parse_args()
 

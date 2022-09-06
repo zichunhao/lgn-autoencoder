@@ -1,17 +1,18 @@
 from argparse import Namespace
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple, Union
 from lgn.models import LGNEncoder, LGNDecoder
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from utils.data.dataset import JetDataset
 from utils.utils import get_eps
 
+from pathlib import Path
 import logging
 import torch
 
 
 def initialize_data(
-    path: str, 
+    path: Union[str, Path], 
     batch_size: int, 
     train_fraction: float, 
     num_val: Optional[int] = None
@@ -49,7 +50,7 @@ def initialize_data(
 
 
 def initialize_test_data(
-    path: str, 
+    path: Union[str, Path], 
     batch_size: int
 ) -> DataLoader:
     data = torch.load(path)

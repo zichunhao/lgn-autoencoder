@@ -192,6 +192,27 @@ def get_p_polar_tensor(
 
     return torch.stack((pt, eta, phi), dim=-1)
 
+def get_p4_polar_tensor(
+    p: torch.Tensor, 
+    eps: float = 1e-16
+) -> torch.Tensor:
+    """(E, px, py, pz) -> (pt, eta, phi)"""
+    if p.shape[-1] == 4:
+        E, px, py, pz = p.unbind(dim=-1)
+    elif p.shape[-1] == 3:
+        px, py, pz  = p.unbind(dim=-1)
+    else:
+        raise ValueError(f'Invalid error. p.shape[-1] should be either 3 or 4. Found: {p.shape[-1]}.')
+
+    pt = torch.sqrt(px ** 2 + py ** 2)
+    try:
+        eta = torch.asinh(pz / (pt + eps))
+    except AttributeError:
+        eta = arcsinh(pz / pt)
+    phi = torch.atan2(py + eps, px)
+
+    return torch.stack((pt, eta, phi), dim=-1)
+
 
 def arcsinh(z: torch.Tensor) -> torch.Tensor:
     '''Self defined arcsinh function if torch is not up to date.'''
