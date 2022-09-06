@@ -76,6 +76,10 @@ def test(args):
         path_ad = Path(make_dir(osp.join(test_path, "anomaly_detection")))
         eps = 1e-16
         bkg_recons, bkg_target, bkg_norms = recons, target, norm_factors
+        if args.abs_coord and (args.unit.lower() == 'tev'):
+            # convert back for consistent unit
+            bkg_recons = bkg_recons / 1000
+            bkg_target = bkg_target / 1000
         bkg_recons_normalized = bkg_recons / (bkg_norms + eps)
         bkg_target_normalized = bkg_target / (bkg_norms + eps)
 
@@ -99,7 +103,7 @@ def test(args):
                 args, sig_loader, encoder, decoder, args.load_epoch,
                 args.model_path, args.device, for_test=True
             )
-
+            
             sig_recons_normalized = sig_recons / (sig_norms + eps)
             sig_target_normalized = sig_target / (sig_norms + eps)
 
