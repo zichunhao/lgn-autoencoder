@@ -14,7 +14,7 @@ from utils.train import validate
 
 
 def test(args):
-    test_loader = initialize_test_data(path=args.test_data_path, batch_size=args.test_batch_size)
+    test_loader = initialize_test_data(paths=args.test_data_paths, batch_size=args.test_batch_size)
 
     # Load models
     encoder, decoder = initialize_autoencoder(args)
@@ -98,7 +98,7 @@ def test(args):
         for signal_path, signal_type in zip(args.signal_paths, args.signal_types):
             # background vs single signal
             path_ad_single = path_ad / f"single_signals/{signal_type}"
-            sig_loader = initialize_test_data(path=signal_path, batch_size=args.test_batch_size)
+            sig_loader = initialize_test_data(paths=signal_path, batch_size=args.test_batch_size)
             sig_recons, sig_target, sig_latent, sig_norms = validate(
                 args, sig_loader, encoder, decoder, args.load_epoch,
                 args.model_path, args.device, for_test=True

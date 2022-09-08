@@ -1,5 +1,5 @@
 from argparse import Namespace
-from typing import List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union
 from lgn.models import LGNEncoder, LGNDecoder
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
@@ -12,14 +12,22 @@ import torch
 
 
 def initialize_data(
-    path: Union[str, Path], 
+    paths: Union[str, Path, List[str], List[Path]],
     batch_size: int, 
     train_fraction: float, 
     num_val: Optional[int] = None
 ) -> Tuple[DataLoader, DataLoader]:
-    data = torch.load(path)
-
-    jet_data = JetDataset(data, shuffle=True)  # The original data is not shuffled yet
+    if isinstance(paths, (list, tuple)):
+        if len(paths) <= 0:
+            raise ValueError(f"{paths=} is empty.")
+        data = torch.load(paths[0])
+        jet_data = JetDataset(data, shuffle=False)
+        for path in paths[1:]:
+            data = torch.load(path)
+            jet_data.add(data)
+    else:
+        data = torch.load(paths)
+        jet_data = JetDataset(data, shuffle=False)
 
     if train_fraction > 1:
         num_train = int(train_fraction)
@@ -50,11 +58,20 @@ def initialize_data(
 
 
 def initialize_test_data(
-    path: Union[str, Path], 
+    paths: Union[str, Path, List[str], List[Path]], 
     batch_size: int
 ) -> DataLoader:
-    data = torch.load(path)
-    jet_data = JetDataset(data, shuffle=False)
+    if isinstance(paths, (list, tuple)):
+        if len(paths) <= 0:
+            raise ValueError(f"{paths=} is empty.")
+        data = torch.load(paths[0])
+        jet_data = JetDataset(data, shuffle=False)
+        for path in paths[1:]:
+            data = torch.load(path)
+            jet_data.add(data)
+    else:
+        data = torch.load(paths)
+        jet_data = JetDataset(data, shuffle=False)
     return DataLoader(jet_data, batch_size=batch_size, shuffle=False)
 
 

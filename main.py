@@ -26,12 +26,12 @@ def main(args):
     )
     logging.info(f"compression rate: {compression_rate}")
 
-    train_loader, valid_loader = initialize_data(path=args.data_path,
+    train_loader, valid_loader = initialize_data(paths=args.data_paths,
                                                  batch_size=args.batch_size,
                                                  train_fraction=args.train_fraction,
                                                  num_val=args.num_valid)
-    test_loader = initialize_test_data(
-        path=args.test_data_path, batch_size=args.test_batch_size)
+    test_loader = initialize_test_data(paths=args.test_data_paths, 
+                                       batch_size=args.test_batch_size)
 
     """Initializations"""
     encoder, decoder = initialize_autoencoder(args)
@@ -56,14 +56,14 @@ def main(args):
         outpath = args.load_path
         try:
             encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/best_encoder_weights.pth'),
-                                    map_location=args.device))
+                                               map_location=args.device))
             decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/best_decoder_weights.pth'),
-                                    map_location=args.device))
+                                               map_location=args.device))
         except FileNotFoundError:
             encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'),
-                                    map_location=args.device))
+                                               map_location=args.device))
             decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'),
-                                    map_location=args.device))
+                                               map_location=args.device))
     # Create new model
     else:
         import json
@@ -102,8 +102,7 @@ def main(args):
         dev = lgn_tests(args, encoder, decoder, test_loader,
                         alpha_max=args.alpha_max, theta_max=args.theta_max,
                         cg_dict=encoder.cg_dict, unit=args.unit)
-        plot_all_dev(dev, osp.join(
-            outpath, 'model_evaluations/equivariance_tests'))
+        plot_all_dev(dev, osp.join(outpath, 'model_evaluations/equivariance_tests'))
 
     if args.test_best_model:
         args.load_epoch = best_epoch

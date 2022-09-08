@@ -11,6 +11,7 @@ class JetDataset(Dataset):
     def __init__(self, data, num_pts=-1, shuffle=True):
 
         self.data = data
+        self.shuffle = shuffle
         if 'Nobj' not in data.keys():
             try:
                 data['Nobj'] = data['labels'].sum(dim=-1)
@@ -36,6 +37,13 @@ class JetDataset(Dataset):
         return self.num_pts
 
     def __getitem__(self, idx):
-        if self.perm is not None:
+        if self.shuffle:
             idx = self.perm[idx]
         return {key: val[idx] for key, val in self.data.items()}
+
+    def add(self, data):
+        data = {
+            key: torch.cat([self.data[key], data[key]], dim=0) 
+            for key in self.data.keys()
+        }
+        self.__init__(self.data, num_pts=self.num_pts, shuffle=self.shuffle)
