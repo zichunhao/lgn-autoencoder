@@ -20,9 +20,11 @@ def initialize_data(
     if isinstance(paths, (list, tuple)):
         if len(paths) <= 0:
             raise ValueError(f"{paths=} is empty.")
+        logging.info(f"loading {paths[0]}")
         data = torch.load(paths[0])
         jet_data = JetDataset(data, shuffle=False)
         for path in paths[1:]:
+            logging.info(f"loading {path}")
             data = torch.load(path)
             jet_data.add(data)
     else:
