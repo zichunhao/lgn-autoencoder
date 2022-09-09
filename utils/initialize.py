@@ -32,18 +32,18 @@ def initialize_data(
     if train_fraction > 1:
         num_train = int(train_fraction)
         if num_val is None:
-            num_jets = len(data['Nobj'])
+            num_jets = len(jet_data)
             num_val = num_jets - num_train
-        else:
-            num_others = len(data['Nobj']) - num_train - num_val
-            train_set, val_set, _ = torch.utils.data.random_split(jet_data, [num_train, num_val, num_others])
-            train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
-            valid_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True)
-            return train_loader, valid_loader
+
+        num_others = len(jet_data) - num_train - num_val
+        train_set, val_set, _ = torch.utils.data.random_split(jet_data, [num_train, num_val, num_others])
+        train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+        valid_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True)
+        return train_loader, valid_loader
     else:
         if train_fraction < 0:
             train_fraction = 0.8
-        num_jets = len(data['Nobj'])
+        num_jets = len(jet_data)
         num_train = int(num_jets * train_fraction)
         num_val = num_jets - num_train
 
