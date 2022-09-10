@@ -395,6 +395,8 @@ def get_jet_name(jet_type):
         jet_name = 'W boson'
     elif jet_type == 'z':
         jet_name = 'Z boson'
+    elif jet_type.lower() == 'qcd':
+        jet_name = 'QCD'
     else:
         import logging
         logging.warning(f"Unknown jet type: {jet_type}.")

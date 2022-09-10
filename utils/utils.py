@@ -1,4 +1,5 @@
 from argparse import Namespace
+import logging
 import os
 import os.path as osp
 from typing import List, Optional, Tuple, Union
@@ -181,3 +182,21 @@ def best_epoch(
             except IndexError:
                 raise RuntimeError(f"Model does not exist in {model_path}")
         return latest
+    
+    
+def get_real(x_cplx: torch.Tensor, method: str, eps: float = 1e-16):
+    if method.lower() == 'real':
+        return x_cplx[0]
+    if method.lower() == 'imag':
+        return x_cplx[1]
+    if method.lower() == 'norm':
+        return torch.sqrt(
+            torch.pow(x_cplx[0], 2) + torch.pow(x_cplx[1], 2) + eps
+        )
+    if method.lower() == 'sum':
+        return x_cplx[0] + x_cplx[1]
+    if method.lower() == 'mean':
+        return (x_cplx[0] + x_cplx[1]) / 2
+    
+    logging.warning("Invalid method of get_real: {method}. Using 'real' instead.")
+    return x_cplx[0]

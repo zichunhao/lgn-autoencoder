@@ -165,21 +165,16 @@ def setup_argparse():
                         help='Only plot the results without the inference. If inference results are not found, run inference first.')
     parser.add_argument('--loss-choice', type=str, default='ChamferLoss', metavar='',
                         help="Choice of loss function. Options: ('ChamferLoss', 'EMDLoss', 'hybrid')")
-    parser.add_argument('--loss-norm-choice', type=str, default='p3', metavar='',
-                        help="Choice of calculating the norms of 4-vectors when calculating the loss. "
-                        "Options: ['canonical', 'real', 'cplx', 'p3', 'polar']. "
-                        "'canonical': Write p in the basis of zonal functions, take the dot product, and find the norm out of the complex scalar. "
-                        "'real': Find the norm of each component and then take the dot product. "
-                        "'cplx': Take the dot product and then find the norm out the the complex scalar. "
-                        "'p3': Find the norm of each component and find the norm square of the 3-momenta part of p4. "
-                        "'polar': Find the distance of real component in polar coordinate: ΔpT^2 + Δphi^2 + Δeta^2"
-                        "Default: 'p3.'")
+    parser.add_argument('--get-real-method', type=str, default='real', metavar='',
+                        help="Method to map complexified vectors to real ones. \n"
+                        "Supported type: \n"
+                        "  - real: real component is taken (default).\n"
+                        "  - imag: imaginary component is taken. \n"
+                        "  - sum : sum of real and imaginary components is taken. \n"
+                        "  - norm: norm of real and imaginary components is taken. \n"
+                        "  - mean: mean of real and imaginary components is taken.")
     parser.add_argument('--chamfer-jet-features', type=get_bool, default=True,
                         help="Whether to take into the jet features.")
-    parser.add_argument('--im', type=get_bool, default=True,
-                        help="Whether to take into imaginary component of the reconstructed jet into account if using the chamfer loss."
-                        "Only used when --loss-norm-choice is in ['p3', 'polar']"
-                        "If set to True, the target will be complexified with 0 imaginary components.")
     parser.add_argument('--device', type=get_device, default=torch.device('cuda' if torch.cuda.is_available() else 'cpu'), metavar='',
                         help="Device to which the model is initialized. Options: ('gpu', 'cpu', 'cuda', '-1')."
                         "Default: -1, which means deciding device based on whether gpu is available.")

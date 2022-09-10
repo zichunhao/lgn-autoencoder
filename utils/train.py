@@ -7,7 +7,7 @@ from lgn.models.lgn_encoder import LGNEncoder
 from torch.utils.data import DataLoader
 from torch.optim import Optimizer
 from utils.jet_analysis import plot_p
-from utils.utils import make_dir, save_data, plot_eval_results, get_eps
+from utils.utils import make_dir, save_data, plot_eval_results, get_eps, get_real
 import time
 import os.path as osp
 import warnings
@@ -242,12 +242,15 @@ def train(
         if device is not None:
             p4_target = p4_target.to(device=device)
 
+        # map to real vectors
+        p4_recons = get_real(p4_recons, method=args.get_real_method)
+
         if args.normalize:
             norm_factor = norm_factor.to(p4_recons.device)
-            reconstructed_data.append((p4_recons[0]*norm_factor).detach().cpu())
+            reconstructed_data.append((p4_recons*norm_factor).detach().cpu())
             target_data.append((p4_target*norm_factor).detach().cpu())
         else:
-            reconstructed_data.append(p4_recons[0].cpu().detach())
+            reconstructed_data.append(p4_recons)
             target_data.append(p4_target.cpu().detach())
 
         if for_test:
@@ -341,10 +344,7 @@ def get_loss(
     # Chamfer loss
     if 'chamfer' in loss_choice:
         from utils.losses import ChamferLoss
-        chamferloss = ChamferLoss(
-            loss_norm_choice=args.chamfer_loss_norm_choice, 
-            im=args.chamfer_im
-        )
+        chamferloss = ChamferLoss(device=args.device)
         batch_loss = chamferloss(
             p4_recons, p4_target, 
             jet_features=args.chamfer_jet_features
@@ -359,10 +359,7 @@ def get_loss(
     # Hybrid of Chamfer loss and EMD loss
     elif loss_choice in ('hybrid', 'combined', 'mix'):
         from utils.losses import ChamferLoss, EMDLoss
-        chamfer_loss = ChamferLoss(
-            loss_norm_choice=args.chamfer_loss_norm_choice, 
-            im=args.chamfer_im
-        )
+        chamfer_loss = ChamferLoss(device=args.device)
         emd_loss = EMDLoss(eps=get_eps(args))
         batch_loss = args.chamfer_loss_weight * chamfer_loss(
             p4_recons, p4_target, 
@@ -373,7 +370,7 @@ def get_loss(
     # MSE loss
     elif 'mse' in loss_choice:
         mseloss = nn.MSELoss()
-        batch_loss = mseloss(p4_recons[0], p4_target)  # output, target
+        batch_loss = mseloss(p4_recons, p4_target)  # output, target
 
     # Hungarian loss
     elif 'jet' in loss_choice or 'hungarian' in loss_choice:
@@ -381,7 +378,7 @@ def get_loss(
         hungarian_mse = HungarianMSELoss()
         # TODO: implement different metric for calculating distance
         batch_loss = hungarian_mse(
-            p4_recons[0], p4_target, 
+            p4_recons, p4_target, 
             abs_coord=args.hungarian_abs_coord, 
             polar_coord=args.hungarian_polar_coord
         )
