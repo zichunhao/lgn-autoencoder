@@ -18,6 +18,17 @@ def prepare(
     )
     logging.info(f"Preparing data ({jet_type=}).")
     
+    if isinstance(save_dir, Path):
+        pass
+    elif isinstance(save_dir, str):
+        save_dir = Path(save_dir)
+    else:
+        raise TypeError(
+            "save_path must be of type a str or pathlib.Path. "
+            f"Got: {type(save_dir)}."
+        )
+    save_dir.mkdir(parents=True, exist_ok=True)
+    
     jet = data.jet_data
     p = data.particle_data
     
