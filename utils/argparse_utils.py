@@ -176,10 +176,12 @@ def parse_data_settings(
     training: bool = True
 ) -> argparse.ArgumentParser:
     parser.add_argument('-j', '--jet-type', type=str, required=True, metavar='',
-                        help="The jet type to train. Options: ('g', 'q', 't', 'w', 'z').")
-    parser.add_argument('--data-paths', nargs='+', type=str, default=['hls4ml/g_jets_30p_p4.pt'], metavar='',
+                        help="The jet type to train. Options: ('g', 'q', 't', 'w', 'z', 'QCD').")
+    parser.add_argument('--data-paths', nargs='+', type=str, 
+                        default=['./data/g_jets_30p_p4.pt', './data/q_jets_30p_p4.pt'], metavar='',
                         help='The paths of the training data.')
-    parser.add_argument('--test-data-paths', nargs='+', type=str, default=['hls4ml/g_jets_30p_p4_test.pt'], metavar='',
+    parser.add_argument('--test-data-paths', nargs='+', type=str, 
+                        default=['./data/g_jets_30p_p4_test.pt', './data/q_jets_30p_p4_test.pt'], metavar='',
                         help='The paths of the test data.')
     parser.add_argument('--unit', type=str, default='TeV',
                         help="The unit of momenta. Choices: ('GeV', 'TeV'). Default: TeV. ")

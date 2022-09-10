@@ -34,12 +34,13 @@ python main.py \
 --tau-latent-scalars 1 \
 --tau-latent-vectors 13 \
 --num-test-batch 200 \
---plot-freq 1 \
---plot-start-epoch 0 \
+--plot-freq 100 \
+--plot-start-epoch 100 \
+--map-to-latent "min&max" \
 --equivariance-test \
---encoder-num-channels 4 5 3 3 \
---decoder-num-channels 4 5 3 3 \
---data-path "./hls4ml/g_jets_30p_p4.pt" \
---test-data-path "./hls4ml/g_jets_30p_p4_test.pt" \
+--encoder-num-channels 3 3 4 4 \
+--decoder-num-channels 4 4 3 3 \
+--data-path "./data/g_jets_30p_p4.pt" \
+--test-data-path "./data/g_jets_30p_p4_test.pt" \
 --save-dir "$output_path" \
 | tee -a "$output_path"/autoencoder-g-s1-v1-4544-4544.txt

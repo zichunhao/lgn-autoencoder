@@ -4,28 +4,42 @@ This jet data generative model exploits the symmetry of the [Lorentz Group](http
 
 To achieve Lorentz equivariance, the model works on the [irreducible representations](https://en.wikipedia.org/wiki/Irreducible_representation) of the [Lorentz group](https://en.wikipedia.org/wiki/Representation_theory_of_the_Lorentz_group) $\mathrm{SO}(1,3)$. For instance, Lorentz scalars are $(0,0)$ representations, and 4-vectors, such as the particle 4-momenta, are $(1/2,1/2)$ representations. Each representation has its transformation rules. That the model is equivariant implies that each parameter in the model will transform according to its corresponding transformation rule if the input undergoes a Lorentz transformation. In this way, the model can always generate data that satisfy the special relativity, and the latent space, since all internal parameters are Lorentz tensors, can possibly be more physically interpretable.
 
-## Running the model
+## Download Dataset
+To download data:
+1. Install `JetNet`:
+    ```
+    pip3 install jetnet; 
+    ```
+2. Run `preprocess.py`
+    ```
+    python utils/data/preprocess.py \
+    --jet-types g q t w z \
+    --save-dir "./data"
+    ```
+
+## Train the model
 An example training looks like this.
 ```
 python main.py \
--j g \
--e 5000 \
+-j QCD \
+-e 20000 \
 -bs 256 \
---tbs 512 \
---data-path "./hls4ml/g_jets_30p_p4.pt" \
---test-data-path "./hls4ml/g_jets_30p_p4_test.pt" \
+-tbs 512 \
+--data-paths "./data/g_jets_30p_p4.pt" "./data/q_jets_30p_p4.pt" \
+--test-data-paths "./data/g_jets_30p_p4_test.pt" "./data/q_jets_30p_p4_test.pt" \
 --train-fraction 0.75 \
 --loss-choice chamfer \
 --maxdim 2 \
 --tau-latent-scalars 1 \
---tau-latent-vectors 13 \
---encoder-num-channels 4 5 3 3 \
---decoder-num-channels 4 5 3 3 \
+--tau-latent-vectors 8 \
+--map-to-latent "min&max" \
+--encoder-num-channels 3 3 4 4 \
+--decoder-num-channels 4 4 3 3 \
 --plot-freq 100 \
 --plot-start-epoch 100 \
 --equivariance-test \
 --save-dir "LGNAE-trained-models" \
-| tee -a" LGNAE-trained-models/autoencoder-g-s1-v13-4533-4533.txt"
+| tee -a" LGNAE-trained-models/autoencoder-g-s1-v8-3344-4433.txt"
 ```
 ### Some important parameters for `main.py`
 - `-bs` (`batch-size`): batch size.
@@ -34,8 +48,12 @@ python main.py \
 - `-e` (`--num-epochs`): number of epochs to train.
 - `--loss-choice`: loss function to use.
 - `--train-fraction`: fraction of the data used for training.
-- `--data-path`: path to the training data.
-- `--test-data-path`: path to the test data.
+- `--data-paths`: paths to the training data.
+- `--test-data-paths`: paths to the test data.
+- `--map-to-latent`: aggregation method to the latent space. 
+  - For `min&max`, min and max will be concatenated.
+  - For `min+max`, min and max will be added.
+  - For `mix`, a Lorentz group equivariant linear layer will mix the irreps to the latent space.
 - `--maxdim`: maximum weight of representation to keep in training (recommended: 2 or 3).
 - `--tau-latent-scalars`: number of (complexified) Lorentz scalars to keep in the latent space.
 - `--tau-latent-vectors`: number of (complexified) 4-vectors to keep in the latent space.
