@@ -75,8 +75,7 @@ def prepare(
         save_dir / f"{jet_type}_jets_30p_p4_test.pt"
     )
     logging.info(
-        f"Data saved in {save_dir} as {jet_type}_jets_30p_p4_all.pt, ' \
-        '{jet_type}_jets_30p_p4.p, {jet_type}_jets_30p_p4_test.pt."
+        f"Data saved in {save_dir} as {jet_type}_jets_30p_p4_all.pt, {jet_type}_jets_30p_p4.pt, {jet_type}_jets_30p_p4_test.pt."
     )
     
     return
