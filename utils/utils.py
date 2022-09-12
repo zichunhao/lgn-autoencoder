@@ -168,7 +168,7 @@ def best_epoch(
 ) -> int:
     try:
         info = torch.load(osp.join(model_path, 'trained_info.pt'))
-        return info['epoch']
+        return info['best_epoch']
     except FileNotFoundError:
         path = osp.join(model_path, 'weights_decoder/*.pth')
         file_list = glob.glob(path)
