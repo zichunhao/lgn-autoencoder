@@ -255,7 +255,7 @@ def train(
 
         if for_test:
             latent_spaces.append({
-                k: latent_features[k].squeeze(dim=2) 
+                k: latent_features[k].squeeze(dim=2).detach().cpu()
                 for k in latent_features.keys()
             })
             if args.normalize:
@@ -294,6 +294,10 @@ def train(
         latent_dict = {
             k: [latent_spaces[i][k] for i in range(len(latent_spaces))]
             for k in latent_features.keys()
+        }
+        latent_dict = {
+            k: torch.cat(v, dim=1)  # (2, jets, tau, dim)
+            for k, v in latent_dict.items()
         }
         
         norm_factors_data = torch.cat(norm_factors, dim=0) if args.normalize else torch.ones(
