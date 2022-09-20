@@ -34,17 +34,16 @@ def prepare(
     
     # jet momenta components
     Pt, Eta, Mass = jet[..., 1], jet[..., 2], jet[..., 3]
-    Phi = (np.random.random(Eta.shape) - 0.5) * np.pi
+    Phi = np.random.random(Eta.shape) * 2 * np.pi  # [0, 2pi]
     
     # particle momenta components (relative coordinates)
     eta_rel, phi_rel, pt_rel, mask = p[..., 0], p[..., 1], p[..., 2], p[..., 3]
-    phi_rel = ((phi_rel + 0.5) * 2 * np.pi) - np.pi
     
     # particle momenta components (polar coordinates)
     pt = pt_rel * Pt.reshape(-1, 1)
     eta = eta_rel + Eta.reshape(-1, 1)
     phi = phi_rel + Phi.reshape(-1, 1)
-    phi = ((phi + np.pi) % (2 * np.pi)) - np.pi
+    phi = (phi % (2 * np.pi)) - np.pi  # [-pi, pi]
     mask = torch.from_numpy(mask)
     
     # Cartesian coordinates
