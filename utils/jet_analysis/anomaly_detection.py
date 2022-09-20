@@ -79,6 +79,11 @@ def anomaly_detection_ROC_AUC(
         roc_curve = metrics.roc_curve(true_labels, scores)
         roc_curves[kind] = roc_curve
         auc = metrics.auc(roc_curve[0], roc_curve[1])
+        if auc < 0.5:
+            # opposite labels
+            roc_curve = metrics.roc_curve(-true_labels, scores)
+            roc_curves[kind] = roc_curve
+            auc = metrics.auc(roc_curve[0], roc_curve[1])
         aucs[kind] = auc
 
     if save_path is not None:
