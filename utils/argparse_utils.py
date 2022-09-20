@@ -101,7 +101,7 @@ def parse_plot_settings(parser: argparse.ArgumentParser) -> argparse.ArgumentPar
     parser.add_argument('--fill', default=False, action='store_true',
                         help='Whether to plot filled histograms as well. True only if called in the command line.')
 
-    parser.add_argument('--jet-image-npix', type=int, default=24,
+    parser.add_argument('--jet-image-npix', type=int, default=40,
                         help='The number of pixels for the jet image')
     parser.add_argument('--jet-image-maxR', type=float, default=0.5,
                         help='The maxR of the jet image')
