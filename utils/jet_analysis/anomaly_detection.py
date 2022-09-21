@@ -1,6 +1,7 @@
 from sklearn import metrics
 from typing import Dict, List, Tuple, Union
 from matplotlib import pyplot as plt
+from torch.utils.data import Dataset, DataLoader
 from .utils import arcsinh
 from pathlib import Path
 
@@ -198,8 +199,8 @@ def anomaly_scores_sig_bkg(
         for k in sig_scores.keys()
     }
     true_labels = np.concatenate([
-        np.ones_like(sig_scores[PARTICLE_CARTESIAN]),
-        -np.ones_like(bkg_scores[PARTICLE_CARTESIAN])
+        np.ones_like(sig_scores[MSE_PARTICLE_CARTESIAN]),
+        -np.ones_like(bkg_scores[MSE_PARTICLE_CARTESIAN])
     ])
     return scores, true_labels
 
