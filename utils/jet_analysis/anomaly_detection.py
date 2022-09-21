@@ -41,6 +41,7 @@ def anomaly_detection_ROC_AUC(
     bkg_recons_normalized: torch.Tensor,
     bkg_target_normalized: torch.Tensor,
     include_emd: bool = True,
+    batch_size: int = -1,
     save_path: Union[str, Path] = None,
     plot_rocs: bool = True,
     rocs_hlines: List[float] = [1e-1, 1e-2]
@@ -65,6 +66,9 @@ def anomaly_detection_ROC_AUC(
     :type bkg_target_normalized: torch.Tensor
     :param include_emd: Whether to include EMD loss as score, defaults to True
     :type include_emd: bool, optional
+    :param batch_size: Batch size, defaults to -1.
+    If it is a non-positive number or None, then the data will no be batched. 
+    :type batch_size: int, optional
     :param save_path: Path to save the ROC curves and AUCs, defaults to None. 
     If None, the ROC curves and AUCs are not saved.
     :type save_path: str, optional
@@ -79,7 +83,7 @@ def anomaly_detection_ROC_AUC(
     scores_dict, true_labels = anomaly_scores_sig_bkg(
         sig_recons, sig_target, sig_recons_normalized, sig_target_normalized,
         bkg_recons, bkg_target, bkg_recons_normalized, bkg_target_normalized,
-        include_emd=include_emd
+        include_emd=include_emd, batch_size=batch_size
     )
     roc_curves = dict()
     aucs = dict()
@@ -154,6 +158,7 @@ def anomaly_scores_sig_bkg(
     bkg_recons_normalized: torch.Tensor,
     bkg_target_normalized: torch.Tensor,
     include_emd: bool = True,
+    batch_size: int = -1
 ) -> Tuple[np.ndarray, Dict[str, np.ndarray]]:
     """Compute anomaly scores for signal and background
     and return the anomaly scores along with the true labels.
@@ -176,6 +181,9 @@ def anomaly_scores_sig_bkg(
     :type bkg_target_normalized: torch.Tensor
     :param include_emd: Whether to include EMD loss as score, defaults to True
     :type include_emd: bool, optional
+    :param batch_size: Batch size, defaults to -1.
+    If it is a non-positive number or None, then the data will no be batched. 
+    :type batch_size: int, optional
     :return: (true_labels, scores), where scores is a dictionary 
     with the scores (value) for each type (key).
     :rtype: Tuple[np.ndarray, Dict[str, np.ndarray]]
@@ -185,22 +193,24 @@ def anomaly_scores_sig_bkg(
         sig_target,
         sig_recons_normalized,
         sig_target_normalized,
-        include_emd=include_emd
+        include_emd=include_emd,
+        batch_size=batch_size
     )
     bkg_scores = anomaly_scores(
         bkg_recons,
         bkg_target,
         bkg_recons_normalized,
         bkg_target_normalized,
-        include_emd=include_emd
+        include_emd=include_emd,
+        batch_size=batch_size
     )
     scores = {
         k: np.concatenate([sig_scores[k], bkg_scores[k]])
         for k in sig_scores.keys()
     }
     true_labels = np.concatenate([
-        np.ones_like(sig_scores[MSE_PARTICLE_CARTESIAN]),
-        -np.ones_like(bkg_scores[MSE_PARTICLE_CARTESIAN])
+        np.ones_like(sig_scores[CHAMFER_PARTICLE_CARTESIAN]),
+        -np.ones_like(bkg_scores[CHAMFER_PARTICLE_CARTESIAN])
     ])
     return scores, true_labels
 
@@ -211,6 +221,7 @@ def anomaly_scores(
     recons_normalized: torch.Tensor,
     target_normalized: torch.Tensor,
     include_emd: bool = True,
+    batch_size: int = -1
 ) -> Dict[str, np.ndarray]:
     """Get anomaly scores for a batch of jets.
 
@@ -224,6 +235,9 @@ def anomaly_scores(
     :type target_normalized: torch.Tensor
     :param include_emd: Whether to include EMD loss as a score, defaults to True
     :type include_emd: bool, optional
+    :param batch_size: Batch size, defaults to -1.
+    If it is a non-positive number or None, then the data will no be batched. 
+    :type batch_size: int, optional
     :return: A dictionary with the scores (value) for each type (key).
     :rtype: Dict[str, np.ndarray]
     """
@@ -250,11 +264,11 @@ def anomaly_scores(
 
     scores = {
         # average over jets
-        CHAMFER_PARTICLE_CARTESIAN: chamfer(recons, target).mean(-1).numpy(),
-        CHAMFER_PARTICLE_POLAR: chamfer(recons_polar, target_polar).mean(-1).numpy(),
-        CHAMFER_PARTICLE_NORMALIZED_CARTESIAN: chamfer(recons_normalized, target_normalized).mean(-1).numpy(),
-        CHAMFER_PARTICLE_NORMALIZED_POLAR: chamfer(recons_normalized_polar, target_normalized_polar).mean(-1).numpy(),
-        CHAMFER_PARTICLE_RELATIVE_POLAR: chamfer(recons_polar_rel, target_polar_rel).mean(-1).numpy(),
+        CHAMFER_PARTICLE_CARTESIAN: chamfer(recons, target, batch_size=batch_size).mean(-1).numpy(),
+        CHAMFER_PARTICLE_POLAR: chamfer(recons_polar, target_polar, batch_size=batch_size).mean(-1).numpy(),
+        CHAMFER_PARTICLE_NORMALIZED_CARTESIAN: chamfer(recons_normalized, target_normalized, batch_size=batch_size).mean(-1).numpy(),
+        CHAMFER_PARTICLE_NORMALIZED_POLAR: chamfer(recons_normalized_polar, target_normalized_polar, batch_size=batch_size).mean(-1).numpy(),
+        CHAMFER_PARTICLE_RELATIVE_POLAR: chamfer(recons_polar_rel, target_polar_rel, batch_size=batch_size).mean(-1).numpy(),
         MSE_PARTICLE_CARTESIAN: mse(recons, target).mean(-1).numpy(),
         MSE_PARTICLE_POLAR: mse(recons_polar, target_polar).mean(-1).numpy(),
         MSE_PARTICLE_NORMALIZED_CARTESIAN: mse(recons_normalized, target_normalized).mean(-1).numpy(),
@@ -262,7 +276,7 @@ def anomaly_scores(
         MSE_PARTICLE_RELATIVE_POLAR: mse(recons_polar_rel, target_polar_rel).mean(-1).numpy(),
         JET_CARTESIAN: mse(recons_jet, target_jet).numpy(),
         JET_POLAR: mse(recons_jet, target_jet).numpy(),
-        CHAMFER_PARTICLE_LORENTZ: chamfer_lorentz(recons, target).mean(-1).numpy(),
+        CHAMFER_PARTICLE_LORENTZ: chamfer_lorentz(recons, target, batch_size=batch_size).mean(-1).numpy(),
         MSE_PARTICLE_LORENTZ: mse_lorentz(recons, target).mean(-1).numpy(),
         JET_LORENTZ: mse_lorentz(recons_jet, target_jet).numpy()
     }
@@ -275,6 +289,11 @@ def anomaly_scores(
 
 
 # Helper functions
+def norm_sq_Lorentz(x: torch.Tensor) -> torch.Tensor:
+    E, px, py, pz = x.unbind(-1)
+    return E**2 - px**2 - py**2 - pz**2
+
+
 def mse_lorentz(
     p: torch.Tensor,
     q: torch.Tensor
@@ -288,9 +307,6 @@ def mse_lorentz(
     :return: MSE Loss between p and q using Lorentzian metric.
     :rtype: torch.Tensor
     """
-    def norm_sq_Lorentz(x: torch.Tensor) -> torch.Tensor:
-        E, px, py, pz = x.unbind(-1)
-        return E**2 - px**2 - py**2 - pz**2
     return norm_sq_Lorentz(p - q)
 
 
@@ -337,25 +353,63 @@ def mse(
 ) -> torch.Tensor:
     return ((p - q)**2).sum(dim=dim)
 
+
 def chamfer(
     p: torch.Tensor,
-    q: torch.Tensor
+    q: torch.Tensor,
+    batch_size: int = -1
 ) -> torch.Tensor:
-    diffs = torch.unsqueeze(p, -2) - torch.unsqueeze(q, -3)
-    dist = torch.norm(diffs, dim=-1)
-    min_dist_pq = torch.min(dist, dim=-1).values
-    min_dist_qp = torch.min(dist, dim=-2).values
-    return min_dist_pq + min_dist_qp
+    """Compute the chamfer distance between two batched data.
+
+    :param p: First tensor.
+    :type p: torch.Tensor
+    :param q: Second tensor.
+    :type q: torch.Tensor
+    :param batch_size: Batch size, defaults to -1.
+    If it is a non-positive number or None, then the data will no be batched. 
+    :type batch_size: int, optional
+    :return: _description_
+    :rtype: torch.Tensor
+    """
+    if (batch_size is not None) and (batch_size > 0):
+        # batched version
+        dataset = DistanceDataset(p, q)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        chamfer_dists = []
+        for p, q in dataloader:
+            # call non-batched version
+            chamfer_dists.append(chamfer(p, q, batch_size=-1))
+        return torch.cat(chamfer_dists, dim=0)
+    else:
+        # non-batched version
+        diffs = torch.unsqueeze(p, -2) - torch.unsqueeze(q, -3)
+        dist = torch.norm(diffs, dim=-1)
+        min_dist_pq = torch.min(dist, dim=-1).values
+        min_dist_qp = torch.min(dist, dim=-2).values
+        return min_dist_pq + min_dist_qp
+
 
 def chamfer_lorentz(
     p: torch.Tensor,
-    q: torch.Tensor
+    q: torch.Tensor,
+    batch_size: int = -1
 ) -> torch.Tensor:
-    diffs = torch.unsqueeze(p, -2) - torch.unsqueeze(q, -3)
-    dist = diffs[..., 0]**2 - diffs[..., 1]**2 - diffs[..., 2]**2 - diffs[..., 3]**2
-    min_dist_pq = torch.min(dist, dim=-1).values
-    min_dist_qp = torch.min(dist, dim=-2).values
-    return min_dist_pq + min_dist_qp
+    if (batch_size is not None) and (batch_size > 0):
+        # batched version
+        dataset = DistanceDataset(p, q)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        chamfer_dists = []
+        for p, q in dataloader:
+            # call non-batched version
+            chamfer_dists.append(chamfer_lorentz(p, q, batch_size=-1))
+        return torch.cat(chamfer_dists, dim=0)
+    else:
+        diffs = torch.unsqueeze(p, -2) - torch.unsqueeze(q, -3)
+        dist = norm_sq_Lorentz(diffs)
+        min_dist_pq = torch.min(dist, dim=-1).values
+        min_dist_qp = torch.min(dist, dim=-2).values
+        return min_dist_pq + min_dist_qp
+
 
 def normalize_particle_features(
     p: torch.Tensor,
@@ -433,5 +487,24 @@ def get_polar_rel(
     pt_norm = pt / (jet_pt.unsqueeze(-1) + eps)
     eta_norm = eta - jet_eta.unsqueeze(-1)
     phi_norm = phi - jet_phi.unsqueeze(-1)
-    phi_norm = (phi_norm + np.pi) % (2 * np.pi) - np.pi  # normalize to [-pi, pi)
+    phi_norm = (phi_norm + np.pi) % (2 * np.pi) - \
+        np.pi  # normalize to [-pi, pi)
     return torch.stack((pt_norm, eta_norm, phi_norm), dim=-1)
+
+class DistanceDataset(Dataset):
+    def __init__(self, x: torch.Tensor, y: torch.Tensor) -> None:
+        super().__init__()
+        if x.shape != y.shape:
+            raise ValueError(
+                f"x and y shapes do not match: "
+                f"{x.shape} != {y.shape}"
+            )
+
+        self.x = x
+        self.y = y
+
+    def __len__(self) -> int:
+        return len(self.x)
+
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        return (self.x[idx], self.y[idx])

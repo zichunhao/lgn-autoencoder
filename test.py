@@ -136,7 +136,7 @@ def test(args):
         anomaly_detection_ROC_AUC(
             sig_recons, sig_target, sig_recons_normalized, sig_target_normalized,
             bkg_recons, bkg_target, bkg_recons_normalized, bkg_target_normalized,
-            include_emd=True, save_path=path_ad
+            include_emd=True, batch_size=args.test_batch_size, save_path=path_ad
         )
 
     elif (args.anomaly_detection) and (len(args.signal_paths) > 0):
@@ -194,6 +194,9 @@ def setup_argparse():
     parse_covariance_test_settings(parser)
     parser.add_argument('--anomaly-detection', action='store_true', default=False,
                         help='Whether to run anomaly detection.')
+    parser.add_argument('--anomaly-scores-batch-size', type=int, default=-1, metavar='',
+                        help='Batch size when computing anomaly scores. Used for calculating chamfer distances. '
+                        'Default: -1, which means not using batch size.')
     parser.add_argument('--signal-paths', nargs="+", type=str, metavar='', default=[],
                         help='Paths to all signal files')
     parser.add_argument('--signal-types', nargs="+", type=str, metavar='', default=[],
