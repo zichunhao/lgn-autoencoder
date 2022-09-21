@@ -7,17 +7,24 @@ from pathlib import Path
 import torch
 import energyflow
 import numpy as np
+from ..losses import ChamferLoss
 
 EPS_DEFAULT = 1e-16
 # keys for scores
-PARTICLE_CARTESIAN = "particle, Cartesian"
-PARTICLE_POLAR = "particle, polar"
-PARTICLE_NORMALIZED_CARTESIAN = "particle, normalized Cartesian"
-PARTICLE_NORMALIZED_POLAR = "particle, normalized polar"
-PARTICLE_RELATIVE_POLAR = "particle, relative polar"
+CHAMFER_PARTICLE_CARTESIAN = "particle, Cartesian, chamfer distance"
+CHAMFER_PARTICLE_POLAR = "particle, polar, chamfer distance"
+CHAMFER_PARTICLE_NORMALIZED_CARTESIAN = "particle, normalized Cartesian, chamfer distance"
+CHAMFER_PARTICLE_NORMALIZED_POLAR = "particle, normalized polar, chamfer distance"
+CHAMFER_PARTICLE_RELATIVE_POLAR = "particle, relative polar, chamfer distance"
+MSE_PARTICLE_CARTESIAN = "particle, Cartesian, MSE"
+MSE_PARTICLE_POLAR = "particle, polar, MSE"
+MSE_PARTICLE_NORMALIZED_CARTESIAN = "particle, normalized Cartesian, MSE"
+MSE_PARTICLE_NORMALIZED_POLAR = "particle, normalized polar, MSE"
+MSE_PARTICLE_RELATIVE_POLAR = "particle, relative polar, MSE"
 JET_CARTESIAN = "jet, Cartesian"
 JET_POLAR = "jet, polar"
-PARTICLE_LORENTZ = "particle, Lorentz norms"
+MSE_PARTICLE_LORENTZ = "particle, Lorentz norms, MSE"
+CHAMFER_PARTICLE_LORENTZ = "particle, Lorentz norms, Chamfer distance"
 JET_LORENTZ = "jet, Lorentz norms"
 EMD = 'emd'
 EMD_RELATIVE = 'emd (relative coordinates)'
@@ -242,14 +249,20 @@ def anomaly_scores(
 
     scores = {
         # average over jets
-        PARTICLE_CARTESIAN: mse(recons, target).mean(-1).numpy(),
-        PARTICLE_POLAR: mse(recons_polar, target_polar).mean(-1).numpy(),
-        PARTICLE_NORMALIZED_CARTESIAN: mse(recons_normalized, target_normalized).mean(-1).numpy(),
-        PARTICLE_NORMALIZED_POLAR: mse(recons_normalized_polar, target_normalized_polar).mean(-1).numpy(),
-        PARTICLE_RELATIVE_POLAR: mse(recons_polar_rel, target_polar_rel).mean(-1).numpy(),
+        CHAMFER_PARTICLE_CARTESIAN: chamfer(recons, target).mean(-1).numpy(),
+        CHAMFER_PARTICLE_POLAR: chamfer(recons_polar, target_polar).mean(-1).numpy(),
+        CHAMFER_PARTICLE_NORMALIZED_CARTESIAN: chamfer(recons_normalized, target_normalized).mean(-1).numpy(),
+        CHAMFER_PARTICLE_NORMALIZED_POLAR: chamfer(recons_normalized_polar, target_normalized_polar).mean(-1).numpy(),
+        CHAMFER_PARTICLE_RELATIVE_POLAR: chamfer(recons_polar_rel, target_polar_rel).mean(-1).numpy(),
+        MSE_PARTICLE_CARTESIAN: mse(recons, target).mean(-1).numpy(),
+        MSE_PARTICLE_POLAR: mse(recons_polar, target_polar).mean(-1).numpy(),
+        MSE_PARTICLE_NORMALIZED_CARTESIAN: mse(recons_normalized, target_normalized).mean(-1).numpy(),
+        MSE_PARTICLE_NORMALIZED_POLAR: mse(recons_normalized_polar, target_normalized_polar).mean(-1).numpy(),
+        MSE_PARTICLE_RELATIVE_POLAR: mse(recons_polar_rel, target_polar_rel).mean(-1).numpy(),
         JET_CARTESIAN: mse(recons_jet, target_jet).numpy(),
         JET_POLAR: mse(recons_jet, target_jet).numpy(),
-        PARTICLE_LORENTZ: mse_lorentz(recons, target).mean(-1).numpy(),
+        CHAMFER_PARTICLE_LORENTZ: chamfer_lorentz(recons, target).mean(-1).numpy(),
+        MSE_PARTICLE_LORENTZ: mse_lorentz(recons, target).mean(-1).numpy(),
         JET_LORENTZ: mse_lorentz(recons_jet, target_jet).numpy()
     }
 
@@ -323,6 +336,25 @@ def mse(
 ) -> torch.Tensor:
     return ((p - q)**2).sum(dim=dim)
 
+def chamfer(
+    p: torch.Tensor,
+    q: torch.Tensor
+) -> torch.Tensor:
+    diffs = torch.unsqueeze(p, -2) - torch.unsqueeze(q, -3)
+    dist = torch.norm(diffs, dim=-1)
+    min_dist_pq = torch.min(dist, dim=-1).values
+    min_dist_qp = torch.min(dist, dim=-2).values
+    return min_dist_pq + min_dist_qp
+
+def chamfer_lorentz(
+    p: torch.Tensor,
+    q: torch.Tensor
+) -> torch.Tensor:
+    diffs = torch.unsqueeze(p, -2) - torch.unsqueeze(q, -3)
+    dist = diffs[..., 0]**2 - diffs[..., 1]**2 - diffs[..., 2]**2 - diffs[..., 3]**2
+    min_dist_pq = torch.min(dist, dim=-1).values
+    min_dist_qp = torch.min(dist, dim=-2).values
+    return min_dist_pq + min_dist_qp
 
 def normalize_particle_features(
     p: torch.Tensor,
@@ -400,6 +432,5 @@ def get_polar_rel(
     pt_norm = pt / (jet_pt.unsqueeze(-1) + eps)
     eta_norm = eta - jet_eta.unsqueeze(-1)
     phi_norm = phi - jet_phi.unsqueeze(-1)
-    phi_norm = (phi_norm + np.pi) % (2 * np.pi) - \
-        np.pi  # normalize to [-pi, pi)
+    phi_norm = (phi_norm + np.pi) % (2 * np.pi) - np.pi  # normalize to [-pi, pi)
     return torch.stack((pt_norm, eta_norm, phi_norm), dim=-1)
