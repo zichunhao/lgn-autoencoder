@@ -48,7 +48,7 @@ def plot_p(
     :rtype: _type_
     """ 
 
-    EPS = get_eps(args)
+    EPS = get_eps(args.dtype)
     
     if args.polar_coord:
         p4_target = get_p4_cartesian_from_polar(p4_target)

@@ -106,8 +106,8 @@ def plot_eval_results(
     plt.close()
 
 
-def get_eps(args: Namespace) -> float:
-    return 1e-16 if args.dtype in (torch.float64, torch.double) else 1e-12
+def get_eps(dtype: torch.dtype = torch.float64) -> float:
+    return 1e-16 if dtype in (torch.float64, torch.double) else 1e-12
 
 
 def get_p_polar(

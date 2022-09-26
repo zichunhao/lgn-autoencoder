@@ -133,8 +133,8 @@ def initialize_optimizers(
         optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.lr)
         optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.lr)
     elif args.optimizer.lower() == 'rmsprop':
-        optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.lr, eps=get_eps(args), momentum=0.9)
-        optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.lr, eps=get_eps(args), momentum=0.9)
+        optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.lr, eps=get_eps(args.dtype), momentum=0.9)
+        optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.lr, eps=get_eps(args.dtype), momentum=0.9)
     else:
         raise NotImplementedError(
             f"""
