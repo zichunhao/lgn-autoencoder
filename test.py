@@ -110,7 +110,7 @@ def test(args):
             anomaly_detection_ROC_AUC(
                 sig_recons, sig_target, sig_recons_normalized, sig_target_normalized,
                 bkg_recons, bkg_target, bkg_recons_normalized, bkg_target_normalized,
-                include_emd=True, save_path=path_ad_single
+                include_emd=True, batch_size=args.test_batch_size, save_path=path_ad_single
             )
 
             # add to list
