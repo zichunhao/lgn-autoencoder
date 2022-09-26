@@ -239,7 +239,8 @@ def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
         plt.xlabel(r'Rotation angle $\theta$ (rad)')
 
     plt.ylabel(r'$\delta_p$')
-    plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
+    # plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
+    plt.yscale('log')
 
     plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_reconstructed_{irrep_str}.pdf"),
                 bbox_inches='tight', transparent=True)
