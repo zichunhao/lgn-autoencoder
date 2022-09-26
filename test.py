@@ -94,9 +94,9 @@ def test(args):
         sig_recons_normalized_list = []
         sig_target_normalized_list = []
 
-
+        # background vs single signal
         for signal_path, signal_type in zip(args.signal_paths, args.signal_types):
-            # background vs single signal
+            logging.info(f"Anomaly detection: {args.jet_type} vs {signal_type}.")
             path_ad_single = path_ad / f"single_signals/{signal_type}"
             sig_loader = initialize_test_data(paths=signal_path, batch_size=args.test_batch_size)
             sig_recons, sig_target, sig_latent, sig_norms = validate(
@@ -126,7 +126,8 @@ def test(args):
             torch.save(sig_norms, path_ad_single / f"{signal_type}_norms.pt")
             torch.save(sig_latent, path_ad_single / f"{signal_type}_latent.pt")
 
-        # bkg vs. all signals
+        # background vs. all signals
+        logging.info(f"Anomaly detection: {args.jet_type} vs {args.signal_types}.")
         sig_recons = torch.cat(sig_recons_list, dim=0)
         sig_target = torch.cat(sig_target_list, dim=0)
         sig_norms = torch.cat(sig_norms_list, dim=0)
