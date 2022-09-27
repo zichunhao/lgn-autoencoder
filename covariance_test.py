@@ -13,8 +13,7 @@ import os.path as osp
 
 def covariance_test(args):
     # Data
-    test_data_path = osp.join(args.file_path, f"{args.jet_type}_{args.file_suffix}_test.pt")
-    test_loader = initialize_test_data(path=test_data_path, batch_size=args.test_batch_size)
+    test_loader = initialize_test_data(paths=args.test_data_paths, batch_size=args.test_batch_size)
 
     # Load models
     encoder, decoder = initialize_autoencoder(args)
