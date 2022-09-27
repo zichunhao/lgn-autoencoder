@@ -3,9 +3,10 @@ import argparse
 import logging
 from pathlib import Path
 import torch
+import numpy as np
 from utils.argparse_utils import get_bool, get_device, get_dtype
 from utils.argparse_utils import parse_model_settings, parse_plot_settings, parse_covariance_test_settings, parse_data_settings
-from utils.jet_analysis import plot_p, anomaly_detection_ROC_AUC
+from utils.jet_analysis import plot_p, get_ROC_AUC, anomaly_scores_sig_bkg
 from lgn.models.autotest.lgn_tests import lgn_tests
 from lgn.models.autotest.utils import plot_all_dev
 from utils.initialize import initialize_autoencoder, initialize_test_data
@@ -93,6 +94,7 @@ def test(args):
         sig_norms_list = []
         sig_recons_normalized_list = []
         sig_target_normalized_list = []
+        sig_scores_list = []
 
         # background vs single signal
         for signal_path, signal_type in zip(args.signal_paths, args.signal_types):
@@ -106,12 +108,13 @@ def test(args):
             
             sig_recons_normalized = sig_recons / (sig_norms + eps)
             sig_target_normalized = sig_target / (sig_norms + eps)
-
-            anomaly_detection_ROC_AUC(
+            
+            scores_dict, true_labels, sig_scores, bkg_scores = anomaly_scores_sig_bkg(
                 sig_recons, sig_target, sig_recons_normalized, sig_target_normalized,
                 bkg_recons, bkg_target, bkg_recons_normalized, bkg_target_normalized,
-                include_emd=True, batch_size=args.test_batch_size, save_path=path_ad_single
+                include_emd=True, batch_size=args.test_batch_size,
             )
+            get_ROC_AUC(scores_dict, true_labels, save_path=path_ad_single)
 
             # add to list
             sig_recons_list.append(sig_recons)
@@ -119,6 +122,7 @@ def test(args):
             sig_norms_list.append(sig_norms)
             sig_recons_normalized_list.append(sig_recons_normalized)
             sig_target_normalized_list.append(sig_target_normalized)
+            sig_scores_list.append(sig_scores)
 
             # save results
             torch.save(sig_recons, path_ad_single / f"{signal_type}_recons.pt")
@@ -133,12 +137,22 @@ def test(args):
         sig_norms = torch.cat(sig_norms_list, dim=0)
         sig_recons_normalized = torch.cat(sig_recons_normalized_list, dim=0)
         sig_target_normalized = torch.cat(sig_target_normalized_list, dim=0)
-
-        anomaly_detection_ROC_AUC(
-            sig_recons, sig_target, sig_recons_normalized, sig_target_normalized,
-            bkg_recons, bkg_target, bkg_recons_normalized, bkg_target_normalized,
-            include_emd=True, batch_size=args.test_batch_size, save_path=path_ad
-        )
+        
+        # concatenate all signal scores
+        sig_scores = {
+            k: np.concatenate([v[k] for v in sig_scores_list], axis=0)
+            for k in sig_scores_list[0].keys()
+        }
+        # signals and backgrounds
+        scores_dict = {
+            k: np.concatenate([sig_scores[k], bkg_scores[k]])
+            for k in sig_scores.keys()
+        }
+        true_labels = np.concatenate([
+            np.ones_like(sig_scores[list(sig_scores.keys())[0]]),
+            -np.ones_like(bkg_scores[list(sig_scores.keys())[0]])
+        ])
+        get_ROC_AUC(scores_dict, true_labels, save_path=path_ad)
 
     elif (args.anomaly_detection) and (len(args.signal_paths) > 0):
         logging.error("No signal paths given for anomaly detection.")

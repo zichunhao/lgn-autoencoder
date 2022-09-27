@@ -31,44 +31,19 @@ EMD = 'emd'
 EMD_RELATIVE = 'emd (relative coordinates)'
 
 
-def anomaly_detection_ROC_AUC(
-    sig_recons: torch.Tensor,
-    sig_target: torch.Tensor,
-    sig_recons_normalized: torch.Tensor,
-    sig_target_normalized: torch.Tensor,
-    bkg_recons: torch.Tensor,
-    bkg_target: torch.Tensor,
-    bkg_recons_normalized: torch.Tensor,
-    bkg_target_normalized: torch.Tensor,
-    include_emd: bool = True,
-    batch_size: int = -1,
+def get_ROC_AUC(
+    scores_dict: Dict[str, np.ndarray],
+    true_labels: np.ndarray,
     save_path: Union[str, Path] = None,
     plot_rocs: bool = True,
     rocs_hlines: List[float] = [1e-1, 1e-2]
 ) -> Tuple[Dict[str, Tuple[np.ndarray]], Dict[str, Tuple[np.ndarray]]]:
-    """Compute get AUC and ROC curves in the anomaly detection.
+    """Get AUC and ROC curves given scores and true labels.
 
-    :param sig_recons: Reconstructed signal jets.
-    :type sig_recons: torch.Tensor
-    :param sig_target: Target signal jets.
-    :type sig_target: torch.Tensor
-    :param sig_recons_normalized: Reconstructed normalized signal jets.
-    :type sig_recons_normalized: torch.Tensor
-    :param sig_target_normalized: Reconstructed normalized signal jets.
-    :type sig_target_normalized: torch.Tensor
-    :param bkg_recons: Reconstructed background jets.
-    :type bkg_recons: torch.Tensor
-    :param bkg_target: Target background jets.
-    :type bkg_target: torch.Tensor
-    :param bkg_recons_normalized: Reconstructed normalized background jets.
-    :type bkg_recons_normalized: torch.Tensor
-    :param bkg_target_normalized: Target normalized background jets.
-    :type bkg_target_normalized: torch.Tensor
-    :param include_emd: Whether to include EMD loss as score, defaults to True
-    :type include_emd: bool, optional
-    :param batch_size: Batch size, defaults to -1.
-    If it is a non-positive number or None, then the data will no be batched. 
-    :type batch_size: int, optional
+    :param scores_dict: Dictionary of scores. Keys: metric names, values: scores.
+    :type scores_dict: Dict[str, np.ndarray]
+    :param true_labels: True labels.
+    :type true_labels: np.ndarray
     :param save_path: Path to save the ROC curves and AUCs, defaults to None. 
     If None, the ROC curves and AUCs are not saved.
     :type save_path: str, optional
@@ -80,11 +55,6 @@ def anomaly_detection_ROC_AUC(
     and `aucs` is a dictionary {kind: auc}.
     :rtype: Tuple[Dict[str, Tuple[np.ndarray]], Dict[str, Tuple[np.ndarray]]]
     """
-    scores_dict, true_labels = anomaly_scores_sig_bkg(
-        sig_recons, sig_target, sig_recons_normalized, sig_target_normalized,
-        bkg_recons, bkg_target, bkg_recons_normalized, bkg_target_normalized,
-        include_emd=include_emd, batch_size=batch_size
-    )
     roc_curves = dict()
     aucs = dict()
     for kind, scores in scores_dict.items():
@@ -107,45 +77,69 @@ def anomaly_detection_ROC_AUC(
         torch.save(aucs, save_path / 'aucs.pt')
 
     if plot_rocs:
-        auc_sorted = list(
-            sorted(aucs.items(), key=lambda x: x[1], reverse=True))
+        auc_sorted = list(sorted(aucs.items(), key=lambda x: x[1], reverse=True))
 
-        def plot_roc_curves(auc, path=None):
-            fig, ax = plt.subplots(1, 1, figsize=(8, 6))
-            ax.set_xlabel('True Positive Rate')
-            ax.set_ylabel('False Positive Rate')
-            ax.set_yscale('log')
-
-            for kind, auc in auc:
-
-                fpr, tpr, thresholds = roc_curves[kind]
-                ax.plot(tpr, fpr, label=f'{kind} (AUC: {auc:.5f})')
-                for y_value in rocs_hlines:
-                    ax.plot(
-                        np.linspace(0, 1, 100), [y_value] * 100,
-                        '--', c='gray', linewidth=1
-                    )
-                    ax.vlines(
-                        x=tpr[np.searchsorted(fpr, y_value)],
-                        ymin=0, ymax=y_value,
-                        linestyles="--", colors="gray", linewidth=1
-                    )
-
-                fpr, tpr, thresholds = roc_curves[kind]
-
-            plt.legend()
-            if path is not None:
-                plt.savefig(path)
-
-            return fig
         if save_path is not None:
-            plot_roc_curves(auc_sorted, save_path / 'roc_curves.pdf')
-            plot_roc_curves(auc_sorted[:3], save_path / 'roc_curves_top3.pdf')
-            plot_roc_curves(auc_sorted[:1], save_path / 'roc_curves_top1.pdf')
+            plot_roc_curves(
+                aucs=auc_sorted,
+                roc_curves=roc_curves,
+                rocs_hlines=rocs_hlines,
+                path=save_path / 'roc_curves.pdf'
+            )
+            plot_roc_curves(
+                aucs=auc_sorted[:3],
+                roc_curves=roc_curves,
+                rocs_hlines=rocs_hlines,
+                path=save_path / 'roc_curves_top3.pdf'
+            )
+            plot_roc_curves(
+                aucs=auc_sorted[:1],
+                roc_curves=roc_curves,
+                rocs_hlines=rocs_hlines,
+                path=save_path / 'roc_curves_top1.pdf'
+            )
         else:
-            plot_roc_curves(auc_sorted, path=None)
+            plot_roc_curves(
+                auc_sorted, 
+                roc_curves=roc_curves,
+                rocs_hlines=rocs_hlines,
+                path=None
+            )
 
     return roc_curves, aucs
+
+def plot_roc_curves(
+    aucs: Tuple[str, float], 
+    roc_curves: Dict[str, np.ndarray],
+    rocs_hlines: List[float] = [1e-1, 1e-2],
+    path: Union[str, Path] = None
+):
+    fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+    ax.set_xlabel('True Positive Rate')
+    ax.set_ylabel('False Positive Rate')
+    ax.set_yscale('log')
+
+    for kind, auc in aucs:
+
+        fpr, tpr, thresholds = roc_curves[kind]
+        ax.plot(tpr, fpr, label=f'{kind} (AUC: {auc:.5f})')
+        for y_value in rocs_hlines:
+            ax.plot(
+                np.linspace(0, 1, 100), [y_value] * 100,
+                '--', c='gray', linewidth=1
+            )
+            ax.vlines(
+                x=tpr[np.searchsorted(fpr, y_value)],
+                ymin=0, ymax=y_value,
+                linestyles="--", colors="gray", linewidth=1
+            )
+        fpr, tpr, thresholds = roc_curves[kind]
+
+    plt.legend()
+    if path is not None:
+        plt.savefig(path)
+
+    return fig
 
 
 def anomaly_scores_sig_bkg(
@@ -184,7 +178,8 @@ def anomaly_scores_sig_bkg(
     :param batch_size: Batch size, defaults to -1.
     If it is a non-positive number or None, then the data will no be batched. 
     :type batch_size: int, optional
-    :return: (true_labels, scores), where scores is a dictionary 
+    :return: (scores, true_labels, sig_scores, bkg_scores), 
+    where scores is a dictionary 
     with the scores (value) for each type (key).
     :rtype: Tuple[np.ndarray, Dict[str, np.ndarray]]
     """
@@ -212,7 +207,7 @@ def anomaly_scores_sig_bkg(
         np.ones_like(sig_scores[CHAMFER_PARTICLE_CARTESIAN]),
         -np.ones_like(bkg_scores[CHAMFER_PARTICLE_CARTESIAN])
     ])
-    return scores, true_labels
+    return scores, true_labels, sig_scores, bkg_scores
 
 
 def anomaly_scores(
