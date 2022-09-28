@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
@@ -183,7 +184,12 @@ def plot_internal_dev(dev_internal, alphas, transform_type, weight, save_path, s
         plt.plot(alphas, dev_internal_max[weight], label="layers max")
 
     plt.ylabel(r'$\delta_p$')
-    plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
+    try:
+        plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
+    except AttributeError as e:
+        # AttributeError: 'LogFormatterSciNotation' object has no attribute 'set_scientific'
+        warnings.warn(f"Error in setting ticklabel format: {e}")
+        plt.ticklabel_format(axis="y", scilimits=(0, 0), useMathText=True)
 
     if show_all:
         plt.legend(bbox_to_anchor=(1.04, 0.85), loc="upper left")
