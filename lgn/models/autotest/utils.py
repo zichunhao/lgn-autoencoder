@@ -215,7 +215,7 @@ def plot_internal_dev(dev_internal, alphas, transform_type, weight, save_path, s
 
 def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
     make_dir(save_path)
-    pkl_path = make_dir(osp.join(save_path, "pkl"))
+    pt_path = make_dir(osp.join(save_path, "pt_files"))
 
     if weight not in [(0, 0), (1, 1)]:
         raise ValueError("Weight has to be one of (0,0) and (1,1)")
@@ -228,25 +228,26 @@ def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
     if transform_type.lower() in ['boost', 'boosts']:
         if weight == (1, 1):
             title = fr'Boost equivariance test of reconstructed {irrep_str} $p^\mu$'
-            torch.save(dev, osp.join(pkl_path, "boost_equivariance_p4.pkl"))
+            torch.save(dev, osp.join(pt_path, "boost_equivariance_p4.pt"))
         else:
             title = f'Boost equivariance test of reconstructed {irrep_str}'
-            torch.save(dev, osp.join(pkl_path, "boost_equivariance_scalars.pkl"))
+            torch.save(dev, osp.join(pt_path, "boost_equivariance_scalars.pt"))
         plt.title(title, y=1.05)
         plt.xlabel(r'Lorentz factor $\gamma$')
-    elif transform_type.lower() in ['rot', 'rots', 'rotation', 'rotatons']:
+    elif transform_type.lower() in ['rot', 'rots', 'rotation', 'rotations']:
         if weight == (1, 1):
             title = fr'Rotation equivariance test of reconstructed {irrep_str} $p^\mu$'
-            torch.save(dev, osp.join(pkl_path, "rot_equivariance_p4.pkl"))
+            torch.save(dev, osp.join(pt_path, "rot_equivariance_p4.pt"))
         else:
             title = f'Rotation equivariance test of reconstructed {irrep_str}'
-            torch.save(dev, osp.join(pkl_path, "rot_equivariance_scalars.pkl"))
+            torch.save(dev, osp.join(pt_path, "rot_equivariance_scalars.pt"))
         plt.title(title, y=1.05)
         plt.xlabel(r'Rotation angle $\theta$ (rad)')
 
     plt.ylabel(r'$\delta_p$')
-    # plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
-    plt.yscale('log')
+    if weight == (1, 1):
+        plt.yscale('log')
+        plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
 
     plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_reconstructed_{irrep_str}.pdf"),
                 bbox_inches='tight', transparent=True)
@@ -255,9 +256,9 @@ def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
 
 def plot_all_dev(dev, save_path):
     make_dir(save_path)
-    pkl_path = make_dir(osp.join(save_path, "pkl"))
-    torch.save(dev['perm_invariance_dev_output'], osp.join(pkl_path, "perm_invariance_dev_output.pkl"))
-    torch.save(dev['perm_equivariance_dev_output'], osp.join(pkl_path, "perm_equivariance_dev_output.pkl"))
+    pt_path = make_dir(osp.join(save_path, "pkl"))
+    torch.save(dev['perm_invariance_dev_output'], osp.join(pt_path, "perm_invariance_dev_output.pkl"))
+    torch.save(dev['perm_equivariance_dev_output'], osp.join(pt_path, "perm_equivariance_dev_output.pkl"))
 
     for weight in [(0, 0), (1, 1)]:
         plot_output_dev(dev_output=dev['boost_dev_output'], alphas=dev['gammas'],
