@@ -147,8 +147,8 @@ def plot_roc_curves(
     plt.legend()
     if path is not None:
         plt.savefig(path)
-
-    return fig
+    plt.close()
+    return
 
 
 def anomaly_scores_sig_bkg(
