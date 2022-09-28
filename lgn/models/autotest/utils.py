@@ -185,11 +185,11 @@ def plot_internal_dev(dev_internal, alphas, transform_type, weight, save_path, s
 
     plt.ylabel(r'$\delta_p$')
     try:
-        plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
+        plt.ticklabel_format(axis="y", style="sci", useMathText=True)
     except AttributeError as e:
         # AttributeError: 'LogFormatterSciNotation' object has no attribute 'set_scientific'
         warnings.warn(f"Error in setting ticklabel format: {e}")
-        plt.ticklabel_format(axis="y", scilimits=(0, 0), useMathText=True)
+        pass
 
     if show_all:
         plt.legend(bbox_to_anchor=(1.04, 0.85), loc="upper left")
@@ -248,11 +248,11 @@ def plot_output_dev(dev_output, alphas, transform_type, weight, save_path):
     if weight == (1, 1):
         plt.yscale('log')
         try:
-            plt.ticklabel_format(axis="y", style="sci", scilimits=(0, 0), useMathText=True)
+            plt.ticklabel_format(axis="y", style="sci", useMathText=True)
         except AttributeError as e:
              # AttributeError: 'LogFormatterSciNotation' object has no attribute 'set_scientific'
             warnings.warn(f"Error in setting ticklabel format: {e}")
-            plt.ticklabel_format(axis="y", scilimits=(0, 0), useMathText=True)
+            pass
 
     plt.savefig(osp.join(save_path, f"{transform_type.lower()}_equivariance_test_reconstructed_{irrep_str}.pdf"),
                 bbox_inches='tight', transparent=True)
