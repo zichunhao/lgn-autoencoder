@@ -4,28 +4,37 @@ from matplotlib import pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from .utils import arcsinh
 from pathlib import Path
+from scipy import optimize
 
 import torch
 import energyflow
 import numpy as np
-from ..losses import ChamferLoss
 
 EPS_DEFAULT = 1e-16
 # keys for scores
-CHAMFER_PARTICLE_CARTESIAN = "particle, Cartesian, chamfer distance"
-CHAMFER_PARTICLE_POLAR = "particle, polar, chamfer distance"
-CHAMFER_PARTICLE_NORMALIZED_CARTESIAN = "particle, normalized Cartesian, chamfer distance"
-CHAMFER_PARTICLE_NORMALIZED_POLAR = "particle, normalized polar, chamfer distance"
-CHAMFER_PARTICLE_RELATIVE_POLAR = "particle, relative polar, chamfer distance"
+CHAMFER_PARTICLE_CARTESIAN = "particle, Cartesian, Chamfer distance"
+CHAMFER_PARTICLE_POLAR = "particle, polar, Chamfer distance"
+CHAMFER_PARTICLE_NORMALIZED_CARTESIAN = "particle, normalized Cartesian, Chamfer distance"
+CHAMFER_PARTICLE_NORMALIZED_POLAR = "particle, normalized polar, Chamfer distance"
+CHAMFER_PARTICLE_RELATIVE_POLAR = "particle, relative polar, Chamfer distance"
+
+HUNGARIAN_PARTICLE_CARTESIAN = "particle, Cartesian, Hungarian distance"
+HUNGARIAN_PARTICLE_POLAR = "particle, polar, Hungarian distance"
+HUNGARIAN_PARTICLE_NORMALIZED_CARTESIAN = "particle, normalized Cartesian, Hungarian distance"
+HUNGARIAN_PARTICLE_NORMALIZED_POLAR = "particle, normalized polar, Hungarian distance"
+HUNGARIAN_PARTICLE_RELATIVE_POLAR = "particle, relative polar, Hungarian distance"
+
 MSE_PARTICLE_CARTESIAN = "particle, Cartesian, MSE"
 MSE_PARTICLE_POLAR = "particle, polar, MSE"
 MSE_PARTICLE_NORMALIZED_CARTESIAN = "particle, normalized Cartesian, MSE"
 MSE_PARTICLE_NORMALIZED_POLAR = "particle, normalized polar, MSE"
 MSE_PARTICLE_RELATIVE_POLAR = "particle, relative polar, MSE"
+
 JET_CARTESIAN = "jet, Cartesian"
 JET_POLAR = "jet, polar"
 MSE_PARTICLE_LORENTZ = "particle, Lorentz norms, MSE"
 CHAMFER_PARTICLE_LORENTZ = "particle, Lorentz norms, Chamfer distance"
+HUNGARIAN_PARTICLE_LORENTZ = "particle, Lorentz norms, Hungarian distance"
 JET_LORENTZ = "jet, Lorentz norms"
 EMD = 'emd'
 EMD_RELATIVE = 'emd (relative coordinates)'
@@ -259,19 +268,30 @@ def anomaly_scores(
 
     scores = {
         # average over jets
+        # Chamfer
         CHAMFER_PARTICLE_CARTESIAN: chamfer(recons, target, batch_size=batch_size).mean(-1).numpy(),
         CHAMFER_PARTICLE_POLAR: chamfer(recons_polar, target_polar, batch_size=batch_size).mean(-1).numpy(),
         CHAMFER_PARTICLE_NORMALIZED_CARTESIAN: chamfer(recons_normalized, target_normalized, batch_size=batch_size).mean(-1).numpy(),
         CHAMFER_PARTICLE_NORMALIZED_POLAR: chamfer(recons_normalized_polar, target_normalized_polar, batch_size=batch_size).mean(-1).numpy(),
         CHAMFER_PARTICLE_RELATIVE_POLAR: chamfer(recons_polar_rel, target_polar_rel, batch_size=batch_size).mean(-1).numpy(),
+        # Hungarian (linear assignment)
+        HUNGARIAN_PARTICLE_CARTESIAN: hungarian(recons, target, batch_size=batch_size).mean(-1).numpy(),
+        HUNGARIAN_PARTICLE_POLAR: hungarian(recons_polar, target_polar, batch_size=batch_size).mean(-1).numpy(),
+        HUNGARIAN_PARTICLE_NORMALIZED_CARTESIAN: hungarian(recons_normalized, target_normalized, batch_size=batch_size).mean(-1).numpy(),
+        HUNGARIAN_PARTICLE_NORMALIZED_POLAR: hungarian(recons_normalized_polar, target_normalized_polar, batch_size=batch_size).mean(-1).numpy(),
+        HUNGARIAN_PARTICLE_RELATIVE_POLAR: hungarian(recons_polar_rel, target_polar_rel, batch_size=batch_size).mean(-1).numpy(),
+        # MSE
         MSE_PARTICLE_CARTESIAN: mse(recons, target).mean(-1).numpy(),
         MSE_PARTICLE_POLAR: mse(recons_polar, target_polar).mean(-1).numpy(),
         MSE_PARTICLE_NORMALIZED_CARTESIAN: mse(recons_normalized, target_normalized).mean(-1).numpy(),
         MSE_PARTICLE_NORMALIZED_POLAR: mse(recons_normalized_polar, target_normalized_polar).mean(-1).numpy(),
         MSE_PARTICLE_RELATIVE_POLAR: mse(recons_polar_rel, target_polar_rel).mean(-1).numpy(),
+        # metrics based on jets
         JET_CARTESIAN: mse(recons_jet, target_jet).numpy(),
         JET_POLAR: mse(recons_jet, target_jet).numpy(),
+        # Lorentz invariant scores
         CHAMFER_PARTICLE_LORENTZ: chamfer_lorentz(recons, target, batch_size=batch_size).mean(-1).numpy(),
+        HUNGARIAN_PARTICLE_LORENTZ: hungarian_lorentz(recons, target, batch_size=batch_size).mean(-1).numpy(),
         MSE_PARTICLE_LORENTZ: mse_lorentz(recons, target).mean(-1).numpy(),
         JET_LORENTZ: mse_lorentz(recons_jet, target_jet).numpy()
     }
@@ -404,6 +424,87 @@ def chamfer_lorentz(
         min_dist_pq = torch.min(dist, dim=-1).values
         min_dist_qp = torch.min(dist, dim=-2).values
         return min_dist_pq + min_dist_qp
+    
+def hungarian(
+    p: torch.Tensor, 
+    q: torch.Tensor, 
+    batch_size: int = -1
+) -> torch.Tensor:
+    """Get the Hungarian distance between two batched data.
+
+    :param p: Reconstructed jets.
+    :type p: torch.Tensor
+    :param q: Target jets.
+    :type q: torch.Tensor
+    :param batch_size: Batch size when computing the distances, defaults to -1.
+    When -1 or None, the data will not be batched.
+    :type batch_size: int, optional
+    :return: Hungarian distance between p and q.
+    :rtype: torch.Tensor
+    """
+    if (batch_size is not None) and (batch_size > 0):
+        # batched version
+        dataset = DistanceDataset(p, q)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        hungarian_distances = []
+        for p, q in dataloader:
+            # call non-batched version
+            hungarian_distances.append(hungarian(p, q, batch_size=-1))
+        return torch.cat(hungarian_distances, dim=0)
+    else:
+        # non-batched version (base case)
+        cost = torch.cdist(p, q).cpu().detach().numpy()
+        matching = [
+            optimize.linear_sum_assignment(cost[i])[1] 
+            for i in range(len(cost))
+        ]
+
+        p_shuffle = torch.zeros(p.shape).to(p.device).to(p.dtype)
+        for i in range(len(matching)):
+            p_shuffle[i] = p[i, matching[i]]
+        return mse(p_shuffle, q)
+    
+def hungarian_lorentz(
+    p: torch.Tensor,
+    q: torch.Tensor,
+    batch_size: int = -1
+) -> torch.Tensor:
+    """Get the Hungarian distance between two batched data 
+    in terms of the Minkowskian metric diag(+, -, -, -).
+
+    :param p: Reconstructed jets.
+    :type p: torch.Tensor
+    :param q: Target jets.
+    :type q: torch.Tensor
+    :param batch_size: Batch size when computing the distances, defaults to -1.
+    When -1 or None, the data will not be batched.
+    :type batch_size: int, optional
+    :return: Hungarian distance between p and q
+    in terms of the Minkowskian metric diag(+, -, -, -).
+    :rtype: torch.Tensor
+    """
+    if (batch_size is not None) and (batch_size > 0):
+        # batched version
+        dataset = DistanceDataset(p, q)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        hungarian_distances = []
+        for p, q in dataloader:
+            # call non-batched version
+            hungarian_distances.append(hungarian_lorentz(p, q, batch_size=-1))
+        return torch.cat(hungarian_distances, dim=0)
+    else:
+        # non-batched version (base case)
+        diffs = torch.unsqueeze(p, -2) - torch.unsqueeze(q, -3)
+        cost = norm_sq_Lorentz(diffs).cpu().detach().numpy()
+        matching = [
+            optimize.linear_sum_assignment(cost[i])[1] 
+            for i in range(len(cost))
+        ]
+
+        p_shuffle = torch.zeros(p.shape).to(p.device).to(p.dtype)
+        for i in range(len(matching)):
+            p_shuffle[i] = p[i, matching[i]]
+        return mse(p_shuffle, q)
 
 
 def normalize_particle_features(
