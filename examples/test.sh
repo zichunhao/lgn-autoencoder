@@ -17,7 +17,6 @@ python test.py \
 --encoder-num-channels 3 3 4 4 \
 --decoder-num-channels 4 4 3 3 \
 --model-path "dev/exp/LGNAutoencoder_QCDJet_min&max_tauLS1_tauLV8_encoder3344_decoder4433" \
---anomaly-detection \
 --data-paths "data/g_jets_30p_p4_small.pt" "data/q_jets_30p_p4_small.pt" \
 --test-data-paths "data/g_jets_30p_p4_small.pt" "data/q_jets_30p_p4_small.pt" \
 --anomaly-detection \
