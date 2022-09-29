@@ -23,6 +23,7 @@ def plot_p(
     p4_recons: torch.Tensor, 
     save_dir: str, 
     cutoff: float = 1e-6, 
+    jet_type: Optional[str] = None,
     epoch: Optional[int] = None, 
     show: bool = False
 ) -> Tuple[np.ndarray, ...]:
@@ -40,6 +41,9 @@ def plot_p(
         Used for plotting particle distributions to avoid big spikes due to padding.
         Default: 1e-6
     :type cutoff: float, optional
+    :param jet_type: type of jet, defaults to None. 
+    In None, --jet-type argument will be used.
+    :type jet_type: Optional[str], optional
     :param epoch: current epoch, defaults to None
     :type epoch: Optional[int], optional
     :param show: whether to show plot, defaults to False
@@ -68,7 +72,7 @@ def plot_p(
         p3_polar_target=p_target_polar, 
         p3_polar_recons=p_recons_polar, 
         abs_coord=args.abs_coord,
-        jet_type=args.jet_type,
+        jet_type=args.jet_type if jet_type is None else jet_type,
         save_dir=save_dir, 
         epoch=epoch, 
         density=False, 
@@ -80,7 +84,7 @@ def plot_p(
         jet_features_recons=jet_recons_polar, 
         save_dir=save_dir, 
         abs_coord=args.abs_coord,
-        jet_type=args.jet_type,
+        jet_type=args.jet_type if jet_type is None else jet_type,
         epoch=epoch, 
         density=False, 
         fill=False, 
@@ -91,7 +95,7 @@ def plot_p(
         p3_recons=p_recons_cartesian, 
         save_dir=save_dir, 
         abs_coord=args.abs_coord,
-        jet_type=args.jet_type,
+        jet_type=args.jet_type if jet_type is None else jet_type,
         epoch=epoch, 
         density=False, 
         fill=False, 
@@ -102,7 +106,7 @@ def plot_p(
         jet_features_recons=jet_recons_cartesian, 
         save_dir=save_dir, 
         abs_coord=args.abs_coord,
-        jet_type=args.jet_type,
+        jet_type=args.jet_type if jet_type is None else jet_type,
         epoch=epoch, 
         density=False, 
         fill=False, 
@@ -114,7 +118,7 @@ def plot_p(
             p3_polar_target=p_target_polar, 
             p3_polar_recons=p_recons_polar, 
             abs_coord=args.abs_coord,
-            jet_type=args.jet_type,
+            jet_type=args.jet_type if jet_type is None else jet_type,
             save_dir=save_dir, 
             epoch=epoch, 
             density=False, 
@@ -126,7 +130,7 @@ def plot_p(
             jet_features_recons=jet_recons_polar, 
             save_dir=save_dir, 
             abs_coord=args.abs_coord,
-            jet_type=args.jet_type,
+            jet_type=args.jet_type if jet_type is None else jet_type,
             epoch=epoch, 
             density=False, 
             fill=True, 
@@ -137,7 +141,7 @@ def plot_p(
             p3_recons=p_recons_cartesian, 
             save_dir=save_dir, 
             abs_coord=args.abs_coord,
-            jet_type=args.jet_type,
+            jet_type=args.jet_type if jet_type is None else jet_type,
             epoch=epoch, 
             density=False, 
             fill=True, 
@@ -148,7 +152,7 @@ def plot_p(
             jet_features_recons=jet_recons_cartesian, 
             save_dir=save_dir, 
             abs_coord=args.abs_coord,
-            jet_type=args.jet_type,
+            jet_type=args.jet_type if jet_type is None else jet_type,
             epoch=epoch, 
             density=False, 
             fill=True, 
@@ -164,7 +168,7 @@ def plot_p(
             p_recons=jets_recons, 
             maxR=args.jet_image_maxR,
             abs_coord=args.abs_coord,
-            jet_type=args.jet_type,
+            jet_type=args.jet_type if jet_type is None else jet_type,
             save_dir=save_dir, 
             epoch=epoch, 
             num_jet_images=args.num_jet_images,

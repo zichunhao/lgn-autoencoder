@@ -10,6 +10,7 @@ from utils.jet_analysis import plot_p, get_ROC_AUC, anomaly_scores_sig_bkg
 from lgn.models.autotest.lgn_tests import lgn_tests
 from lgn.models.autotest.utils import plot_all_dev
 from utils.initialize import initialize_autoencoder, initialize_test_data
+from utils.jet_analysis.utils import get_jet_name
 from utils.utils import make_dir, best_epoch
 from utils.train import validate
 
@@ -115,6 +116,13 @@ def test(args):
                 include_emd=True, batch_size=args.test_batch_size,
             )
             get_ROC_AUC(scores_dict, true_labels, save_path=path_ad_single)
+            plot_p(
+                args, 
+                sig_target*1000 if args.abs_coord and (args.unit.lower() == 'tev') else sig_target, 
+                sig_recons*1000 if args.abs_coord and (args.unit.lower() == 'tev') else sig_recons,
+                save_dir=path_ad_single,
+                jet_type=signal_type
+            )
 
             # add to list
             sig_recons_list.append(sig_recons)
