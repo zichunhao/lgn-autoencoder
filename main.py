@@ -1,3 +1,4 @@
+from pathlib import Path
 from utils.argparse_utils import get_bool, get_device, get_dtype
 from utils.argparse_utils import parse_model_settings, parse_plot_settings, parse_covariance_test_settings, parse_data_settings
 from utils.utils import create_model_folder, best_epoch, get_compression_rate
@@ -25,18 +26,28 @@ def main(args):
         num_particles=args.num_jet_particles
     )
     logging.info(f"compression rate: {compression_rate}")
+    
+    outpath = args.load_path if args.load_path else create_model_folder(args)
 
-    train_loader, valid_loader = initialize_data(paths=args.data_paths,
-                                                 batch_size=args.batch_size,
-                                                 train_fraction=args.train_fraction,
-                                                 num_val=args.num_valid)
-    test_loader = initialize_test_data(paths=args.test_data_paths, 
-                                       batch_size=args.test_batch_size)
+    train_loader, valid_loader = initialize_data(
+        paths=args.data_paths,
+        batch_size=args.batch_size,
+        train_fraction=args.train_fraction,
+        num_val=args.num_valid,
+        # save the datasets splitting for EMD loss
+        save_path=Path(outpath) / 'datasets' \
+            if 'emd' in args.loss_choice.lower() else None
+    )
+    test_loader = initialize_test_data(
+        paths=args.test_data_paths, 
+        batch_size=args.test_batch_size
+    )
 
     """Initializations"""
     encoder, decoder = initialize_autoencoder(args)
     optimizer_encoder, optimizer_decoder = initialize_optimizers(
-        args, encoder, decoder)
+        args, encoder, decoder
+    )
 
     # Both on gpu
     if (next(encoder.parameters()).is_cuda and next(encoder.parameters()).is_cuda):
@@ -53,21 +64,27 @@ def main(args):
     logging.info(f'Training over {args.num_epochs} epochs...')
     # Load existing model
     if args.load_to_train:
-        outpath = args.load_path
         try:
-            encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/best_encoder_weights.pth'),
-                                               map_location=args.device))
-            decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/best_decoder_weights.pth'),
-                                               map_location=args.device))
+            encoder.load_state_dict(torch.load(
+                osp.join(outpath, f'weights_encoder/best_encoder_weights.pth'),
+                map_location=args.device
+            ))
+            decoder.load_state_dict(
+                torch.load(osp.join(outpath, f'weights_decoder/best_decoder_weights.pth'),
+                map_location=args.device
+            ))
         except FileNotFoundError:
-            encoder.load_state_dict(torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'),
-                                               map_location=args.device))
-            decoder.load_state_dict(torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'),
-                                               map_location=args.device))
+            encoder.load_state_dict(
+                torch.load(osp.join(outpath, f'weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth'),
+                map_location=args.device
+            ))
+            decoder.load_state_dict(
+                torch.load(osp.join(outpath, f'weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth'),
+                map_location=args.device
+            ))
     # Create new model
     else:
         import json
-        outpath = create_model_folder(args)
         args_dir = osp.join(outpath, "args_cache.json")
         with open(args_dir, "w") as f:
             json.dump({k: str(v) for k, v in vars(args).items()}, f)

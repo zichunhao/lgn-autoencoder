@@ -15,7 +15,8 @@ def initialize_data(
     paths: Union[str, Path, List[str], List[Path]],
     batch_size: int, 
     train_fraction: float, 
-    num_val: Optional[int] = None
+    num_val: Optional[int] = None,
+    save_path: Optional[Union[str, Path]] = None
 ) -> Tuple[DataLoader, DataLoader]:
     if isinstance(paths, (list, tuple)):
         if len(paths) <= 0:
@@ -51,6 +52,11 @@ def initialize_data(
 
     # split into training and validation set
     train_set, val_set = torch.utils.data.random_split(jet_data, [num_train, num_val])
+    if save_path is not None:
+        save_path = Path(save_path)
+        save_path.mkdir(parents=True, exist_ok=True)
+        torch.save(train_set, save_path / 'train_set.pt')
+        torch.save(val_set, save_path / 'val_set.pt')
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
     valid_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True)
 
