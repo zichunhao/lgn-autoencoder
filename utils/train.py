@@ -357,14 +357,20 @@ def get_loss(
     # EMD loss
     elif 'emd' in loss_choice:
         from utils.losses import EMDLoss
-        emd_loss = EMDLoss(eps=get_eps(args.dtype))
+        emd_loss = EMDLoss(
+            num_particles=p4_recons.shape[-2],
+            device='cuda' if 'cuda' in str(args.device).lower() else 'cpu'
+        )
         batch_loss = emd_loss(p4_recons, p4_target)  # true, output
 
     # Hybrid of Chamfer loss and EMD loss
     elif loss_choice in ('hybrid', 'combined', 'mix'):
         from utils.losses import ChamferLoss, EMDLoss
         chamfer_loss = ChamferLoss(device=args.device)
-        emd_loss = EMDLoss(eps=get_eps(args.dtype))
+        emd_loss = EMDLoss(
+            num_particles=p4_recons.shape[-2],
+            device='cuda' if 'cuda' in str(args.device).lower() else 'cpu'
+        )
         batch_loss = args.chamfer_loss_weight * chamfer_loss(
             p4_recons, p4_target, 
             jet_features=args.chamfer_jet_features
