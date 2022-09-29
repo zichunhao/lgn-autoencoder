@@ -34,7 +34,7 @@ class EMDLoss(nn.Module):
     def __get_p3_polar(self, p4: torch.Tensor) -> torch.Tensor:
         """(E, px, py, pz) -> (eta, phi, pt)"""        
         p0, px, py, pz = p4.unbind(-1)
-        pt = torch.sqrt(px ** 2 + py ** 2)
+        pt = torch.sqrt(px ** 2 + py ** 2 + EPS)
         phi = torch.atan2(py + EPS, px + EPS)
         eta = torch.asinh(pz / (pt + EPS))
         return torch.stack([eta, phi, pt], dim=-1)
