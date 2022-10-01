@@ -144,9 +144,15 @@ def plot_roc_curves(
             )
         fpr, tpr, thresholds = roc_curves[kind]
 
-    plt.legend()
+    if len(aucs) >= 5:
+        plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
+    else:
+        plt.legend()
     if path is not None:
-        plt.savefig(path)
+        if len(aucs) >= 5:
+            plt.savefig(path, bbox_inches='tight')
+        else:
+            plt.savefig(path)
     plt.close()
     return
 
