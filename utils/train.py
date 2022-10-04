@@ -260,7 +260,7 @@ def train(
                 for k in latent_features.keys()
             })
             if args.normalize:
-                norm_factors.append(norm_factor.squeeze(dim=2).cpu().detach())
+                norm_factors.append(norm_factor.cpu().detach())
         else:
             batch_loss = get_loss(
                 args, 
