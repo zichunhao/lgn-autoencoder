@@ -1,3 +1,4 @@
+import logging
 from sklearn import metrics
 from typing import Dict, List, Tuple, Union
 from matplotlib import pyplot as plt
@@ -87,6 +88,7 @@ def get_ROC_AUC(
 
     if plot_rocs:
         auc_sorted = list(sorted(aucs.items(), key=lambda x: x[1], reverse=True))
+        logging.info(f"Best AUC: {auc_sorted[0]}")
 
         if save_path is not None:
             plot_roc_curves(
