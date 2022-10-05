@@ -232,7 +232,8 @@ def train(
     for i, batch in enumerate(tqdm(loader)):
 
         if args.normalize:
-            norm_factor = torch.abs(batch['p4']).amax(dim=-2, keepdim=True)
+            # normalize the features based on the max entry of each jet
+            norm_factor = torch.abs(batch['p4']).amax(dim=-2, keepdim=True).amax(dim=-1, keepdim=True)
             norm_factor = norm_factor.to(batch['p4'].device)
             batch['p4'] /= (norm_factor + eps)
 
@@ -259,7 +260,7 @@ def train(
                 for k in latent_features.keys()
             })
             if args.normalize:
-                norm_factors.append(norm_factor.squeeze(dim=2).cpu().detach())
+                norm_factors.append(norm_factor.cpu().detach())
         else:
             batch_loss = get_loss(
                 args, 
