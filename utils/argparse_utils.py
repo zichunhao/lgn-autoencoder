@@ -193,6 +193,11 @@ def parse_data_settings(
                         help='Whether the data is in polar coordinates (pt, eta, phi). False when Cartesian coordinates are used.')
     parser.add_argument('--normalize', type=get_bool, default=True, metavar='',
                         help='Whether to normalize the features before passing into the NN.')
+    parser.add_argument('--normalize-method', type=str, default='overall_max', metavar='',
+                        help='Method to normalize the features. Choices: ("overall_max", "component_max", "jet_E"). Default: "overall_max". '
+                        'overall_max: normalize by the overall maximum of all features within a jet. '
+                        'component_max: normalize each component by its maximum (absolute value) within a jet. '
+                        'jet_E: normalize each component by the jet energy.')
     parser.add_argument('--scale', type=float, default=1., metavar='',
                         help='The rescaling factor of the input 4-momenta. Default: 1.')
     parser.add_argument('--num-test-batch', type=int, default=-1, metavar='',

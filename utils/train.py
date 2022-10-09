@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 from torch.optim import Optimizer
 from utils.jet_analysis import plot_p
 from utils.utils import make_dir, save_data, plot_eval_results, get_eps, get_real
+from utils.normalize_p4 import normalize_p4
 import time
 import os.path as osp
 import warnings
@@ -206,8 +207,6 @@ def train(
     device: torch.device = None
 ):
     
-    if args.normalize:
-        eps = get_eps(args)
 
     if is_train:
         if (optimizer_encoder is None) or (optimizer_decoder is None):
@@ -233,9 +232,7 @@ def train(
 
         if args.normalize:
             # normalize the features based on the max entry of each jet
-            norm_factor = torch.abs(batch['p4']).amax(dim=-2, keepdim=True).amax(dim=-1, keepdim=True)
-            norm_factor = norm_factor.to(batch['p4'].device)
-            batch['p4'] /= (norm_factor + eps)
+            batch['p4'], norm_factor = normalize_p4(batch['p4'], args.normalize_method)
 
         latent_features = encoder(batch, covariance_test=False)
         p4_recons = decoder(latent_features, covariance_test=False)
