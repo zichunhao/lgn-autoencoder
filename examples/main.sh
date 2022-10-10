@@ -3,8 +3,8 @@ set -xe;
 mkdir -p dev/exp;
 
 python -u main.py \
---data-paths "./data/g_jets_30p_p4_small.pt" "./data/q_jets_30p_p4_small.pt" \
---test-data-paths "./data/g_jets_30p_p4_small.pt" "./data/q_jets_30p_p4_small.pt" \
+--data-paths "./data/g_jets_30p_p4.pt" "./data/q_jets_30p_p4.pt" \
+--test-data-paths "./data/g_jets_30p_p4.pt" "./data/q_jets_30p_p4.pt" \
 -j QCD \
 -e 10 \
 -bs 500 \

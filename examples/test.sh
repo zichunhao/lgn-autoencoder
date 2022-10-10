@@ -17,10 +17,10 @@ python test.py \
 --encoder-num-channels 3 3 4 4 \
 --decoder-num-channels 4 4 3 3 \
 --model-path "dev/exp/LGNAutoencoder_QCDJet_min&max_tauLS1_tauLV8_encoder3344_decoder4433" \
---data-paths "data/g_jets_30p_p4_small.pt" "data/q_jets_30p_p4_small.pt" \
---test-data-paths "data/g_jets_30p_p4_small.pt" "data/q_jets_30p_p4_small.pt" \
+--data-paths "data/g_jets_30p_p4.pt" "data/q_jets_30p_p4.pt" \
+--test-data-paths "data/g_jets_30p_p4.pt" "data/q_jets_30p_p4.pt" \
 --anomaly-detection \
---signal-paths "data/t_jets_30p_p4_small.pt" "data/w_jets_30p_p4_small.pt" "data/z_jets_30p_p4_small.pt" \
+--signal-paths "data/t_jets_30p_p4.pt" "data/w_jets_30p_p4.pt" "data/z_jets_30p_p4.pt" \
 --signal-types t w z \
 --equivariance-test \
 | tee -a "dev/exp/test-log.txt"
