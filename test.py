@@ -307,7 +307,7 @@ def setup_argparse():
         type=int,
         default=-1,
         metavar="",
-        help="Epoch number of the trained model to load. -1 for loading weights in the lastest model.",
+        help="Epoch number of the trained model to load. -1 for loading weights in the best model.",
     )
 
     # Plots
