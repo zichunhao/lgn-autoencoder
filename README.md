@@ -20,26 +20,36 @@ To download data:
 ## Train the model
 An example training looks like this.
 ```
-python main.py \
--j QCD \
--e 20000 \
--bs 256 \
--tbs 512 \
+mkdir -p results;
+
+python -u main.py \
 --data-paths "./data/g_jets_30p_p4.pt" "./data/q_jets_30p_p4.pt" \
---test-data-paths "./data/g_jets_30p_p4_test.pt" "./data/q_jets_30p_p4_test.pt" \
+--test-data-paths "./data/g_jets_30p_p4.pt" "./data/q_jets_30p_p4.pt" \
+-j QCD \
+-e 50 \
+-bs 512 \
 --train-fraction 0.75 \
+--lr 0.0005 \
 --loss-choice chamfer \
---maxdim 2 \
---tau-latent-scalars 1 \
+--get-real-method sum \
 --tau-latent-vectors 8 \
+--tau-latent-scalars 1 \
+--maxdim 2 \
+--l1-lambda 1e-8 \
+--l2-lambda 0 \
 --map-to-latent "min&max" \
+--mlp-width 6 \
+--mlp-depth 6 \
 --encoder-num-channels 3 3 4 4 \
 --decoder-num-channels 4 4 3 3 \
+--patience 1000 \
 --plot-freq 100 \
---plot-start-epoch 100 \
+--save-freq 200 \
+--plot-start-epoch 50 \
 --equivariance-test \
---save-dir "LGNAE-trained-models" \
-| tee -a" LGNAE-trained-models/autoencoder-g-s1-v8-3344-4433.txt"
+--num-test-batch 1024 \
+--save-dir "results" \
+| tee "results/training-log.txt"
 ```
 ### Some important parameters for `main.py`
 - `-bs` (`batch-size`): batch size.
@@ -64,9 +74,37 @@ python main.py \
 - `--save-dir`: directory to save the trained model and plots.
 - `--equivariance-test`: whether to test the model for equivariance.
 
+## Test the model
+The test includes reconstruction and can include Lorentz group equivariance test and anomaly detection. An example test looks like this.
+```
+python test.py \
+-tbs 512 \
+--num-test-batch 200 \
+-j QCD \
+--maxdim 2 \
+--tau-latent-vectors 8 \
+--tau-latent-scalars 1 \
+--loss-choice chamfer \
+--get-real-method sum \
+--map-to-latent "min&max" \
+--mlp-width 6 \
+--mlp-depth 6 \
+--encoder-num-channels 3 3 4 4 \
+--decoder-num-channels 4 4 3 3 \
+--model-path "results/LGNAutoencoder_QCDJet_min&max_tauLS1_tauLV1_encoder3344_decoder4433" \
+--data-paths "data/g_jets_30p_p4.pt" "data/q_jets_30p_p4.pt" \
+--test-data-paths "data/g_jets_30p_p4.pt" "data/q_jets_30p_p4.pt" \
+--anomaly-detection \
+--signal-paths "data/t_jets_30p_p4.pt" "data/w_jets_30p_p4.pt" "data/z_jets_30p_p4.pt" \
+--signal-types t w z \
+--equivariance-test \
+| tee -a "results/test-log.txt"
+```
+
 ## Results
 ### Equivariance Tests
 Boost and rotational equivariance tests were done on the model. The rotation angles range from $0$ to $2\pi$, and the Lorentz factors range from $0$ to $11013.2$. The model is equivariant with respect to rotation up to floating point errors and is equivariant with respect to boost in the physically relevant region (the errors increase as the Lorentz factor increases because of the floating point sensitivity of boost). See [`results/equivariance_tests`](results/equivariance_tests) for more details.
+
 
 
 ## References
@@ -74,7 +112,7 @@ Boost and rotational equivariance tests were done on the model. The rotation ang
 - A. Bogatskiy et al., "Lorentz group equivariant neural network for particle physics", [arXiv:2006.04780](https://arxiv.org/abs/2006.04780). Repository: [Lorentz Group Network](https://github.com/fizisist/LorentzGroupNetwork).
 - F. Marc et al., "A Practical Method for Constructing Equivariant Multilayer Perceptrons for Arbitrary Matrix Groups", [arXiv:2104.09459](https://arxiv.org/abs/2104.09459). Repository: [A Practical Method for Constructing Equivariant Multilayer Perceptrons for Arbitrary Matrix Groups](https://github.com/mfinzi/equivariant-MLP).
 
-### Backgrounds
+### Background Knowledge
 #### Group theory and group representations
 - A. Zee, ["Group Theory in a Nutshell for Physicists"](https://press.princeton.edu/books/hardcover/9780691162690/group-theory-in-a-nutshell-for-physicists). Princeton University Press, 2016. ISBN 9781400881185.
 - B. Hall, "Lie Groups, Lie Algebras, and Representations: An Elementary Introduction". Graduate Texts in Mathematics. Springer, doi: [10.1007/978-3-319-13467-3](https://doi.org/10.1007/978-3-319-13467-3). ISBN 9783319134673.
@@ -92,3 +130,13 @@ Boost and rotational equivariance tests were done on the model. The rotation ang
 - E. Wigner, "On Unitary Representations of the Inhomogeneous Lorentz Group", Annals of Mathematics **40** (1939), no. 1, 149-204, doi: [10.2307/1968551](https://doi.org/10.2307/1968551).
 - M. Schwartz, ["Quantum Field Theory and the Standard Model"](https://www.cambridge.org/us/academic/subjects/physics/theoretical-physics-and-mathematical-physics/quantum-field-theory-and-standard-model). Cambridge University Press, 2013. ISBN 9781107034730.
 - S. Weinberg. "The Quantum Theory of Fields, Volume 1: Foundations". Cambridge University Press, 1995, doi: [10.1017/CBO9781139644167](https://doi.org/10.1017/CBO9781139644167).
+
+#### Main Libraries
+- [PyTorch](https://pytorch.org/)
+- [NumPy](https://numpy.org/)
+- [Matplotlib](https://matplotlib.org/)
+- [scikit-learn](https://scikit-learn.org/stable/)
+- [SciPy](https://scipy.org/)
+- [JetNet](https://jetnet.readthedocs.io/en/latest/pages/contents.html)
+- [energyflow](https://energyflow.network/)
+- [Awkward](https://pypi.org/project/awkward/)
