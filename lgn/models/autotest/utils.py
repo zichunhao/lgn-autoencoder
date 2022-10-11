@@ -103,10 +103,16 @@ def get_avg_internal_dev(covariance_results, test_name):
 
     # Adapted from https://stackoverflow.com/a/50782438
     # Get average
-    avg_internal_dev_by_alpha = [[{key: sum(e[key] for e in internal_devs_by_alpha[i][j]) / len(internal_devs_by_alpha[i][j])
-                                   for key in internal_devs_by_alpha[i][j][0].keys()}
-                                  for j in range(len(internal_devs_by_alpha[i]))]
-                                 for i in range(len(internal_devs_by_alpha))]
+    avg_internal_dev_by_alpha = [
+        [
+            {
+                key: sum(e[key] for e in internal_devs_by_alpha[i][j]) / len(internal_devs_by_alpha[i][j])
+                for key in internal_devs_by_alpha[i][j][0].keys()
+            }
+            for j in range(len(internal_devs_by_alpha[i]))
+        ]                        
+        for i in range(len(internal_devs_by_alpha))
+    ]
 
     return avg_internal_dev_by_alpha
 
@@ -116,10 +122,15 @@ def get_internal_dev_stats(dev_internal):
     Get mean and max of relative error of all layers
     as well as the deviation in each layer as gamma increases
     """
-    dev_layers = {key: np.array([[dev_internal[i][j][key]
-                                  for j in range(len(dev_internal[i]))]
-                                 for i in range(len(dev_internal))]).transpose().tolist()
-                  for key in [(0, 0), (1, 1)]}
+    dev_layers = {
+        key: np.array(
+            [
+                [dev_internal[i][j][key] for j in range(len(dev_internal[i]))]
+                for i in range(len(dev_internal))
+            ]
+        ).transpose().tolist()
+        for key in [(0, 0), (1, 1)]
+    }
 
     dev_internal_mean = []
     dev_internal_max = []

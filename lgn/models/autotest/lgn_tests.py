@@ -232,9 +232,8 @@ def lgn_tests(args, encoder, decoder, dataloader, axis='z', alpha_max=None, thet
         perm_inv, perm_equivariance = permutation_invariance_test(encoder, decoder, data)
         perm_inv_test_all_epochs.append(perm_inv)
         perm_equivariance_test_all_epochs.append(perm_equivariance)
-        # if idx + 1 == args.num_test_batch:
-        #     break
-        break
+        if (args.num_test_batch > 0) and (idx + 1 >= args.num_test_batch):
+            break
 
     dt = time.time() - t0
     print(f"Covariance test completed! Time taken: {round(dt/60, 2)} min")
