@@ -292,6 +292,8 @@ def get_rel_err(
     target: Union[np.ndarray, torch.Tensor], 
     recons: Union[np.ndarray, torch.Tensor], 
 ):
+    target = target.cpu().detach()
+    recons = recons.cpu().detach()
     return ((recons - target) / target).view(-1, target.shape[-1])
 
 
