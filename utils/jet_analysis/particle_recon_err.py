@@ -84,10 +84,10 @@ def plot_particle_recon_err(
     LABELS = LABELS_ABS_COORD if abs_coord else LABELS_REL_COORD
     if (not custom_particle_recons_ranges) or (ranges is None):
         ranges = get_bins(
-            rel_err_cartesian=rel_err_cartesian.numpy(),
-            rel_err_polar=rel_err_polar.numpy(),
-            p_padded_recons_cartesian=p_padded_recons_cartesian.numpy(),
-            p_padded_recons_polar=p_padded_recons_polar.numpy()
+            rel_err_cartesian=rel_err_cartesian.cpu().detach().numpy(),
+            rel_err_polar=rel_err_polar.cpu().detach().numpy(),
+            p_padded_recons_cartesian=p_padded_recons_cartesian.cpu().detach().numpy(),
+            p_padded_recons_polar=p_padded_recons_polar.cpu().detach().numpy()
         )
 
     # Plot both Cartesian and polar coordinates
@@ -107,7 +107,7 @@ def plot_particle_recon_err(
         fig, axs = plt.subplots(2, 3, figsize=FIGSIZE, sharey=False)
 
         for i, (ax, bins, label) in enumerate(zip(axs[0], ranges_real, labels)):
-            res = rel_err[..., i].numpy()
+            res = rel_err[..., i].cpu().detach().numpy()
             stats = get_stats(res, bins)
             err_dict_coordinate['rel_err'].append(stats)
 
@@ -132,7 +132,7 @@ def plot_particle_recon_err(
         for i, (ax, bins, label) in enumerate(zip(axs[1], ranges_padded, labels)):
             p = p_padded_recons[..., i]
             if isinstance(p, torch.Tensor):
-                p = p.detach().cpu().numpy()
+                p = p.cpu().detach().numpy()
 
             stats = get_stats(p, bins)
             err_dict_coordinate['pad_recons'].append(stats)
@@ -205,7 +205,7 @@ def get_rel_err_find_match(
         p_recons_cartesian = p_recons_cartesian.to(DEVICE)
         p_target_polar = p_target_polar.to(DEVICE)
         p_recons_polar = p_recons_polar.to(DEVICE)
-    cost = torch.cdist(p_target_cartesian, p_recons_cartesian).cpu().numpy()
+    cost = torch.cdist(p_target_cartesian, p_recons_cartesian).cpu().detach().numpy()
 
     rel_err_cartesian_list = []
     rel_err_polar_list = []

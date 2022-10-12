@@ -277,31 +277,31 @@ def anomaly_scores(
     scores = {
         # average over jets
         # Chamfer
-        CHAMFER_PARTICLE_CARTESIAN: chamfer(recons, target, batch_size=batch_size).mean(-1).numpy(),
-        CHAMFER_PARTICLE_POLAR: chamfer(recons_polar, target_polar, batch_size=batch_size).mean(-1).numpy(),
-        CHAMFER_PARTICLE_NORMALIZED_CARTESIAN: chamfer(recons_normalized, target_normalized, batch_size=batch_size).mean(-1).numpy(),
-        CHAMFER_PARTICLE_NORMALIZED_POLAR: chamfer(recons_normalized_polar, target_normalized_polar, batch_size=batch_size).mean(-1).numpy(),
-        CHAMFER_PARTICLE_RELATIVE_POLAR: chamfer(recons_polar_rel, target_polar_rel, batch_size=batch_size).mean(-1).numpy(),
+        CHAMFER_PARTICLE_CARTESIAN: chamfer(recons, target, batch_size=batch_size).mean(-1).cpu().detach().numpy(),
+        CHAMFER_PARTICLE_POLAR: chamfer(recons_polar, target_polar, batch_size=batch_size).mean(-1).cpu().detach().numpy(),
+        CHAMFER_PARTICLE_NORMALIZED_CARTESIAN: chamfer(recons_normalized, target_normalized, batch_size=batch_size).mean(-1).cpu().detach().numpy(),
+        CHAMFER_PARTICLE_NORMALIZED_POLAR: chamfer(recons_normalized_polar, target_normalized_polar, batch_size=batch_size).mean(-1).cpu().detach().numpy(),
+        CHAMFER_PARTICLE_RELATIVE_POLAR: chamfer(recons_polar_rel, target_polar_rel, batch_size=batch_size).mean(-1).cpu().detach().numpy(),
         # Hungarian (linear assignment)
-        HUNGARIAN_PARTICLE_CARTESIAN: hungarian(recons, target, batch_size=batch_size).mean(-1).numpy(),
-        HUNGARIAN_PARTICLE_POLAR: hungarian(recons_polar, target_polar, batch_size=batch_size).mean(-1).numpy(),
-        HUNGARIAN_PARTICLE_NORMALIZED_CARTESIAN: hungarian(recons_normalized, target_normalized, batch_size=batch_size).mean(-1).numpy(),
-        HUNGARIAN_PARTICLE_NORMALIZED_POLAR: hungarian(recons_normalized_polar, target_normalized_polar, batch_size=batch_size).mean(-1).numpy(),
-        HUNGARIAN_PARTICLE_RELATIVE_POLAR: hungarian(recons_polar_rel, target_polar_rel, batch_size=batch_size).mean(-1).numpy(),
+        HUNGARIAN_PARTICLE_CARTESIAN: hungarian(recons, target, batch_size=batch_size).mean(-1).cpu().detach().numpy(),
+        HUNGARIAN_PARTICLE_POLAR: hungarian(recons_polar, target_polar, batch_size=batch_size).mean(-1).cpu().detach().numpy(),
+        HUNGARIAN_PARTICLE_NORMALIZED_CARTESIAN: hungarian(recons_normalized, target_normalized, batch_size=batch_size).mean(-1).cpu().detach().numpy(),
+        HUNGARIAN_PARTICLE_NORMALIZED_POLAR: hungarian(recons_normalized_polar, target_normalized_polar, batch_size=batch_size).mean(-1).cpu().detach().numpy(),
+        HUNGARIAN_PARTICLE_RELATIVE_POLAR: hungarian(recons_polar_rel, target_polar_rel, batch_size=batch_size).mean(-1).cpu().detach().numpy(),
         # MSE
-        MSE_PARTICLE_CARTESIAN: mse(recons, target).mean(-1).numpy(),
-        MSE_PARTICLE_POLAR: mse(recons_polar, target_polar).mean(-1).numpy(),
-        MSE_PARTICLE_NORMALIZED_CARTESIAN: mse(recons_normalized, target_normalized).mean(-1).numpy(),
-        MSE_PARTICLE_NORMALIZED_POLAR: mse(recons_normalized_polar, target_normalized_polar).mean(-1).numpy(),
-        MSE_PARTICLE_RELATIVE_POLAR: mse(recons_polar_rel, target_polar_rel).mean(-1).numpy(),
+        MSE_PARTICLE_CARTESIAN: mse(recons, target).mean(-1).cpu().detach().numpy(),
+        MSE_PARTICLE_POLAR: mse(recons_polar, target_polar).mean(-1).cpu().detach().numpy(),
+        MSE_PARTICLE_NORMALIZED_CARTESIAN: mse(recons_normalized, target_normalized).mean(-1).cpu().detach().numpy(),
+        MSE_PARTICLE_NORMALIZED_POLAR: mse(recons_normalized_polar, target_normalized_polar).mean(-1).cpu().detach().numpy(),
+        MSE_PARTICLE_RELATIVE_POLAR: mse(recons_polar_rel, target_polar_rel).mean(-1).cpu().detach().numpy(),
         # metrics based on jets
-        JET_CARTESIAN: mse(recons_jet, target_jet).numpy(),
-        JET_POLAR: mse(recons_jet, target_jet).numpy(),
+        JET_CARTESIAN: mse(recons_jet, target_jet).cpu().detach().numpy(),
+        JET_POLAR: mse(recons_jet, target_jet).cpu().detach().numpy(),
         # Lorentz invariant scores
-        CHAMFER_PARTICLE_LORENTZ: chamfer_lorentz(recons, target, batch_size=batch_size).mean(-1).numpy(),
-        HUNGARIAN_PARTICLE_LORENTZ: hungarian_lorentz(recons, target, batch_size=batch_size).mean(-1).numpy(),
-        MSE_PARTICLE_LORENTZ: mse_lorentz(recons, target).mean(-1).numpy(),
-        JET_LORENTZ: mse_lorentz(recons_jet, target_jet).numpy()
+        CHAMFER_PARTICLE_LORENTZ: chamfer_lorentz(recons, target, batch_size=batch_size).mean(-1).cpu().detach().numpy(),
+        HUNGARIAN_PARTICLE_LORENTZ: hungarian_lorentz(recons, target, batch_size=batch_size).mean(-1).cpu().detach().numpy(),
+        MSE_PARTICLE_LORENTZ: mse_lorentz(recons, target).mean(-1).cpu().detach().numpy(),
+        JET_LORENTZ: mse_lorentz(recons_jet, target_jet).cpu().detach().numpy()
     }
 
     if include_emd:
@@ -360,7 +360,7 @@ def emd_loss(
         if q_polar.shape[-1] == 4:
             q_polar = q_polar[..., 1:]
         # (pT, eta, phi): https://energyflow.network/docs/emd/#emd
-        return energyflow.emd.emd(p_polar.numpy(), q_polar.numpy())
+        return energyflow.emd.emd(p_polar.cpu().detach().numpy(), q_polar.cpu().detach().numpy())
 
     losses = []
     for i in range(target_polar.shape[0]):
