@@ -28,6 +28,7 @@ def main(args):
     logging.info(f"compression rate: {compression_rate}")
     
     outpath = args.load_path if args.load_path else create_model_folder(args)
+    logging.info(f"output path: {outpath}")
 
     train_loader, valid_loader = initialize_data(
         paths=args.data_paths,
@@ -129,7 +130,7 @@ def main(args):
         from test import test
         test(args)
 
-    logging.info("Done!")
+    logging.info(f"Done! Results saved in {outpath}")
 
 
 def setup_argparse():
