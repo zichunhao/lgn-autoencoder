@@ -1,7 +1,8 @@
 from pathlib import Path
 from utils.argparse_utils import get_bool, get_device, get_dtype
 from utils.argparse_utils import parse_model_settings, parse_plot_settings, parse_covariance_test_settings, parse_data_settings
-from utils.utils import create_model_folder, best_epoch, get_compression_rate
+from utils.utils import create_model_folder, get_compression_rate
+from utils.utils import best_epoch as get_best_epoch
 from utils.train import train_loop
 from utils.initialize import initialize_autoencoder, initialize_data, initialize_test_data, initialize_optimizers
 
@@ -15,9 +16,6 @@ import argparse
 
 
 def main(args):
-    if args.load_to_train and args.load_epoch < 0:
-        args.load_epoch = best_epoch(args.load_path, num=args.load_epoch)
-    logging.info(f'{args=}')
     compression_rate = get_compression_rate(
         ls=args.tau_latent_scalars,
         lv=args.tau_latent_vectors,
@@ -27,8 +25,22 @@ def main(args):
     )
     logging.info(f"compression rate: {compression_rate}")
     
-    outpath = args.load_path if args.load_path else create_model_folder(args)
+    if args.load_to_train:
+        if args.load_path is None:
+            outpath = args.load_path = create_model_folder(args)
+            logging.warning(f"--load-path not specified, using {outpath}")
+            if not (Path(outpath) / "trained_info.pt").exists():
+                Path(outpath).mkdir(parents=True, exist_ok=True)
+                logging.warning(f"Trained info in {outpath} did not exist. Training from scratch.")
+                args.load_to_train = False
+        else:
+            outpath = args.load_path
+    else:
+        outpath = create_model_folder(args)
     logging.info(f"output path: {outpath}")
+    
+    if args.load_to_train and args.load_epoch < 0:
+        args.load_epoch = get_best_epoch(args.load_path, num=args.load_epoch)
 
     train_loader, valid_loader = initialize_data(
         paths=args.data_paths,
@@ -49,7 +61,7 @@ def main(args):
     optimizer_encoder, optimizer_decoder = initialize_optimizers(
         args, encoder, decoder
     )
-
+    
     # Both on gpu
     if (next(encoder.parameters()).is_cuda and next(encoder.parameters()).is_cuda):
         logging.info('The models are initialized on GPU...')
@@ -60,6 +72,8 @@ def main(args):
     # Both on cpu
     else:
         logging.info('The models are initialized on CPU...')
+    
+    logging.info(f'{args=}')
 
     '''Training'''
     logging.info(f'Training over {args.num_epochs} epochs...')
@@ -209,10 +223,6 @@ def setup_argparse():
 
     args = parser.parse_args()
 
-    if args.load_to_train and ((args.load_path is None) or (args.load_epoch is None)):
-        raise ValueError(
-            "--load-to-train requires --load-model-path and --load-epoch."
-        )
     if args.patience < 0:
         import math
         args.patience = math.inf
