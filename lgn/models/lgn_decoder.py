@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 import torch
 import logging
 
@@ -208,13 +208,18 @@ class LGNDecoder(CGModule):
 
         self.__num_param = sum(p.nelement() for p in self.parameters() if p.requires_grad)
 
-    def l1_norm(self):
+    def l1_norm(self) -> torch.Tensor:
         return sum(p.abs().sum() for p in self.parameters())
     
-    def l2_norm(self):
+    def l2_norm(self) -> torch.Tensor:
         return sum(torch.pow(p, 2).sum() for p in self.parameters())
     
-    def forward(self, latent_features, covariance_test=False, nodes_all=None):
+    def forward(
+        self, 
+        latent_features: GVec, 
+        covariance_test: bool = False, 
+        nodes_all: List[GVec] = None
+    ):
         '''
         The forward pass of the LGN GNN.
 
@@ -295,7 +300,10 @@ class LGNDecoder(CGModule):
             nodes_all.append(generated_features)
             return generated_features, nodes_all
 
-    def _prepare_input(self, latent_features):
+    def _prepare_input(
+        self, 
+        latent_features: GVec
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Extract input from data.
 

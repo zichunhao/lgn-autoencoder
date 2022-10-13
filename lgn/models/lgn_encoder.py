@@ -1,5 +1,6 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 import torch
+import numpy as np
 import logging
 
 from lgn.cg_lib import CGModule, ZonalFunctionsRel, ZonalFunctions
@@ -242,17 +243,17 @@ class LGNEncoder(CGModule):
 
         self.__num_param = sum(p.nelement() for p in self.parameters() if p.requires_grad)
         
-    def l1_norm(self):
+    def l1_norm(self) -> torch.Tensor:
         return sum(p.abs().sum() for p in self.parameters())
 
-    def l2_norm(self):
+    def l2_norm(self) -> torch.Tensor:
         return sum(torch.pow(p, 2).sum() for p in self.parameters())
 
     def forward(
         self, 
-        data: Dict[str, torch.Tensor], 
+        data: Union[Dict[str, torch.Tensor], torch.Tensor, np.ndarray], 
         covariance_test: bool = False
-    ):
+    ) -> Union[torch.Tensor, Tuple[torch.Tensor, List[GVec]]]:
         '''
         The forward pass of the LGN GNN.
 
@@ -338,7 +339,10 @@ class LGNEncoder(CGModule):
             nodes_all.append(GVec(latent_features_canonical))
             return latent_features, nodes_all
 
-    def _prepare_input(self, data):
+    def _prepare_input(
+        self, 
+        data: Union[Dict[str, torch.Tensor], torch.Tensor, np.ndarray]
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Extract input from data.
 
@@ -358,6 +362,16 @@ class LGNEncoder(CGModule):
         edge_mask: `torch.Tensor`
             Edge mask used for batching data.
         """
+        
+        # convert ot dict
+        if isinstance(data, torch.Tensor):
+            p4 = data
+            data = dict()
+            data['p4'] = p4
+        elif isinstance(data, np.ndarray):
+            p4 = torch.from_numpy(data)
+            data = dict()
+            data['p4'] = p4
 
         node_ps = data['p4'].to(device=self.device, dtype=self.dtype) * self.scale
         if self.jet_features:
@@ -399,7 +413,7 @@ class LGNEncoder(CGModule):
 def aggregate(
     map_to_latent: str, 
     latent_features: Union[GVec, torch.Tensor]
-):
+) -> GVec:
     '''Aggregate to the latent space.'''
     if map_to_latent.lower() == 'sum':
         return GVec({
