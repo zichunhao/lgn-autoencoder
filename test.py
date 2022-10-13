@@ -107,6 +107,21 @@ def test(args):
     torch.save(jet_images_same_norm, osp.join(test_path, "jet_images_same_norm.pt"))
     torch.save(jet_images, osp.join(test_path, "jet_images.pt"))
     logging.info("Plots finished.")
+    
+    # Lorentz group equivariance tests
+    if args.equivariance_test:
+        logging.info("Running equivariance tests.")
+        dev = lgn_tests(
+            args,
+            encoder,
+            decoder,
+            test_loader,
+            alpha_max=args.alpha_max,
+            theta_max=args.theta_max,
+            cg_dict=encoder.cg_dict,
+            unit=args.unit,
+        )
+        plot_all_dev(dev, osp.join(test_path, "equivariance_tests"))
 
     # anomaly detection
     if (args.anomaly_detection) and (len(args.signal_paths) > 0):
@@ -221,19 +236,7 @@ def test(args):
     elif (args.anomaly_detection) and (len(args.signal_paths) > 0):
         logging.error("No signal paths given for anomaly detection.")
 
-    # Lorentz group equivariance tests
-    if args.equivariance_test:
-        dev = lgn_tests(
-            args,
-            encoder,
-            decoder,
-            test_loader,
-            alpha_max=args.alpha_max,
-            theta_max=args.theta_max,
-            cg_dict=encoder.cg_dict,
-            unit=args.unit,
-        )
-        plot_all_dev(dev, osp.join(test_path, "equivariance_tests"))
+
 
 
 def setup_argparse():
