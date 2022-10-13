@@ -8,7 +8,7 @@ METHODS = ('component_max', 'overall_max', 'jet_E')
 
 def normalize_p4(
     p4: torch.Tensor, 
-    method: str = 'normalize_p4_overall_max'
+    method: str = 'overall_max'
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     if method.lower().replace(' ', '_').replace('-', '_') == 'component_max':
         return normalize_p4_component_max(p4)
