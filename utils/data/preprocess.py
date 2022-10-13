@@ -43,14 +43,15 @@ def prepare(
     pt = pt_rel * Pt.reshape(-1, 1)
     eta = eta_rel + Eta.reshape(-1, 1)
     phi = phi_rel + Phi.reshape(-1, 1)
-    phi = (phi % (2 * np.pi)) - np.pi  # [-pi, pi]
+    phi = ((phi + np.pi) % (2 * np.pi)) - np.pi  # [-pi, pi]
     mask = torch.from_numpy(mask)
     
     # Cartesian coordinates
     px = pt * np.cos(phi)
     py = pt * np.sin(phi)
     pz = pt * np.sinh(eta)
-    p0 = pt * np.cosh(eta) + np.random.random(eta.shape) / 1e16  # random eps as jet mass
+    m = np.random.random(eta.shape) * 1e-3  # O(1e-4 GeV)
+    p0 = np.sqrt((pt * np.cosh(eta))**2 + m**2)
     
     p4 = torch.from_numpy(np.stack([p0, px, py, pz], axis=-1))
     p4 = p4 * mask.unsqueeze(-1) / 1000  # tev
