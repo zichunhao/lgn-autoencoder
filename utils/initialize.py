@@ -94,12 +94,20 @@ def initialize_autoencoder(
         map_to_latent=args.map_to_latent,
         tau_latent_scalars=args.tau_latent_scalars,
         tau_latent_vectors=args.tau_latent_vectors,
-        maxdim=args.maxdim, max_zf=[1],
+        maxdim=args.maxdim, 
+        max_zf=[1],
         num_channels=args.encoder_num_channels,
-        weight_init=args.weight_init, level_gain=args.level_gain,
-        num_basis_fn=args.num_basis_fn, activation=args.activation, scale=args.scale,
-        mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
-        device=args.device, dtype=args.dtype
+        weight_init=args.weight_init, 
+        level_gain=args.level_gain,
+        num_basis_fn=args.num_basis_fn, 
+        activation=args.activation, 
+        scale=args.scale,
+        jet_features=args.jet_features,
+        mlp=args.mlp, 
+        mlp_depth=args.mlp_depth, 
+        mlp_width=args.mlp_width,
+        device=args.device, 
+        dtype=args.dtype
     )
     logging.info(f"LGNEncoder initialized with {encoder.num_learnable_parameters} learnable parameters.")
     
@@ -114,12 +122,19 @@ def initialize_autoencoder(
         num_output_particles=args.num_jet_particles,
         tau_output_scalars=args.tau_jet_scalars,
         tau_output_vectors=args.tau_jet_vectors,
-        maxdim=args.maxdim, max_zf=[1],
+        maxdim=args.maxdim, 
+        max_zf=[1],
         num_channels=args.decoder_num_channels,
-        weight_init=args.weight_init, level_gain=args.level_gain,
-        num_basis_fn=args.num_basis_fn, activation=args.activation,
-        mlp=args.mlp, mlp_depth=args.mlp_depth, mlp_width=args.mlp_width,
-        cg_dict=encoder.cg_dict, device=args.device, dtype=args.dtype
+        weight_init=args.weight_init, 
+        level_gain=args.level_gain,
+        num_basis_fn=args.num_basis_fn, 
+        activation=args.activation,
+        mlp=args.mlp, 
+        mlp_depth=args.mlp_depth, 
+        mlp_width=args.mlp_width,
+        cg_dict=encoder.cg_dict, 
+        device=args.device, 
+        dtype=args.dtype
     )
     logging.info(f"LGNDecoder initialized with {encoder.num_learnable_parameters} learnable parameters.")
     

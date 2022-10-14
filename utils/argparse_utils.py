@@ -1,4 +1,5 @@
 import argparse
+from email.policy import default
 import numpy as np
 import torch
 
@@ -65,6 +66,8 @@ def parse_model_settings(parser: argparse.ArgumentParser) -> argparse.ArgumentPa
                         help='Multiplicity of scalars per particle in the latent space.')
     parser.add_argument('--tau-latent-vectors', type=int, default=1, metavar='',
                         help='Multiplicity of 4-vectors per particle the latent space.')
+    parser.add_argument('--jet-features', default=False, action='store_true',
+                        help='Include jet momentum as an additional vector and jet invariant mass as an additional scalar to the input.')
 
     parser.add_argument('--encoder-num-channels', nargs="+", type=int, default=[3, 3, 4, 4], metavar='',
                         help='Number of channels (multiplicity of all irreps) in each CG layer in the encoder.')

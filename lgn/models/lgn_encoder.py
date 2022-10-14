@@ -15,8 +15,8 @@ from lgn.nn import MixReps
 from lgn.models.utils import adapt_var_list
 
 IMPLEMENTED_AGGREGATIONS = (
-    'mix', 'sum', 
-    'mean', 'average', 
+    'mix', 'sum',
+    'mean', 'average',
     'min', 'max'
 )
 
@@ -26,15 +26,15 @@ class LGNEncoder(CGModule):
     """
 
     def __init__(
-        self, 
-        num_input_particles: int, 
-        tau_input_scalars: int, 
+        self,
+        num_input_particles: int,
+        tau_input_scalars: int,
         tau_input_vectors: int,
-        tau_latent_scalars: int, 
-        tau_latent_vectors: int, 
-        maxdim: int, 
+        tau_latent_scalars: int,
+        tau_latent_vectors: int,
+        maxdim: int,
         num_basis_fn: int,
-        num_channels: List[int], 
+        num_channels: List[int],
         max_zf: List[int],
         weight_init: List[float],
         level_gain: List[float],
@@ -46,7 +46,7 @@ class LGNEncoder(CGModule):
         jet_features: bool = False,
         map_to_latent: str = 'mean',
         device: torch.device = None,
-        dtype: torch.dtype = None, 
+        dtype: torch.dtype = None,
         cg_dict: CGDict = None
     ):
         '''
@@ -157,17 +157,18 @@ class LGNEncoder(CGModule):
 
         if jet_features:
             self.num_input_particles += 1
+            tau_input_scalars += 1  # invariant mass of the jet
 
         # Express input momenta in the canonical basis
         self.zonal_fns_in = ZonalFunctions(
-            maxdim=max(self.max_zf), 
+            maxdim=max(self.max_zf),
             basis=self.input_basis,
             cg_dict=cg_dict,
             **misc_info
         )
         # Relative position in momentum space
         self.zonal_fns = ZonalFunctionsRel(
-            maxdim=max(self.max_zf), 
+            maxdim=max(self.max_zf),
             basis=self.input_basis,
             cg_dict=cg_dict,
             **misc_info
@@ -175,8 +176,8 @@ class LGNEncoder(CGModule):
 
         # Position functions
         self.rad_funcs = RadialFilters(
-            max_zf=self.max_zf, 
-            num_basis_fn=self.num_basis_fn, 
+            max_zf=self.max_zf,
+            num_basis_fn=self.num_basis_fn,
             num_channels_out=self.num_channels,
             num_levels=self.num_cg_levels,
             **misc_info
@@ -193,7 +194,7 @@ class LGNEncoder(CGModule):
         # tau_out = GTau({weight: num_channels[0] for weight in [(0, 0), (1, 1)]})
         tau_out = GTau({(l, l): num_channels[0] for l in range(max_zf[0] + 1)})
         self.input_func_node = MixReps(
-            tau_in, tau_out, 
+            tau_in, tau_out,
             **misc_info
         )
 
@@ -201,18 +202,18 @@ class LGNEncoder(CGModule):
 
         # CG layers
         self.lgn_cg = LGNCG(
-            maxdim=maxdim, 
-            max_zf=self.max_zf, 
-            tau_in=tau_input_node, 
-            tau_pos=tau_pos, 
+            maxdim=maxdim,
+            max_zf=self.max_zf,
+            tau_in=tau_input_node,
+            tau_pos=tau_pos,
             num_cg_levels=self.num_cg_levels,
             num_channels=self.num_channels,
-            level_gain=level_gain, 
-            weight_init=weight_init, 
-            mlp=self.mlp, 
-            mlp_depth=self.mlp_depth, 
+            level_gain=level_gain,
+            weight_init=weight_init,
+            mlp=self.mlp,
+            mlp_depth=self.mlp_depth,
             mlp_width=self.mlp_width,
-            activation=self.activation, 
+            activation=self.activation,
             cg_dict=self.cg_dict,
             **misc_info
         )
@@ -233,8 +234,8 @@ class LGNEncoder(CGModule):
         self.tau_output[(1, 1)] = tau_latent_vectors
         self.tau_dict['latent'] = self.tau_output
         self.mix_reps = MixReps(
-            self.tau_cg_levels_node[-1], 
-            self.tau_output, 
+            self.tau_cg_levels_node[-1],
+            self.tau_output,
             **misc_info
         )
 
@@ -242,7 +243,7 @@ class LGNEncoder(CGModule):
         self.tau_latent = self.tau_output
 
         self.__num_param = sum(p.nelement() for p in self.parameters() if p.requires_grad)
-        
+
     def l1_norm(self) -> torch.Tensor:
         return sum(p.abs().sum() for p in self.parameters())
 
@@ -250,8 +251,8 @@ class LGNEncoder(CGModule):
         return sum(torch.pow(p, 2).sum() for p in self.parameters())
 
     def forward(
-        self, 
-        data: Union[Dict[str, torch.Tensor], torch.Tensor, np.ndarray], 
+        self,
+        data: Union[Dict[str, torch.Tensor], torch.Tensor, np.ndarray],
         covariance_test: bool = False
     ) -> Union[GVec, Tuple[GVec, List[GVec]]]:
         '''
@@ -270,8 +271,8 @@ class LGNEncoder(CGModule):
         Returns
         -------
         node_features : GVec
-            The dictionary that stores all relevant irreps. 
-            For each key, the value is a tensor of shape 
+            The dictionary that stores all relevant irreps.
+            For each key, the value is a tensor of shape
             `(2, batch_size, num_particles, tau, feature_dim)`.
         If covariance_test is True, also:
             nodes_all : list of `GVec`
@@ -315,14 +316,14 @@ class LGNEncoder(CGModule):
         # node_all[-1] is the updated feature in the last layer
         latent_features = self.mix_reps(node_features)
         latent_features = GVec({
-            weight: latent_features[weight] 
+            weight: latent_features[weight]
             for weight in [(0, 0), (1, 1)]
         })  # Truncate higher order irreps than (1, 1)
 
         # latent_features = self._aggregate(latent_features)
 
         latent_features[(1, 1)] = rep_to_p(latent_features[(1, 1)])  # Convert to Cartesian coordinates
-        
+
         latent_features = aggregate(self.map_to_latent, latent_features)
         latent_features_canonical = GVec({
             weight: val.clone()
@@ -338,7 +339,7 @@ class LGNEncoder(CGModule):
             return latent_features, nodes_all
 
     def _prepare_input(
-        self, 
+        self,
         data: Union[Dict[str, torch.Tensor], torch.Tensor, np.ndarray]
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
@@ -360,7 +361,7 @@ class LGNEncoder(CGModule):
         edge_mask: `torch.Tensor`
             Edge mask used for batching data.
         """
-        
+
         # convert ot dict
         if isinstance(data, torch.Tensor):
             p4 = data
@@ -373,9 +374,17 @@ class LGNEncoder(CGModule):
 
         node_ps = data['p4'].to(device=self.device, dtype=self.dtype) * self.scale
         if self.jet_features:
-            node_ps = torch.cat((node_ps, torch.sum(node_ps, dim=-2).unsqueeze(-1)), dim=-2)
+            jet_p = torch.sum(node_ps, dim=-2).unsqueeze(-2)
+            node_ps = torch.cat((node_ps, jet_p), dim=-2)
 
-        data['p4'].requires_grad_(True)
+        scalars = normsq4(node_ps).abs().sqrt().unsqueeze(-1)
+        if self.jet_features:
+            jet_mass = normsq4(
+                torch.sum(node_ps, dim=-2)
+            ).unsqueeze(-1).unsqueeze(-1).repeat(
+                1, self.num_input_particles, 1
+            )
+            scalars = torch.cat((scalars, jet_mass), dim=-1)
 
         # Calculate node masks and edge masks
         if 'labels' in data:
@@ -390,26 +399,27 @@ class LGNEncoder(CGModule):
         else:
             node_mask = data['p4'][..., 0] != 0
             node_mask = node_mask.to(device=self.device, dtype=torch.uint8)
+        if self.jet_features:
+            jet_mask = torch.ones_like(node_mask[..., 0:1])
+            jet_mask = jet_mask.to(device=self.device, dtype=torch.uint8)
+            node_mask = torch.cat((node_mask, jet_mask), dim=-1)
         edge_mask = node_mask.unsqueeze(1) * node_mask.unsqueeze(2)
-
-        scalars = torch.ones_like(node_ps[:, :, 0]).unsqueeze(-1)
-        scalars = normsq4(node_ps).abs().sqrt().unsqueeze(-1)
 
         if 'scalars' in data.keys():
             # (0,0) representation
             scalars = torch.cat([
-                scalars, 
+                scalars,
                 data['scalars'].to(device=self.device, dtype=self.dtype)
             ], dim=-1)
 
         return scalars, node_ps, node_mask, edge_mask
-        
+
     @property
     def num_learnable_parameters(self) -> int:
         return self.__num_param
-        
+
 def aggregate(
-    map_to_latent: str, 
+    map_to_latent: str,
     latent_features: Union[GVec, torch.Tensor]
 ) -> GVec:
     '''Aggregate to the latent space.'''
@@ -431,7 +441,7 @@ def aggregate(
             weight: get_max_features(value)
             for weight, value in latent_features.items()
         })
-        
+
 
     elif map_to_latent.lower() == 'min':
         p4 = latent_features[(1, 1)]
@@ -442,7 +452,7 @@ def aggregate(
 
     elif map_to_latent.lower() == 'mix':  # will be processed in the next step
         return latent_features
-    
+
     # simply add different latent features
     # TODO: learnable parameters based on Lorentz scalars
     elif '+' in map_to_latent.lower():
@@ -460,12 +470,12 @@ def aggregate(
             aggregate(method, latent_features)
             for method in methods
         ]
-        
+
         return GVec({
             weight: sum([feature[weight] for feature in features]) / len(methods)
             for weight in weights
         })
-    
+
     elif '&' in map_to_latent:
         if 'mix' in map_to_latent.lower():
             raise NotImplementedError(
@@ -487,10 +497,10 @@ def aggregate(
                 dim=3
             ) for weight in weights
         })
-    
+
     else:
         raise NotImplementedError(f'{map_to_latent} is not implemented.')
-        
+
 def get_msq(p4: torch.Tensor, keep_dim=False):
     '''Get mass squared of a 4-momentum.'''
     E, p3 = p4[..., 0], p4[..., 1:]
@@ -558,7 +568,7 @@ def get_max_features(feature: torch.Tensor):
     '''
     Get the maximum features per tau based on the reference and a map function.
     '''
-    # (2, batch_size, num_particles, tau, feature_dim) 
+    # (2, batch_size, num_particles, tau, feature_dim)
     # -> (2, batch_size, tau, num_particles, feature_dim)
     features_permute = feature.permute(0, 1, 3, 2, 4)
     scalar = get_msq(feature, keep_dim=False)
@@ -571,10 +581,9 @@ def get_max_features(feature: torch.Tensor):
         raise NotImplementedError(
             f'feature dimension {feature.shape[-1]} not supported yet'
         )
-    
+
     # aggregated_permuted = gather_righthand(features_permute, indices)
-    
-    # (2, batch_size, tau, num_particles, feature_dim) 
+
+    # (2, batch_size, tau, num_particles, feature_dim)
     # -> (2, batch_size, num_particles, tau, feature_dim)
-    return gather_righthand(features_permute, indices).permute(0, 1, 3, 2, 4) 
-    
+    return gather_righthand(features_permute, indices).permute(0, 1, 3, 2, 4)
