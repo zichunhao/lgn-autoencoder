@@ -253,7 +253,7 @@ class LGNEncoder(CGModule):
         self, 
         data: Union[Dict[str, torch.Tensor], torch.Tensor, np.ndarray], 
         covariance_test: bool = False
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, List[GVec]]]:
+    ) -> Union[GVec, Tuple[GVec, List[GVec]]]:
         '''
         The forward pass of the LGN GNN.
 
@@ -269,12 +269,10 @@ class LGNEncoder(CGModule):
 
         Returns
         -------
-        node_features : `dict`
-            The dictionary that stores all relevant irreps.
-        node_mask : `torch.Tensor`
-            The mask of node features. (Unchanged)
-        edge_mask : `torch.Tensor`
-            The mask of edge features. (Unchanged)
+        node_features : GVec
+            The dictionary that stores all relevant irreps. 
+            For each key, the value is a tensor of shape 
+            `(2, batch_size, num_particles, tau, feature_dim)`.
         If covariance_test is True, also:
             nodes_all : list of `GVec`
                 The full node features in the encoder.
