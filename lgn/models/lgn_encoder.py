@@ -334,7 +334,7 @@ class LGNEncoder(CGModule):
         if not covariance_test:
             return latent_features
         else:
-            nodes_all.append(GVec(node_features))
+            # nodes_all.append(GVec(node_features))
             nodes_all.append(GVec(latent_features_canonical))
             return latent_features, nodes_all
 
