@@ -468,4 +468,4 @@ def get_one_to_one_jet_image_figsize(
     num_jets: int = 15
 ) -> Tuple[float, float]:
     """Returns the figure size of one-to-one jet images"""
-    return (7.5, 3*num_jets)
+    return (10, 4*num_jets)
