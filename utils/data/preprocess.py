@@ -9,7 +9,8 @@ import torch
 def prepare(
     jet_type: str, 
     save_dir: Union[str, Path],
-    test_portion: float = 0.2
+    test_portion: float = 0.2,
+    normalize: bool = False
 ):
     logging.info(f"Downloading data ({jet_type=}) from JetNet.")
     data = jetnet.datasets.JetNet(
@@ -54,7 +55,11 @@ def prepare(
     p0 = np.sqrt((pt * np.cosh(eta))**2 + m**2)
     
     p4 = torch.from_numpy(np.stack([p0, px, py, pz], axis=-1))
-    p4 = p4 * mask.unsqueeze(-1) / 1000  # tev
+    p4 = p4 * mask.unsqueeze(-1)
+    if not normalize:
+        p4 = p4 / 1000  # GeV -> TeV
+    else:
+        p4 = p4 / p4.abs().max()
     
     p4_data = {
         'p4': p4,
@@ -103,11 +108,17 @@ if __name__ == "__main__":
         type=float, default=0.2,
         help="Test portion of the data."
     )
+    parser.add_argument(
+        '--normalize',
+        action='store_true', default=False,
+        help="Normalize the data by the global maximum (of the absolute value)."
+    )
     args = parser.parse_args()
     logging.info(f"{args=}")
     for jet_type in args.jet_types:
         prepare(
             jet_type=jet_type,
             save_dir=Path(args.save_dir),
-            test_portion=args.test_portion
+            test_portion=args.test_portion,
+            normalize=args.normalize
         )
