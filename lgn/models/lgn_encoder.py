@@ -321,21 +321,13 @@ class LGNEncoder(CGModule):
         })  # Truncate higher order irreps than (1, 1)
 
         # latent_features = self._aggregate(latent_features)
-
         latent_features[(1, 1)] = rep_to_p(latent_features[(1, 1)])  # Convert to Cartesian coordinates
-
         latent_features = aggregate(self.map_to_latent, latent_features)
-        latent_features_canonical = GVec({
-            weight: val.clone()
-            for weight, val in latent_features.items()
-        })
 
 
         if not covariance_test:
             return latent_features
         else:
-            # nodes_all.append(GVec(node_features))
-            nodes_all.append(GVec(latent_features_canonical))
             return latent_features, nodes_all
 
     def _prepare_input(
