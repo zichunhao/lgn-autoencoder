@@ -29,7 +29,7 @@ def get_node_dev(transform_input, transform_output, eps=1e-16, mode='mean'):
     else:
         # what is done in [arXiv:2006.04780]
         return {
-            weight: (transform_input[weight] - transform_output[weight]).mean().item() / ((transform_output[weight]).mean().item() + eps)
+            weight: abs((transform_input[weight] - transform_output[weight]).mean().item() / ((transform_output[weight]).mean().item() + eps))
             for weight in [(0, 0), (1, 1)]
         }
 
