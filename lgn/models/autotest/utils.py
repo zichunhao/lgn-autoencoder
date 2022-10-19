@@ -1,3 +1,4 @@
+import logging
 import warnings
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,19 +27,22 @@ def get_node_dev(transform_input, transform_output, eps=1e-16, mode='mean'):
             weight: ((transform_input[weight] - transform_output[weight]) / (transform_output[weight] + eps)).abs().max().item()
             for weight in [(0, 0), (1, 1)]
         }
-    else:
-        # what is done in [arXiv:2006.04780]
+    elif mode.lower() == 'mean':
+        # what is done in [arXiv:2006.04780] for covariance
         return {
             weight: abs((transform_input[weight] - transform_output[weight]).mean().item() / ((transform_output[weight]).mean().item() + eps))
             for weight in [(0, 0), (1, 1)]
         }
+    else:
+        logging.warning(f"Mode {mode} not recognized. Returning mean.")
+        return get_node_dev(transform_input, transform_output, eps=eps, mode='mean')
 
-def get_dev(transform_input, transform_output, transform_input_nodes_all, transform_output_nodes_all):
+def get_dev(transform_input, transform_output, transform_input_nodes_all, transform_output_nodes_all, mode='mean'):
     # Output equivariance
-    dev_output = [get_node_dev(transform_input[i], transform_output[i])
+    dev_output = [get_node_dev(transform_input[i], transform_output[i], mode=mode)
                   for i in range(len(transform_output))]
     # Equivariance of all internal features
-    dev_internal = [[get_node_dev(transform_input_nodes_all[i][j], transform_output_nodes_all[i][j])
+    dev_internal = [[get_node_dev(transform_input_nodes_all[i][j], transform_output_nodes_all[i][j], mode=mode)
                      for j in range(len(transform_output_nodes_all[i]))]
                     for i in range(len(transform_output_nodes_all))]
     return dev_output, dev_internal

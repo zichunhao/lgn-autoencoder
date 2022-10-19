@@ -19,12 +19,18 @@ def _gen_rot(angles, maxdim, device=torch.device('cpu'), dtype=torch.float64, cg
     D = {(k, n): rot.LorentzD((k, n), *angles, device=device, dtype=dtype, cg_dict=cg_dict)
          for k in range(maxdim) for n in range(maxdim)}
     # compute the Lorentz matrix in cartesian coordinates
-    cartesian4 = torch.tensor([[[1, 0, 0, 0], [0, 1/sqrt(2.), 0, 0], [0, 0, 0, 1], [0, -1/sqrt(2.), 0, 0]],
-                               [[0, 0, 0, 0], [0, 0, -1/sqrt(2.), 0], [0, 0, 0, 0], [0, 0, -1/sqrt(2.), 0]]], device=device, dtype=dtype)
-    cartesian4H = torch.tensor([[[1, 0, 0, 0], [0, 1/sqrt(2.), 0, 0], [0, 0, 0, 1], [0, -1/sqrt(2.), 0, 0]],
-                                [[0, 0, 0, 0], [0, 0, 1/sqrt(2.), 0], [0, 0, 0, 0], [0, 0, 1/sqrt(2.), 0]]], device=device, dtype=dtype).permute(0, 2, 1)
-    R = torch.stack((D[(1, 1)][0].matmul(cartesian4[0]) - D[(1, 1)][1].matmul(cartesian4[1]),
-                     D[(1, 1)][0].matmul(cartesian4[1]) + D[(1, 1)][1].matmul(cartesian4[0])))
+    cartesian4 = torch.tensor([
+        [[1, 0, 0, 0], [0, 1/sqrt(2.), 0, 0], [0, 0, 0, 1], [0, -1/sqrt(2.), 0, 0]],
+        [[0, 0, 0, 0], [0, 0, -1/sqrt(2.), 0], [0, 0, 0, 0], [0, 0, -1/sqrt(2.), 0]]
+    ], device=device, dtype=dtype)
+    cartesian4H = torch.tensor([
+        [[1, 0, 0, 0], [0, 1/sqrt(2.), 0, 0], [0, 0, 0, 1], [0, -1/sqrt(2.), 0, 0]],
+        [[0, 0, 0, 0], [0, 0, 1/sqrt(2.), 0], [0, 0, 0, 0], [0, 0, 1/sqrt(2.), 0]]
+    ], device=device, dtype=dtype).permute(0, 2, 1)
+    R = torch.stack((
+        D[(1, 1)][0].matmul(cartesian4[0]) - D[(1, 1)][1].matmul(cartesian4[1]),
+        D[(1, 1)][0].matmul(cartesian4[1]) + D[(1, 1)][1].matmul(cartesian4[0])
+    ))
     R = cartesian4H[0].matmul(R[0]) - cartesian4H[1].matmul(R[1])
 
     return D, R
@@ -40,9 +46,13 @@ def covariance_test(encoder, decoder, data, test_type, axis='z', alpha_max=None,
     data['p4'] = data['p4'].to(device, dtype)
     data = data.copy()
     if unit.lower() == 'gev':
-        data['p4'] /= 1e6  # Convert to TeV for better numerical precision after boost
-    elif unit.lower() == 'tev':
-        data['p4'] /= 1e3  # Convert to TeV for better numerical precision after boost
+        # Convert to TeV for better numerical precision after boost
+        data['p4'] /= 1e3
+        # # Convert to PeV for better numerical precision after boost
+        # data['p4'] /= 1e6
+    # elif unit.lower() == 'tev':
+    #     # Convert to PeV for better numerical precision after boost
+    #     data['p4'] /= 1e3
 
     # data['p4'] = torch.rand_like(data['p4']).to(device, dtype)
 
@@ -52,8 +62,10 @@ def covariance_test(encoder, decoder, data, test_type, axis='z', alpha_max=None,
         if alpha_max is None:
             alpha_max = 10.
         alpha_range = np.arange(0, alpha_max+.01, step=alpha_max/25.)
-        gammas, boost_dev_output, boost_dev_internal = boost_equivariance(encoder, decoder, data, alpha_range,
-                                                                          axis, device, dtype, cg_dict)
+        gammas, boost_dev_output, boost_dev_internal = boost_equivariance(
+            encoder, decoder, data, alpha_range,
+            axis, device, dtype, cg_dict
+        )
         covariance_test_result['gammas'] = gammas
         covariance_test_result['boost_dev_output'] = boost_dev_output
         covariance_test_result['boost_dev_internal'] = boost_dev_internal
@@ -62,8 +74,10 @@ def covariance_test(encoder, decoder, data, test_type, axis='z', alpha_max=None,
         if alpha_max is None:
             alpha_max = 2 * np.pi
         theta_range = np.arange(0, alpha_max+.01, step=alpha_max/25.)
-        theta_range, rot_dev_output, rot_dev_internal = rot_equivariance(encoder, decoder, data, theta_range,
-                                                                         axis, device, dtype, cg_dict)
+        theta_range, rot_dev_output, rot_dev_internal = rot_equivariance(
+            encoder, decoder, data, theta_range,
+            axis, device, dtype, cg_dict
+        )
         covariance_test_result['thetas'] = theta_range
         covariance_test_result['rot_dev_output'] = rot_dev_output
         covariance_test_result['rot_dev_internal'] = rot_dev_internal
@@ -92,7 +106,10 @@ def permutation_invariance_test(encoder, decoder, data, *ignore):
     assert((mask == apply_perm(mask)).all())
 
     data_noperm = data.copy()
-    data_perm = {key: apply_perm(val) if key in ['p4', 'scalars'] else val for key, val in data.items()}
+    data_perm = {
+        key: apply_perm(val) if key in ['p4', 'scalars'] else val 
+        for key, val in data.items()
+    }
 
     outputs_perm, _ = get_output(encoder, decoder, data_perm, covariance_test=True)
     outputs_perm = {k: v.squeeze() for k, v in outputs_perm.items()}
@@ -107,8 +124,8 @@ def permutation_invariance_test(encoder, decoder, data, *ignore):
         for k, v in outputs_noperm.items()
     }
 
-    perm_inv_dev = get_node_dev(outputs_perm, outputs_noperm)
-    perm_equivariance_dev = get_node_dev(outputs_perm, perm_outputs)
+    perm_inv_dev = get_node_dev(outputs_perm, outputs_noperm, mode='max')
+    perm_equivariance_dev = get_node_dev(outputs_perm, perm_outputs, mode='max')
 
     return perm_inv_dev, perm_equivariance_dev
 
@@ -122,8 +139,13 @@ def boost_equivariance(encoder, decoder, data, alpha_range, axis, device, dtype,
     for alpha in alpha_range:
         phi_x, phi_y, phi_z = get_boost(alpha, axis)
         # boost input
-        Di, Ri = _gen_rot((phi_x, phi_y, phi_z), encoder.maxdim,
-                          device=device, dtype=dtype, cg_dict=cg_dict)
+        Di, Ri = _gen_rot(
+            angles=(phi_x, phi_y, phi_z), 
+            maxdim=encoder.maxdim,
+            device=device,
+            dtype=dtype, 
+            cg_dict=cg_dict
+        )
         data_boost = data.copy()
         data_boost['p4'] = torch.einsum("...b, ba->...a", data['p4'], Ri)  # Boost input
         res_boost_input, internal_boost_input = get_output(
@@ -134,13 +156,20 @@ def boost_equivariance(encoder, decoder, data, alpha_range, axis, device, dtype,
         # boost output
         res, internal = get_output(encoder, decoder, data, covariance_test=True)
         boost_res = rot.rotate_rep(res, phi_x, phi_y, phi_z, cg_dict=cg_dict)
-        boost_internal = [rot.rotate_rep(internal[i], phi_x, phi_y, phi_z, cg_dict=cg_dict)
-                          for i in range(len(internal))]
+        boost_internal = [
+            rot.rotate_rep(internal[i], phi_x, phi_y, phi_z, cg_dict=cg_dict)
+            for i in range(len(internal))
+        ]
         boost_output.append((boost_res))
         boost_output_nodes_all.append((boost_internal))
 
-        dev_output, dev_internal = get_dev(boost_input, boost_output,
-                                           boost_input_nodes_all, boost_output_nodes_all)
+        dev_output, dev_internal = get_dev(
+            boost_input, 
+            boost_output,
+            boost_input_nodes_all, 
+            boost_output_nodes_all,
+            mode='mean'
+        )
 
     return gammas, dev_output, dev_internal
 
@@ -153,23 +182,39 @@ def rot_equivariance(encoder, decoder, data, theta_range, axis, device, dtype, c
     for theta in theta_range:
         theta_x, theta_y, theta_z = get_rotation(theta, axis)
         # rotate input -> output
-        Di, Ri = _gen_rot((theta_x, theta_y, theta_z), encoder.maxdim,
-                          device=device, dtype=dtype, cg_dict=cg_dict)
+        Di, Ri = _gen_rot(
+            (theta_x, theta_y, theta_z), 
+            encoder.maxdim,
+            device=device, dtype=dtype, cg_dict=cg_dict
+        )
         data_boost = data.copy()
         data_boost['p4'] = torch.einsum("...b, ba->...a", data['p4'], Ri)  # Rotate input
-        res_rot_input, internal_rot_input = get_output(encoder, decoder, data_boost, covariance_test=True)
+        res_rot_input, internal_rot_input = get_output(
+            encoder, 
+            decoder, 
+            data_boost, 
+            covariance_test=True
+        )
         rot_input.append((res_rot_input))
         rot_input_nodes_all.append((internal_rot_input))
 
         # Input -> rotate output
         res, internal = get_output(encoder, decoder, data, covariance_test=True)
         rot_res = rot.rotate_rep(res, theta_x, theta_y, theta_z, cg_dict=cg_dict)
-        rot_internal = [rot.rotate_rep(internal[i], theta_x, theta_y, theta_z, cg_dict=cg_dict)
-                        for i in range(len(internal))]
+        rot_internal = [
+            rot.rotate_rep(internal[i], theta_x, theta_y, theta_z, cg_dict=cg_dict)
+            for i in range(len(internal))
+        ]
         rot_output.append((rot_res))
         rot_output_nodes_all.append((rot_internal))
 
-        dev_output, dev_internal = get_dev(rot_input, rot_output, rot_input_nodes_all, rot_output_nodes_all)
+        dev_output, dev_internal = get_dev(
+            rot_input, 
+            rot_output, 
+            rot_input_nodes_all, 
+            rot_output_nodes_all,
+            mode='mean'
+        )
 
     return theta_range, dev_output, dev_internal
 
@@ -221,12 +266,24 @@ def lgn_tests(args, encoder, decoder, dataloader, axis='z', alpha_max=None, thet
     perm_equivariance_test_all_epochs = []
 
     for idx, data in enumerate(tqdm(dataloader)):
-        boost_results = covariance_test(encoder, decoder, data, test_type='boost',
-                                        cg_dict=cg_dict, alpha_max=alpha_max, unit=unit)
+        boost_results = covariance_test(
+            encoder=encoder, 
+            decoder=decoder, 
+            data=data, 
+            test_type='boost',
+            cg_dict=cg_dict, 
+            alpha_max=alpha_max, 
+            unit=unit)
         boost_test_all_epochs.append(boost_results)
 
-        rot_results = covariance_test(encoder, decoder, data, test_type='rotation',
-                                      cg_dict=cg_dict, alpha_max=theta_max, unit=unit)
+        rot_results = covariance_test(
+            encoder=encoder, 
+            decoder=decoder, 
+            data=data, 
+            test_type='rotation',
+            cg_dict=cg_dict, 
+            alpha_max=theta_max, 
+            unit=unit)
         rot_test_all_epochs.append(rot_results)
 
         perm_inv, perm_equivariance = permutation_invariance_test(encoder, decoder, data)
