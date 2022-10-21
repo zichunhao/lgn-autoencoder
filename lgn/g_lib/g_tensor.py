@@ -422,3 +422,7 @@ class GTensor(ABC):
 
         return cls({key: torch.ones(shape, device=device, dtype=dtype,
                                     requires_grad=requires_grad) for key, shape in shapes.items()})
+        
+    def __repr__(self) -> str:
+        shape_dict = {k: v.shape for k, v in self._data.items()}
+        return f"{self.__class__.__name__}({shape_dict})"
