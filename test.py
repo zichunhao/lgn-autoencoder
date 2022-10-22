@@ -26,26 +26,16 @@ def test(args):
 
     # Load models
     encoder, decoder = initialize_autoencoder(args)
-    try:
-        encoder_path = osp.join(
-            args.model_path, "weights_encoder/best_encoder_weights.pth"
-        )
-        decoder_path = osp.join(
-            args.model_path, "weights_decoder/best_decoder_weights.pth"
-        )
-        encoder.load_state_dict(torch.load(encoder_path, map_location=args.device))
-        decoder.load_state_dict(torch.load(decoder_path, map_location=args.device))
-    except FileNotFoundError:
-        encoder_path = osp.join(
-            args.model_path,
-            f"weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth",
-        )
-        decoder_path = osp.join(
-            args.model_path,
-            f"weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth",
-        )
-        encoder.load_state_dict(torch.load(encoder_path, map_location=args.device))
-        decoder.load_state_dict(torch.load(decoder_path, map_location=args.device))
+    encoder_path = osp.join(
+        args.model_path,
+        f"weights_encoder/epoch_{args.load_epoch}_encoder_weights.pth",
+    )
+    decoder_path = osp.join(
+        args.model_path,
+        f"weights_decoder/epoch_{args.load_epoch}_decoder_weights.pth",
+    )
+    encoder.load_state_dict(torch.load(encoder_path, map_location=args.device))
+    decoder.load_state_dict(torch.load(decoder_path, map_location=args.device))
 
     if args.plot_only:
         test_path = osp.join(
