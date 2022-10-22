@@ -391,7 +391,7 @@ def chamfer(
     :param batch_size: Batch size, defaults to -1.
     If it is a non-positive number or None, then the data will no be batched. 
     :type batch_size: int, optional
-    :return: _description_
+    :return: Chamfer distance between p and q.
     :rtype: torch.Tensor
     """
     if (batch_size is not None) and (batch_size > 0):
