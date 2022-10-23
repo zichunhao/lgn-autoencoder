@@ -14,7 +14,8 @@ from .utils import (
 )
 from .particle_recon_err import plot_particle_recon_err
 from .jet_recon_err import plot_jet_recon_err
-from utils.utils import get_eps
+
+EPS = 1e-16
 
 
 def plot_p(
@@ -51,12 +52,29 @@ def plot_p(
     :return: the jet images.
     :rtype: _type_
     """ 
-
-    EPS = get_eps(args.dtype)
     
+    # # convert to 4-momentum from
     if args.polar_coord:
+        if p4_target.shape[-1] == 3:
+            pt, eta, phi = p4_target.unbind(-1)
+            p0 = pt * torch.cosh(eta)
+            p4_target = torch.stack([p0, pt, eta, phi], dim=-1)
         p4_target = get_p4_cartesian_from_polar(p4_target)
+        
+        if p4_recons.shape[-1] == 3:
+            # convert to 4-momentum
+            pt, eta, phi = p4_recons.unbind(-1)
+            p0 = pt * torch.cosh(eta)
+            p4_recons = torch.stack([p0, pt, eta, phi], dim=-1)
         p4_recons = get_p4_cartesian_from_polar(p4_recons)
+    else:
+        # Cartesian coordinates
+        if p4_target.shape[-1] == 3:
+            p0 = torch.norm(p4_target, dim=-1, keepdim=True)
+            p4_target = torch.cat([p0, p4_target], dim=-1)
+        if p4_recons.shape[-1] == 3:
+            p0 = torch.norm(p4_recons, dim=-1, keepdim=True)
+            p4_recons = torch.cat([p0, p4_recons], dim=-1)
 
     p_target_polar = get_p_polar(p4_target, cutoff=cutoff, eps=EPS, return_arr=False)
     jet_target_polar = get_jet_feature_polar(p4_target, return_arr=False)
