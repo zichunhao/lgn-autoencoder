@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utils.utils import make_dir
 from .utils import NUM_BINS, PLOT_FONT_SIZE, find_fwhm, get_stats
+from scipy import stats
 import os.path as osp
 import logging
 import json
@@ -57,8 +58,9 @@ def plot_jet_recon_err(
 
             if not custom_jet_recons_ranges:
             # Find the range based on the FWHM
-                FWHM = stats['FWHM']
-                bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
+                median = stats['median']
+                iqr = stats['IQR']
+                bins_suitable = np.linspace(median-4*iqr, median+4*iqr, NUM_BINS)
                 ax.hist(rel_err, bins=bins_suitable, histtype='step', stacked=True)
             else:
                 ax.hist(rel_err, bins=bins, histtype='step', stacked=True)
@@ -112,27 +114,34 @@ def default_get_rel_err(
 def get_bins(
     num_bins: int, 
     rel_err_cartesian: Optional[Tuple[float, float, float, float]] = None, 
-    rel_err_polar: Optional[Tuple[float, float, float, float]] = None
+    rel_err_polar: Optional[Tuple[float, float, float, float]] = None,
+    alpha: float = 1.5
 ) -> Tuple[Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
            Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]]:
     """Get bins for jet reconstruction error plots."""
     if rel_err_cartesian is None:
         cartesian_min_max = ((-1, 10), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE))
     else:
-        mass_min_max = (-min(10 * np.std(rel_err_cartesian[0]), 1), min(2 * np.std(rel_err_cartesian[0]), 2 * MAX_BIN_RANGE))
-        px_min_max = (-min(np.std(rel_err_cartesian[1]), MAX_BIN_RANGE), min(np.std(rel_err_cartesian[1]), MAX_BIN_RANGE))
-        py_min_max = (-min(np.std(rel_err_cartesian[2]), MAX_BIN_RANGE), min(np.std(rel_err_cartesian[2]), MAX_BIN_RANGE))
-        pz_min_max = (-min(np.std(rel_err_cartesian[3]), MAX_BIN_RANGE), min(np.std(rel_err_cartesian[3]), MAX_BIN_RANGE))
-        cartesian_min_max = (mass_min_max, px_min_max, py_min_max, pz_min_max)
+        err = rel_err_cartesian[0]
+        num_components = len(err)
+        medians = [np.median(err[..., i]) for i in range(num_components)]
+        iqrs = [stats.iqr(err[..., i]) for i in range(num_components)]
+        cartesian_min_max = tuple([
+            (medians[i] - alpha * iqrs[i], medians[i] + alpha * iqrs[i])
+            for i in range(num_components)
+        ])
 
     if rel_err_polar is None:
         polar_min_max = ((-1, DEFAULT_BIN_RANGE), (-1, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE), (-DEFAULT_BIN_RANGE, DEFAULT_BIN_RANGE))
     else:
-        mass_min_max = (-min(10 * np.std(rel_err_polar[0]), 1), min(2 * np.std(rel_err_polar[0]), 2 * MAX_BIN_RANGE))
-        pt_min_max = (-min(10 * np.std(rel_err_polar[1]), 1), min(2 * np.std(rel_err_polar[1]), 2 * MAX_BIN_RANGE))
-        eta_min_max = (-min(np.std(rel_err_polar[2]), MAX_BIN_RANGE), min(np.std(rel_err_polar[2]), MAX_BIN_RANGE))
-        phi_min_max = (-min(np.std(rel_err_polar[3]), MAX_BIN_RANGE), min(np.std(rel_err_polar[3]), MAX_BIN_RANGE))
-        polar_min_max = (mass_min_max, pt_min_max, eta_min_max, phi_min_max)
+        err = rel_err_polar[0]
+        num_components = len(err)
+        medians = [np.median(err[..., i]) for i in range(num_components)]
+        iqrs = [stats.iqr(err[..., i]) for i in range(num_components)]
+        polar_min_max = tuple([
+            (medians[i] - alpha * iqrs[i], medians[i] + alpha * iqrs[i])
+            for i in range(num_components)
+        ])
 
     ranges_cartesian = tuple([
         np.linspace(*cartesian_min_max[i], num_bins)

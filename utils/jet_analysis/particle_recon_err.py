@@ -6,6 +6,7 @@ import os.path as osp
 from utils.utils import make_dir
 from .utils import get_p_polar_tensor, get_stats, NUM_BINS, PLOT_FONT_SIZE, DEVICE
 import scipy.optimize as optimize
+from scipy import stats
 import logging
 import json
 
@@ -113,8 +114,9 @@ def plot_particle_recon_err(
 
             if not custom_particle_recons_ranges:
                 # Find the range based on the FWHM
-                FWHM = stats['FWHM']
-                bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
+                median = stats['median']
+                iqr = stats['IQR']
+                bins_suitable = np.linspace(median-4*iqr, median+4*iqr, NUM_BINS)
                 ax.hist(res, bins=bins_suitable, histtype='step', stacked=True)
             else:
                 ax.hist(res, bins=bins, histtype='step', stacked=True)
@@ -139,8 +141,9 @@ def plot_particle_recon_err(
 
             if not custom_particle_recons_ranges:
                 # Find the range based on the FWHM
-                FWHM = stats['FWHM']
-                bins_suitable = np.linspace(-1.5*FWHM, 1.5*FWHM, NUM_BINS)
+                median = stats['median']
+                iqr = stats['IQR']
+                bins_suitable = np.linspace(median-4*iqr, median+4*iqr, NUM_BINS)
                 ax.hist(p, histtype='step', stacked=True, bins=bins_suitable)
             else:
                 ax.hist(p, histtype='step', stacked=True, bins=bins)
@@ -225,13 +228,13 @@ def get_rel_err_find_match(
 
 def get_min_max(
     err: np.ndarray, 
-    alpha: float=1.5
+    alpha: float = 4
 ) -> Tuple[Tuple[float, float], ...]:
     num_components = err.shape[-1]
-    means = [np.mean(err[..., i]) for i in range(num_components)]
-    std_devs = [np.std(err[..., i]) for i in range(num_components)]
+    medians = [np.median(err[..., i]) for i in range(num_components)]
+    iqrs = [stats.iqr(err[..., i]) for i in range(num_components)]
     return tuple([
-        (means[i] - alpha * std_devs[i], means[i] + alpha * std_devs[i])
+        (medians[i] - alpha * iqrs[i], medians[i] + alpha * iqrs[i])
         for i in range(num_components)
     ])
 
