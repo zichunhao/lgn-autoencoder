@@ -218,6 +218,24 @@ def get_p4_polar_tensor(
 
     return torch.stack((pt, eta, phi), dim=-1)
 
+def get_p_polarrel_tensor(
+    p: torch.Tensor,
+    eps: float = 1e-16
+) -> torch.Tensor:
+    """(E, px, py, pz) -> (pt, eta, phi)"""
+    # particle features
+    pt, eta, phi = get_p_polar_tensor(p, eps=eps).unbind(dim=-1)
+    # jet polar features
+    p4_jet = p.sum(dim=-2, keepdim=True)
+    Pt, Eta, Phi = get_p_polar_tensor(p4_jet, eps=eps).unbind(dim=-1)
+    # relative features
+    pt_rel = pt / (Pt + eps)
+    eta_rel = Eta - eta
+    phi_rel = Phi - phi
+    phi_rel = (phi_rel + np.pi) % (2 * np.pi) - np.pi  # [-pi, pi]
+    return torch.stack((pt_rel, eta_rel, phi_rel), dim=-1)
+    
+
 
 def arcsinh(z: torch.Tensor) -> torch.Tensor:
     '''Self defined arcsinh function if torch is not up to date.'''
@@ -386,7 +404,11 @@ def get_stats(res, bins):
     med = np.median(res)
     quartile_first = np.quantile(res, 0.25)
     quartile_third = np.quantile(res, 0.75)
-    mad = stats.median_absolute_deviation(res)
+    try:
+        mad = stats.median_absolute_deviation(res)
+    except AttributeError:
+        # older versions of scipy
+        mad = stats.median_abs_deviation(res)
     # interdecile range
     idr = np.quantile(res, 0.9) - np.quantile(res, 0.1)
 

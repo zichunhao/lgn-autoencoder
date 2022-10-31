@@ -4,17 +4,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os.path as osp
 from utils.utils import make_dir
-from .utils import get_p_polar_tensor, get_stats, NUM_BINS, PLOT_FONT_SIZE, DEVICE
+from .utils import get_p_polar_tensor, get_p_polarrel_tensor, get_stats, NUM_BINS, PLOT_FONT_SIZE, DEVICE
 import scipy.optimize as optimize
 from scipy import stats
 import logging
 import json
 
 FIGSIZE = (12, 8)
-LABELS_ABS_COORD = ((r'$p_x$', r'$p_y$', r'$p_z$'), (r'$p_\mathrm{T}$', r'$\eta$', r'$\phi$'))
-LABELS_REL_COORD = ((r'$p_x^\mathrm{rel}$', r'$p_y^\mathrm{rel}$', r'$p_z^\mathrm{rel}$'),
-                    (r'$p_\mathrm{T}^\mathrm{rel}$', r'$\eta^\mathrm{rel}$', r'$\phi^\mathrm{rel}$'))
+LABELS_ABS_COORD = (
+    (r'$p_x$', r'$p_y$', r'$p_z$'), 
+    (r'$p_\mathrm{T}$', r'$\eta$', r'$\phi$'), 
+    (r'$p_\mathrm{T}$^\mathrm{rel}', r'$\eta^\mathrm{rel}$', r'$\phi^\mathrm{rel}$')
+)
+LABELS_REL_COORD = (
+    (r'$p_x^\mathrm{rel}$', r'$p_y^\mathrm{rel}$', r'$p_z^\mathrm{rel}$'),
+    (r'$p_\mathrm{T}^\mathrm{rel}$', r'$\eta^\mathrm{rel}$', r'$\phi^\mathrm{rel}$'),
+    (r'$p_\mathrm{T}^\mathrm{rel}$', r'$\eta^\mathrm{rel}$', r'$\phi^\mathrm{rel}$')
+)
 
+EPS = 1e-16
 
 def plot_particle_recon_err(
     p_target: Union[np.ndarray, torch.Tensor], 
@@ -26,6 +34,8 @@ def plot_particle_recon_err(
         Tuple[Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray], 
               Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]],
         Tuple[Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray], 
+              Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]],
+        Tuple[Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
               Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]]
     ]] = None,
     save_dir: Optional[str] = None, 
@@ -48,9 +58,12 @@ def plot_particle_recon_err(
     :type custom_particle_recons_ranges: bool
     :param find_match: whether , defaults to True
     :type find_match: bool, optional
-    :param ranges: Ranges of plots: ((ranges_rel_err_cartesian, ranges_padded_recons_cartesian), (ranges_rel_err_polar, ranges_padded_recons_polar)),
-        where each of ranges_rel_err_cartesian, ranges_padded_recons_cartesian,
-        ranges_rel_err_polar, and ranges_padded_recons_polar is a tuple of numpy.ndarray, defaults to None.
+    :param ranges: Ranges of plots: 
+    ((ranges_rel_err_cartesian, ranges_padded_recons_cartesian),
+    (ranges_rel_err_polar, ranges_padded_recons_polar), 
+    (ranges_rel_err_polarrel, ranges_padded_recons_polarrel)),
+    where each of ranges_rel_err_cartesian, ranges_padded_recons_cartesian,
+    ranges_rel_err_polar, and ranges_padded_recons_polar is a tuple of numpy.ndarray, defaults to None.
     :param save_dir: directory to save plots, defaults to None
     :type save_dir: Optional[str], optional
     :param epoch: current epoch, defaults to None
@@ -64,39 +77,53 @@ def plot_particle_recon_err(
     p_recons_cartesian = p_recons if (p_recons.shape[-1] == 3) else p_recons[..., 1:]
     p_target_polar = get_p_polar_tensor(p_target)
     p_recons_polar = get_p_polar_tensor(p_recons)
+    if abs_coord:
+        p_target_polarrel = get_p_polarrel_tensor(p_target)
+        p_recons_polarrel = get_p_polarrel_tensor(p_recons)
+    else:
+        # relative polar already
+        p_target_polarrel = p_target_polar
+        p_recons_polarrel = p_recons_polar
 
     if not find_match:
         rel_err_cartesian = get_rel_err(p_target_cartesian, p_recons_cartesian).view(-1, 3)
         rel_err_polar = get_rel_err(p_target_polar, p_recons_polar).view(-1, 3)
+        rel_err_polarrel = get_rel_err(p_target_polarrel, p_recons_polarrel).view(-1, 3)
     else:
-        rel_err_cartesian, rel_err_polar = get_rel_err_find_match(
-            p_target_cartesian, p_recons_cartesian, p_target_polar, p_recons_polar
+        rel_err_cartesian, rel_err_polar, rel_err_polarrel = get_rel_err_find_match(
+            p_target_cartesian, p_recons_cartesian, 
+            p_target_polar, p_recons_polar,
+            p_target_polarrel, p_recons_polarrel
         )
 
     is_padded = torch.any(rel_err_cartesian.isinf(), dim=-1)
     # Relative error for real/nonpadded particles
     rel_err_cartesian = rel_err_cartesian[~is_padded]
     rel_err_polar = rel_err_polar[~is_padded]
+    rel_err_polarrel = rel_err_polarrel[~is_padded]
 
     # Padded particle features
     p_padded_recons_cartesian = p_recons_cartesian.view(-1, 3)[is_padded]
     p_padded_recons_polar = p_recons_polar.view(-1, 3)[is_padded]
+    p_padded_recons_polarrel = p_recons_polarrel.view(-1, 3)[is_padded]
 
     LABELS = LABELS_ABS_COORD if abs_coord else LABELS_REL_COORD
     if (not custom_particle_recons_ranges) or (ranges is None):
         ranges = get_bins(
             rel_err_cartesian=rel_err_cartesian.cpu().detach().numpy(),
             rel_err_polar=rel_err_polar.cpu().detach().numpy(),
+            rel_err_polarrel=rel_err_polarrel.cpu().detach().numpy(),
             p_padded_recons_cartesian=p_padded_recons_cartesian.cpu().detach().numpy(),
-            p_padded_recons_polar=p_padded_recons_polar.cpu().detach().numpy()
+            p_padded_recons_polar=p_padded_recons_polar.cpu().detach().numpy(),
+            p_padded_recons_polarrel=p_padded_recons_polarrel.cpu().detach().numpy()
         )
 
     # Plot both Cartesian and polar coordinates
     err_dict = dict()
     for rel_err, p_padded_recons, coordinate, bin_tuple, labels in zip(
-        (rel_err_cartesian, rel_err_polar),
-        (p_padded_recons_cartesian, p_padded_recons_polar),
-        ('cartesian', 'polar'),
+        (rel_err_cartesian, rel_err_polar, rel_err_polarrel),
+        (p_padded_recons_cartesian, p_padded_recons_polar, p_padded_recons_polarrel),
+        ('cartesian', 'polar', 'polarrel'),
         ranges,
         LABELS
     ):
@@ -195,35 +222,49 @@ def get_rel_err_find_match(
     p_recons_cartesian: torch.Tensor, 
     p_target_polar: torch.Tensor, 
     p_recons_polar: torch.Tensor, 
+    p_target_polarrel: torch.Tensor, 
+    p_recons_polarrel: torch.Tensor, 
     gpu: bool = True
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """
     Get relative errors after finding the match 
     between target and reconstructed/generated jet.
     
-    :return: (rel_err_cartesian, rel_err_polar)
+    :return: (rel_err_cartesian, rel_err_polar, rel_err_polarrel)
     """
     if gpu:
         p_target_cartesian = p_target_cartesian.to(DEVICE)
         p_recons_cartesian = p_recons_cartesian.to(DEVICE)
         p_target_polar = p_target_polar.to(DEVICE)
         p_recons_polar = p_recons_polar.to(DEVICE)
-    cost = torch.cdist(p_target_cartesian, p_recons_cartesian).cpu().detach().numpy()
+        p_target_polarrel = p_target_polarrel.to(DEVICE)
+        p_recons_polarrel = p_recons_polarrel.to(DEVICE)
+    cost_cartesian = torch.cdist(p_target_cartesian, p_recons_cartesian).cpu().detach().numpy()
+    cost_polarrel = torch.cdist(p_target_polarrel, p_recons_polarrel).cpu().detach().numpy()
 
     rel_err_cartesian_list = []
     rel_err_polar_list = []
+    rel_err_polarrel_list = []
     for i in range(len(p_target_cartesian)):
-        matching = optimize.linear_sum_assignment(cost[i])
+        matching = optimize.linear_sum_assignment(cost_cartesian[i])
         rel_err_cartesian = (p_recons_cartesian[i][matching[1]] - p_target_cartesian[i]) / p_target_cartesian[i]
         rel_err_cartesian_list.append(rel_err_cartesian)
 
-        rel_err_polar = (p_recons_polar[i][matching[1]] - p_target_polar[i]) / p_target_polar[i]
+        # we still use the same matching for the polar coordinates
+        # because eta and phi are dimensionless
+        rel_err_polar = (p_recons_polar[i][matching[1]] - p_target_polar[i]) / (p_target_polar[i] + EPS)
         rel_err_polar_list.append(rel_err_polar)
+        
+        # for polarrel, we need to find the matching between the relative coordinates
+        matching = optimize.linear_sum_assignment(cost_polarrel[i])
+        rel_err_polarrel = (p_recons_polarrel[i][matching[1]] - p_target_polarrel[i]) / (p_target_polarrel[i] + EPS)
+        rel_err_polarrel_list.append(rel_err_polarrel)
 
     rel_err_cartesian = torch.stack(rel_err_cartesian_list).view(-1, 3).cpu()
     rel_err_polar = torch.stack(rel_err_polar_list).view(-1, 3).cpu()
+    rel_err_polarrel = torch.stack(rel_err_polarrel_list).view(-1, 3).cpu()
 
-    return rel_err_cartesian, rel_err_polar
+    return rel_err_cartesian, rel_err_polar, rel_err_polarrel
 
 
 def get_min_max(
@@ -242,30 +283,43 @@ def get_min_max(
 def get_bins(
     rel_err_cartesian: Optional[np.ndarray] = None, 
     rel_err_polar: Optional[np.ndarray] = None, 
+    rel_err_polarrel: Optional[np.ndarray] = None, 
     p_padded_recons_cartesian: Optional[np.ndarray] = None, 
-    p_padded_recons_polar: Optional[np.ndarray] = None
+    p_padded_recons_polar: Optional[np.ndarray] = None,
+    p_padded_recons_polarrel: Optional[np.ndarray] = None
 ):
     """Get bins for reconstruction error plots."""
     if rel_err_cartesian is None:
+        # default bins
         cartesian_real_min_max = ((-20, 20),)*3,
     else:
         cartesian_real_min_max = get_min_max(rel_err_cartesian)
 
     if p_padded_recons_cartesian is None:
+        # default bins
         cartesian_padded_min_max = ((-200, 200),)*3,
     else:
         cartesian_padded_min_max = get_min_max(rel_err_cartesian)
 
     if rel_err_polar is None:
+        # default bins
         polar_real_min_max = ((-1.5, 10), (-20, 20), (-20, 20)),
     else:
         polar_real_min_max = get_min_max(rel_err_polar)
 
     if p_padded_recons_polar is None:
+        # default bins
         polar_padded_min_max = ((0, 150), (-2, 2), (-np.pi, np.pi))
     else:
         polar_padded_min_max = get_min_max(p_padded_recons_polar)
+        
+    if rel_err_polarrel is None:
+        # default bins
+        polarrel_padded_min_max = ((0, 1), (-2, 2), (np.pi, np.pi))
+    else:
+        polarrel_padded_min_max = get_min_max(p_padded_recons_polarrel)
 
+    # cartesian ranges
     ranges_cartesian_real = tuple([
         np.linspace(*cartesian_real_min_max[i])
         for i in range(len(cartesian_real_min_max))
@@ -276,6 +330,7 @@ def get_bins(
     ])
     ranges_cartesian = (ranges_cartesian_real, ranges_cartesian_padded)
 
+    # polar ranges
     ranges_polar_real = tuple([
         np.linspace(*polar_real_min_max[i])
         for i in range(len(polar_real_min_max))
@@ -286,9 +341,19 @@ def get_bins(
         for i in range(len(polar_padded_min_max))
     ])
     ranges_polar = (ranges_polar_real, ranges_polar_padded)
+    
+    # polarrel ranges
+    ranges_polarrel_real = tuple([
+        np.linspace(*polarrel_padded_min_max[i])
+        for i in range(len(polarrel_padded_min_max))
+    ])
+    ranges_polarrel_padded = tuple([
+        np.linspace(*polarrel_padded_min_max[i])
+        for i in range(len(polarrel_padded_min_max))
+    ])
+    ranges_polarrel = (ranges_polarrel_real, ranges_polarrel_padded)
 
-    ranges = (ranges_cartesian, ranges_polar)
-    return ranges
+    return ranges_cartesian, ranges_polar, ranges_polarrel
 
 
 def get_rel_err(
