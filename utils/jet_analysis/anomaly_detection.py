@@ -10,6 +10,9 @@ from scipy import optimize
 import torch
 import energyflow
 import numpy as np
+from tqdm import tqdm
+
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 EPS_DEFAULT = 1e-16
 # keys for scores
@@ -406,11 +409,15 @@ def chamfer(
         # batched version
         dataset = DistanceDataset(p, q)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        logging.info(f"Computing chamfer distance on {DEVICE.type}...")
         chamfer_dists = []
-        for p, q in dataloader:
+        for p, q in tqdm(dataloader):
+            # send to GPU if possible
+            p = p.to(DEVICE)
+            q = p.to(DEVICE)
             # call non-batched version
             chamfer_dists.append(chamfer(p, q, batch_size=-1))
-        return torch.cat(chamfer_dists, dim=0)
+        return torch.cat(chamfer_dists, dim=0).detach().cpu()
     else:
         # non-batched version
         diffs = torch.unsqueeze(p, -2) - torch.unsqueeze(q, -3)
@@ -429,11 +436,15 @@ def chamfer_lorentz(
         # batched version
         dataset = DistanceDataset(p, q)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        logging.info(f"Computing chamfer distance on {DEVICE.type}...")
         chamfer_dists = []
-        for p, q in dataloader:
+        for p, q in tqdm(dataloader):
+            # send to GPU if possible
+            p = p.to(DEVICE)
+            q = p.to(DEVICE)
             # call non-batched version
             chamfer_dists.append(chamfer_lorentz(p, q, batch_size=-1))
-        return torch.cat(chamfer_dists, dim=0)
+        return torch.cat(chamfer_dists, dim=0).detach().cpu()
     else:
         diffs = torch.unsqueeze(p, -2) - torch.unsqueeze(q, -3)
         dist = norm_sq_Lorentz(diffs)
@@ -462,11 +473,15 @@ def hungarian(
         # batched version
         dataset = DistanceDataset(p, q)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        logging.info(f"Computing Hungarian distance on {DEVICE.type}...")
         hungarian_distances = []
-        for p, q in dataloader:
+        for p, q in tqdm(dataloader):
             # call non-batched version
+            # send to GPU if possible
+            p = p.to(DEVICE)
+            q = p.to(DEVICE)
             hungarian_distances.append(hungarian(p, q, batch_size=-1))
-        return torch.cat(hungarian_distances, dim=0)
+        return torch.cat(hungarian_distances, dim=0).detach().cpu()
     else:
         # non-batched version (base case)
         cost = torch.cdist(p, q).cpu().detach().numpy()
@@ -503,11 +518,15 @@ def hungarian_lorentz(
         # batched version
         dataset = DistanceDataset(p, q)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        logging.info(f"Computing Hungarian distance on {DEVICE.type}...")
         hungarian_distances = []
-        for p, q in dataloader:
+        for p, q in tqdm(dataloader):
+            # send to GPU if possible
+            p = p.to(DEVICE)
+            q = p.to(DEVICE)
             # call non-batched version
             hungarian_distances.append(hungarian_lorentz(p, q, batch_size=-1))
-        return torch.cat(hungarian_distances, dim=0)
+        return torch.cat(hungarian_distances, dim=0).detach().cpu()
     else:
         # non-batched version (base case)
         diffs = torch.unsqueeze(p, -2) - torch.unsqueeze(q, -3)
