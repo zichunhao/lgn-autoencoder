@@ -66,7 +66,7 @@ def test(args):
             torch.save(recons, osp.join(test_path, "reconstructed.pt"))
             torch.save(latent, osp.join(test_path, "latent.pt"))
             torch.save(norm_factors, osp.join(test_path, "norm_factors.pt"))
-            logging.info(f"Data saved exported to {test_path}.")
+            logging.info(f"Data exported to {test_path}.")
     else:
         recons, target, latent, norm_factors = validate(
             args,
@@ -85,7 +85,7 @@ def test(args):
         torch.save(recons, osp.join(test_path, "reconstructed.pt"))
         torch.save(latent, osp.join(test_path, "latent.pt"))
         torch.save(norm_factors, osp.join(test_path, "norm_factors.pt"))
-        logging.info(f"Data saved exported to {test_path}.")
+        logging.info(f"Data exported to {test_path}.")
 
     fig_path = make_dir(osp.join(test_path, "jet_plots"))
     if args.abs_coord and (args.unit.lower() == "tev"):

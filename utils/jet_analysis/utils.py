@@ -5,7 +5,7 @@ from scipy import stats
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 NUM_BINS = 81  # Number of bins for all histograms
-PLOT_FONT_SIZE = 12
+PLOT_FONT_SIZE = 14
 
 
 def get_magnitude(p, gpu=True):

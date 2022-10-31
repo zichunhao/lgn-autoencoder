@@ -1,14 +1,17 @@
 from typing import Optional, Tuple, Union
+from utils.jet_analysis.utils import PLOT_FONT_SIZE
 from utils.utils import make_dir
 import os.path as osp
 import numpy as np
 import torch
+import matplotlib
 import matplotlib.pyplot as plt
 import awkward as ak
 from coffea.nanoevents.methods import vector
 ak.behavior.update(vector.behavior)
 
 IMG_VMAX = 0.05
+matplotlib.rcParams.update({'font.size': PLOT_FONT_SIZE})
 
 
 def plot_jet_image(
@@ -166,7 +169,7 @@ def plot_jet_image(
         for j in range(len(axs_row)):
             axs_row[j].set_xlabel(r"$\phi^\mathrm{rel}$")
             axs_row[j].set_ylabel(r"$\eta^\mathrm{rel}$")
-
+    
     plt.tight_layout()
 
     if epoch is not None:
