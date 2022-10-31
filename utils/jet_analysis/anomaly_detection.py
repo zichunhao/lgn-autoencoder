@@ -95,26 +95,30 @@ def get_ROC_AUC(
                 aucs=auc_sorted,
                 roc_curves=roc_curves,
                 rocs_hlines=rocs_hlines,
-                path=save_path / 'roc_curves.pdf'
+                path=save_path / 'roc_curves.pdf',
+                show_intercepts=False
             )
             plot_roc_curves(
                 aucs=auc_sorted[:3],
                 roc_curves=roc_curves,
                 rocs_hlines=rocs_hlines,
-                path=save_path / 'roc_curves_top3.pdf'
+                path=save_path / 'roc_curves_top3.pdf',
+                show_intercepts=True
             )
             plot_roc_curves(
                 aucs=auc_sorted[:1],
                 roc_curves=roc_curves,
                 rocs_hlines=rocs_hlines,
-                path=save_path / 'roc_curves_top1.pdf'
+                path=save_path / 'roc_curves_top1.pdf',
+                show_intercepts=False
             )
         else:
             plot_roc_curves(
                 auc_sorted, 
                 roc_curves=roc_curves,
                 rocs_hlines=rocs_hlines,
-                path=None
+                path=None,
+                show_intercepts=True
             )
 
     return roc_curves, aucs
@@ -123,7 +127,8 @@ def plot_roc_curves(
     aucs: Tuple[str, float], 
     roc_curves: Dict[str, np.ndarray],
     rocs_hlines: List[float] = [1e-1, 1e-2],
-    path: Union[str, Path] = None
+    path: Union[str, Path] = None,
+    show_intercepts: bool = False
 ):
     fig, ax = plt.subplots(1, 1, figsize=(8, 6))
     ax.set_xlabel('True Positive Rate')
@@ -134,16 +139,21 @@ def plot_roc_curves(
 
         fpr, tpr, thresholds = roc_curves[kind]
         ax.plot(tpr, fpr, label=f'{kind} (AUC: {auc:.5f})')
+        intercepts = dict()
         for y_value in rocs_hlines:
             ax.plot(
                 np.linspace(0, 1, 100), [y_value] * 100,
                 '--', c='gray', linewidth=1
             )
+            x_intercept = tpr[np.searchsorted(fpr, y_value)]
+            intercepts[y_value] = x_intercept
             ax.vlines(
-                x=tpr[np.searchsorted(fpr, y_value)],
+                x=x_intercept,
                 ymin=0, ymax=y_value,
                 linestyles="--", colors="gray", linewidth=1
             )
+        if show_intercepts:
+            logging.info(f"{kind}: {intercepts}")
         fpr, tpr, thresholds = roc_curves[kind]
 
     if len(aucs) >= 5:
