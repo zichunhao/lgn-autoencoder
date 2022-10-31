@@ -37,7 +37,6 @@ MSE_PARTICLE_LORENTZ = "particle, Lorentz norms, MSE"
 CHAMFER_PARTICLE_LORENTZ = "particle, Lorentz norms, Chamfer distance"
 HUNGARIAN_PARTICLE_LORENTZ = "particle, Lorentz norms, Hungarian distance"
 JET_LORENTZ = "jet, Lorentz norms"
-EMD = 'emd'
 EMD_RELATIVE = 'emd (relative coordinates)'
 
 
@@ -315,7 +314,6 @@ def anomaly_scores(
     }
 
     if include_emd:
-        scores[EMD] = emd_loss(recons_polar, target_polar)
         scores[EMD_RELATIVE] = emd_loss(target_polar_rel, recons_polar_rel)
 
     return scores

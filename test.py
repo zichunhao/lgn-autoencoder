@@ -168,7 +168,7 @@ def test(args):
                 bkg_target,
                 bkg_recons_normalized,
                 bkg_target_normalized,
-                include_emd=True,
+                include_emd=args.include_emd,
                 batch_size=args.test_batch_size,
             )
             get_ROC_AUC(scores_dict, true_labels, save_path=path_ad_single)
@@ -337,6 +337,12 @@ def setup_argparse():
         metavar="",
         default=[],
         help="Types of jets in the signal files",
+    )
+    parser.add_argument(
+        "--include-emd",
+        default=False,
+        action="store_true",
+        help="Include EMD as a score for anomaly detection."
     )
     parser.add_argument(
         "--plot-num-rocs",

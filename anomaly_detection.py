@@ -40,7 +40,7 @@ def main(args: argparse.Namespace) -> None:
         scores_dict, true_labels, sig_scores, bkg_scores = anomaly_scores_sig_bkg(
             sig_recons, sig_target, sig_recons_normalized, sig_target_normalized,
             bkg_recons, bkg_target, bkg_recons_normalized, bkg_target_normalized,
-            include_emd=True, batch_size=args.batch_size,
+            include_emd=args.include_emd, batch_size=args.batch_size,
         )
         get_ROC_AUC(scores_dict, true_labels, save_path=sig_path)
         
@@ -79,6 +79,9 @@ def main(args: argparse.Namespace) -> None:
         
 def setup_argparse() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='LGN Autoencoder Anomaly Detection')
+    
+    parser.add_argument("--include-emd", default=False, action="store_true",
+                        help="Include EMD as a score for anomaly detection.")
     
     parser.add_argument('--batch-size', '-bs', type=int, default=-1,
                         help='Batch size for ROC AUC computation. If -1, use all data.')
