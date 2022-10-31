@@ -370,6 +370,8 @@ def get_stats(res, bins):
 
     mean = np.mean(res)
     mean = None if np.isnan(mean) else mean
+    
+    med = np.median(res)
 
     std_dev = np.std(res)
     std_dev = None if np.isnan(std_dev) else std_dev
@@ -381,6 +383,7 @@ def get_stats(res, bins):
     kurtosis = None if np.isnan(kurtosis) else kurtosis
 
     return {
+        'median': med,
         'mean': mean,
         'max': max_val,
         'min': min_val,
