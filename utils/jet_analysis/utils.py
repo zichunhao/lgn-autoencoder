@@ -31,8 +31,9 @@ def get_magnitude(p, gpu=True):
         elif p.shape[-1] == 4:
             return np.linalg.norm(p[..., 1:], axis=-1)
         else:
-            raise ValueError(f'p must be 3- or 4-vector. Found: {p.shape[-1]=}.')
-    
+            raise ValueError(
+                f'p must be 3- or 4-vector. Found: {p.shape[-1]=}.')
+
     elif isinstance(p, torch.Tensor):
         if gpu:
             p = p.to(device=DEVICE)
@@ -41,10 +42,12 @@ def get_magnitude(p, gpu=True):
         elif p.shape[-1] == 4:
             return torch.norm(p[..., 1:], dim=-1)
         else:
-            raise ValueError(f'p must be 3- or 4-vector. Found: {p.shape[-1]=}.')
-        
+            raise ValueError(
+                f'p must be 3- or 4-vector. Found: {p.shape[-1]=}.')
+
     else:
-        raise ValueError(f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p)}.")
+        raise ValueError(
+            f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p)}.")
 
 
 def get_p_cartesian(jets, cutoff=1e-6, return_arr: bool = False):
@@ -68,19 +71,19 @@ def get_p_cartesian(jets, cutoff=1e-6, return_arr: bool = False):
     """
     if jets.shape[-1] != 4:
         raise ValueError(f"Jet must be a 4-vector. Found: {jets.shape[-1]=}.")
-    
+
     if isinstance(jets, np.ndarray):
         jets = np.copy(jets).reshape(-1, 4)
         px = jets[:, 1].copy()
         py = jets[:, 2].copy()
         pz = jets[:, 3].copy()
-    
+
     elif isinstance(jets, torch.Tensor):
         jets = torch.clone(jets).reshape(-1, 4)
         px = torch.clone(jets[:, 1]).detach().cpu().numpy()
         py = torch.clone(jets[:, 2]).detach().cpu().numpy()
         pz = torch.clone(jets[:, 3]).detach().cpu().numpy()
-        
+
     else:
         raise ValueError(
             f"The input must be numpy.ndarray or torch.Tensor. Found: {type(jets)}."
@@ -92,17 +95,17 @@ def get_p_cartesian(jets, cutoff=1e-6, return_arr: bool = False):
         px = px[mask]
         py = py[mask]
         pz = pz[mask]
-        
+
     if return_arr:
         return np.stack((px, py, pz), axis=-1)
     return px, py, pz
 
 
 def get_p_polar(
-    p4: torch.Tensor, 
-    cutoff: float = 1e-6, 
-    eps: float = 1e-12, 
-    gpu: float = True, 
+    p4: torch.Tensor,
+    cutoff: float = 1e-6,
+    eps: float = 1e-12,
+    gpu: float = True,
     return_arr: float = False
 ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
@@ -138,8 +141,9 @@ def get_p_polar(
             eta = eta[mask]
             phi = phi[mask]
     else:
-        raise TypeError(f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p4)}.")
-    
+        raise TypeError(
+            f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p4)}.")
+
     if return_arr:
         return np.stack((pt, eta, phi), axis=-1)
 
@@ -164,24 +168,22 @@ def get_p4_cartesian_from_polar(p: torch.Tensor) -> torch.Tensor:
     py = (p[..., pt_idx] * torch.sin(p[..., phi_idx])).unsqueeze(-1)
     pz = (p[..., pt_idx] * torch.sinh(p[..., eta_idx])).unsqueeze(-1)
 
-    return torch.stack((E, px, py, pz), dim=-1)
+    return torch.cat((E, px, py, pz), dim=-1)
 
 
 def get_p_polar_tensor(
-    p: torch.Tensor, 
+    p: torch.Tensor,
     eps: float = 1e-16
 ) -> torch.Tensor:
     """(E, px, py, pz) -> (pt, eta, phi)"""
     if p.shape[-1] == 4:
-        px = p[..., 1]
-        py = p[..., 2]
-        pz = p[..., 3]
+        p0, px, py, pz = p.unbind(-1)
     elif p.shape[-1] == 3:
-        px = p[..., 0]
-        py = p[..., 1]
-        pz = p[..., 2]
+        px, py, pz = p.unbind(-1)
     else:
-        raise ValueError(f'Invalid error. p.shape[-1] should be either 3 or 4. Found: {p.shape[-1]}.')
+        raise ValueError(
+            f'Invalid error. p.shape[-1] should be either 3 or 4. Found: {p.shape[-1]}.'
+        )
 
     pt = torch.sqrt(px ** 2 + py ** 2)
     try:
@@ -192,17 +194,19 @@ def get_p_polar_tensor(
 
     return torch.stack((pt, eta, phi), dim=-1)
 
+
 def get_p4_polar_tensor(
-    p: torch.Tensor, 
+    p: torch.Tensor,
     eps: float = 1e-16
 ) -> torch.Tensor:
     """(E, px, py, pz) -> (pt, eta, phi)"""
     if p.shape[-1] == 4:
-        E, px, py, pz = p.unbind(dim=-1)
+        p0, px, py, pz = p.unbind(dim=-1)
     elif p.shape[-1] == 3:
-        px, py, pz  = p.unbind(dim=-1)
+        px, py, pz = p.unbind(dim=-1)
     else:
-        raise ValueError(f'Invalid error. p.shape[-1] should be either 3 or 4. Found: {p.shape[-1]}.')
+        raise ValueError(
+            f'Invalid error. p.shape[-1] should be either 3 or 4. Found: {p.shape[-1]}.')
 
     pt = torch.sqrt(px ** 2 + py ** 2)
     try:
@@ -221,9 +225,9 @@ def arcsinh(z: torch.Tensor) -> torch.Tensor:
 
 def get_jet_feature_cartesian(
     p4: Union[np.ndarray, torch.Tensor],
-    gpu: bool=True,
+    gpu: bool = True,
     return_arr: bool = False
-) -> Union[np.ndarray, 
+) -> Union[np.ndarray,
            Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
            torch.Tensor,
            Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]:
@@ -249,38 +253,42 @@ def get_jet_feature_cartesian(
 
     if isinstance(p4, np.ndarray):
         jet_p4 = np.sum(p4, axis=-2)
-        msq = jet_p4[:, 0] ** 2 - np.sum(np.power(jet_p4, 2)[:, 1:], axis=-1)
+        msq = jet_p4[..., 0] ** 2 - \
+            np.sum(np.power(jet_p4, 2)[..., 1:], axis=-1)
         jet_mass = np.sqrt(np.abs(msq)) * np.sign(msq)
-        jet_px = jet_p4[:, 1]
-        jet_py = jet_p4[:, 2]
-        jet_pz = jet_p4[:, 3]
+        jet_px = jet_p4[..., 1]
+        jet_py = jet_p4[..., 2]
+        jet_pz = jet_p4[..., 3]
         if return_arr:
             return np.stack((jet_mass, jet_px, jet_py, jet_pz), axis=-1)
-    
+
     elif isinstance(p4, torch.Tensor):  # torch.Tensor
         if gpu:
             p4 = p4.to(device=DEVICE)
-        jet_p4 = torch.sum(p4, axis=-2)
-        msq = jet_p4[:, 0] ** 2 - torch.sum(torch.pow(jet_p4, 2)[:, 1:], axis=-1)
-        jet_mass = (torch.sqrt(torch.abs(msq)) * torch.sign(msq)).detach().cpu()
-        jet_px = jet_p4[:, 1].detach().cpu()
-        jet_py = jet_p4[:, 2].detach().cpu()
-        jet_pz = jet_p4[:, 3].detach().cpu()
+        jet_p4 = torch.sum(p4, dim=-2)
+        jet_p0, jet_px, jet_py, jet_pz = jet_p4.unbind(dim=-1)
+        msq = jet_p0 ** 2 - jet_px ** 2 - jet_py ** 2 - jet_pz ** 2
+        jet_mass = (torch.sqrt(torch.abs(msq)) *
+                    torch.sign(msq)).detach().cpu()
+        jet_px = jet_px.detach().cpu()
+        jet_py = jet_py.detach().cpu()
+        jet_pz = jet_pz.detach().cpu()
         if return_arr:
             return torch.stack((jet_mass, jet_px, jet_py, jet_pz), dim=-1)
-    
+
     else:
-        raise ValueError(f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p4)}.")
+        raise ValueError(
+            f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p4)}.")
 
     return jet_mass, jet_px, jet_py, jet_pz
 
 
 def get_jet_feature_polar(
-    p4: Union[np.ndarray, torch.Tensor], 
-    gpu: bool = True, 
+    p4: Union[np.ndarray, torch.Tensor],
+    gpu: bool = True,
     eps: float = 1e-16,
     return_arr: bool = False
-) -> Union[np.ndarray, 
+) -> Union[np.ndarray,
            Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]]:
     """
     Get jet (m, pt, eta, phi) from the jet data.
@@ -307,7 +315,7 @@ def get_jet_feature_polar(
         phi = np.arctan2(py, px)
         if return_arr:
             return np.stack((m, pt, eta, phi), axis=-1)
-        
+
     elif isinstance(p4, torch.Tensor):
         if gpu:
             p4 = p4.to(device=DEVICE)
@@ -323,10 +331,11 @@ def get_jet_feature_polar(
         phi = phi.detach().cpu().numpy()
         if return_arr:
             return np.stack((m, pt, eta, phi), axis=-1)
-    
+
     else:
-        raise ValueError(f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p4)}.")
-    
+        raise ValueError(
+            f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p4)}.")
+
     return m, pt, eta, phi
 
 
@@ -348,31 +357,31 @@ def get_stats(res, bins):
         max_val = np.max(res)
     except ValueError:
         max_val = None
-        
+
     try:
         min_val = np.min(res)
     except ValueError:
         min_val = None
-        
+
     try:
         abs_min = np.min(np.abs(res))
     except ValueError:
         abs_min = None
-        
+
     mean = np.mean(res)
     mean = None if np.isnan(mean) else mean
-        
+
     std_dev = np.std(res)
     std_dev = None if np.isnan(std_dev) else std_dev
-    
+
     skew = stats.skew(res)
     skew = None if np.isnan(skew) else skew
-    
+
     kurtosis = stats.kurtosis(res)
     kurtosis = None if np.isnan(kurtosis) else kurtosis
-    
+
     return {
-        'mean': mean, 
+        'mean': mean,
         'max': max_val,
         'min': min_val,
         'abs_min': abs_min,
@@ -381,7 +390,6 @@ def get_stats(res, bins):
         'kurtosis': kurtosis,
         'FWHM': find_fwhm(res, bins)
     }
-    
 
 
 def get_jet_name(jet_type):
