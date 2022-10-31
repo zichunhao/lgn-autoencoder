@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Tuple, Union
 import torch
 import numpy as np
@@ -6,6 +7,10 @@ from scipy import stats
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 NUM_BINS = 81  # Number of bins for all histograms
 PLOT_FONT_SIZE = 12
+
+def make_dir(path: str) -> str:
+    Path(path).mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def get_magnitude(p, gpu=True):
