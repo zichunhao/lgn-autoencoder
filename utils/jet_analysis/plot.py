@@ -9,7 +9,7 @@ from .jet_images import plot_jet_image
 from .utils import (
     get_p_polar, get_p_cartesian,
     get_jet_feature_polar, get_jet_feature_cartesian, 
-    get_p4_cartesian_from_polar, get_p_polar_tensor, 
+    get_p4_cartesian_from_polar, get_p_polar_tensor, get_p_polarrel_tensor, 
     get_recons_err_ranges
 )
 from .particle_recon_err import plot_particle_recon_err
@@ -80,11 +80,17 @@ def plot_p(
     jet_target_polar = get_jet_feature_polar(p4_target, return_arr=False)
     p_recons_polar = get_p_polar(p4_recons, cutoff=cutoff, eps=EPS, return_arr=False)
     jet_recons_polar = get_jet_feature_polar(p4_recons)
+    
 
     p_target_cartesian = get_p_cartesian(p4_target.detach().cpu().numpy(), cutoff=cutoff)
     jet_target_cartesian = get_jet_feature_cartesian(p4_target.detach().cpu().numpy())
     p_recons_cartesian = get_p_cartesian(p4_recons.detach().cpu().numpy(), cutoff=cutoff)
     jet_recons_cartesian = get_jet_feature_cartesian(p4_recons.detach().cpu().numpy())
+    
+    # relative polar coordinates
+    if args.abs_coord:
+        p_target_polarrel = get_p_polarrel_tensor(p4_target[..., 1:]).detach().cpu().numpy()
+        p_recons_polarrel = get_p_polarrel_tensor(p4_recons[..., 1:]).detach().cpu().numpy()
 
     plot_p_polar(
         p3_polar_target=p_target_polar, 
@@ -97,6 +103,18 @@ def plot_p(
         fill=False, 
         show=show
     )
+    if args.abs_coord:
+        plot_p_polar(
+            p3_polar_target=p_target_polarrel, 
+            p3_polar_recons=p_recons_polarrel, 
+            abs_coord=False,
+            jet_type=args.jet_type if jet_type is None else jet_type,
+            save_dir=save_dir, 
+            epoch=epoch, 
+            density=False, 
+            fill=False, 
+            show=show
+        )
     plot_jet_p_polar(
         jet_features_target=jet_target_polar, 
         jet_features_recons=jet_recons_polar, 

@@ -5,6 +5,7 @@ from utils.utils import make_dir
 import os.path as osp
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
 from .utils import NUM_BINS, PLOT_FONT_SIZE
 
 FIGSIZE = (12, 4)
@@ -145,8 +146,11 @@ def plot_p_cartesian(
         save_dir = make_dir(osp.join(save_dir, 'particle_features/cartesian'))
     else:
         pass  # Save without creating a subdirectory
-
-    filename = f'p_cartesian_{jet_type}_jet'
+    
+    if abs_coord:
+        filename = f'p_cartesian_{jet_type}_jet'
+    else:
+        filename = f'p_cartesian_rel_{jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
     if density:
@@ -197,12 +201,14 @@ def plot_p_polar(
     :raises TypeError: if p3_targets or p3_recons is not an np.ndarray or a tuple of 3 np.ndarray.
     """    
     
-    if isinstance(p3_polar_target, np.ndarray):
+    if isinstance(p3_polar_target, (np.ndarray, torch.Tensor)):
         if p3_polar_target.shape[-1] != 3:
             raise ValueError(
                 f'p3_polar_target must be a 3-vector (pt, eta, phi). Found: {p3_polar_target.shape[-1]=}'
             )
-        p3_polar_target = tuple([p3_polar_target[..., i] for i in range(3)])
+        if isinstance(p3_polar_target, torch.Tensor):
+            p3_polar_target = p3_polar_target.cpu().detach().numpy()
+        p3_polar_target = tuple([p3_polar_target[..., i] for i in range(3)]) 
     elif isinstance(p3_polar_target, Iterable):
         if len(p3_polar_target) != 3:
             raise ValueError(
@@ -213,11 +219,14 @@ def plot_p_polar(
             f'p3_polar_target must be a tuple of 3 numpy.ndarray or numpy.ndarray. Found: {type(p3_polar_target)}'
         )
     
-    if isinstance(p3_polar_recons, np.ndarray):
+    
+    if isinstance(p3_polar_recons, (np.ndarray, torch.Tensor)):
         if p3_polar_recons.shape[-1] != 3:
             raise ValueError(
                 f'p3_polar_recons must be a 3-vector (pt, eta, phi). Found: {p3_polar_recons.shape[-1]=}'
             )
+        if isinstance(p3_polar_recons, torch.Tensor):
+            p3_polar_recons = p3_polar_recons.cpu().detach().numpy()
         p3_polar_recons = tuple([p3_polar_recons[..., i] for i in range(3)])
     elif isinstance(p3_polar_recons, Iterable):
         if len(p3_polar_recons) != 3:
@@ -280,7 +289,10 @@ def plot_p_polar(
     else:
         pass  # Save without creating a subdirectory
 
-    filename = f'p_polar_{jet_type}_jet'
+    if abs_coord:
+        filename = f'p_polar_{jet_type}_jet'
+    else:
+        filename = f'p_polar_rel_{jet_type}_jet'
     if epoch is not None:
         filename = f'{filename}_epoch_{epoch+1}'
     if density:

@@ -14,7 +14,7 @@ FIGSIZE = (12, 8)
 LABELS_ABS_COORD = (
     (r'$p_x$', r'$p_y$', r'$p_z$'), 
     (r'$p_\mathrm{T}$', r'$\eta$', r'$\phi$'), 
-    (r'$p_\mathrm{T}$^\mathrm{rel}', r'$\eta^\mathrm{rel}$', r'$\phi^\mathrm{rel}$')
+    (r'$p_\mathrm{T}^\mathrm{rel}$', r'$\eta^\mathrm{rel}$', r'$\phi^\mathrm{rel}$')
 )
 LABELS_REL_COORD = (
     (r'$p_x^\mathrm{rel}$', r'$p_y^\mathrm{rel}$', r'$p_z^\mathrm{rel}$'),
