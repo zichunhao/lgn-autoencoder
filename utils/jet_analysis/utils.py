@@ -1,3 +1,4 @@
+from os import stat
 from typing import Tuple, Union
 import torch
 import numpy as np
@@ -370,20 +371,29 @@ def get_stats(res, bins):
 
     mean = np.mean(res)
     mean = None if np.isnan(mean) else mean
-    
-    med = np.median(res)
 
     std_dev = np.std(res)
     std_dev = None if np.isnan(std_dev) else std_dev
 
     skew = stats.skew(res)
     skew = None if np.isnan(skew) else skew
+    
 
     kurtosis = stats.kurtosis(res)
     kurtosis = None if np.isnan(kurtosis) else kurtosis
+    
+    # outlier insensitive measures
+    med = np.median(res)
+    quartile_first = np.quantile(res, 0.25)
+    quartile_third = np.quantile(res, 0.75)
+    mad = stats.median_absolute_deviation(res)
 
     return {
         'median': med,
+        'IQR': quartile_third - quartile_first,
+        'first_quartile': quartile_first,
+        'third_quartile': quartile_third,
+        'MAD': mad,
         'mean': mean,
         'max': max_val,
         'min': min_val,
