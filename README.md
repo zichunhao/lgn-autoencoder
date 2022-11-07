@@ -2,7 +2,11 @@
 ## Descriptions
 This jet data generative model exploits the symmetry of the [Lorentz Group](https://en.wikipedia.org/wiki/Lorentz_group), a [Lie group](https://en.wikipedia.org/wiki/Lie_group) that represents a fundamental symmetry of spacetime and describes the dynamics of relativistic objects such as elementary particles in a particle physics experiment. The model is built using the architecture of the [Lorentz Group Network](https://github.com/fizisist/LorentzGroupNetwork) introduced by Bogatskiy et al. in [arXiv:2006.04780](https://arxiv.org/abs/2006.04780) (see the `README` file in each directory for more details).
 
-To achieve Lorentz equivariance, the model works on the [irreducible representations](https://en.wikipedia.org/wiki/Irreducible_representation) of the [Lorentz group](https://en.wikipedia.org/wiki/Representation_theory_of_the_Lorentz_group) $\mathrm{SO}(1,3)$. For instance, Lorentz scalars are $(0,0)$ representations, and 4-vectors, such as the particle 4-momenta, are $(1/2,1/2)$ representations. Each representation has its transformation rules. That the model is equivariant implies that each parameter in the model will transform according to its corresponding transformation rule if the input undergoes a Lorentz transformation. In this way, the model can always generate data that satisfy the special relativity, and the latent space, since all internal parameters are Lorentz tensors, can possibly be more physically interpretable.
+To achieve Lorentz equivariance, the model works on the [irreducible representations](https://en.wikipedia.org/wiki/Irreducible_representation) of the [Lorentz group](https://en.wikipedia.org/wiki/Representation_theory_of_the_Lorentz_group) $\mathrm{SO}(1,3)$. For instance, Lorentz scalars are $(0,0)$ representations, and 4-vectors, such as the particle 4-momenta, are $(1/2,1/2)$ representations. Each representation has its transformation rules. That the model is equivariant implies that each parameter in the model will transform according to its corresponding transformation rule if the input undergoes a Lorentz transformation. In this way, the model can always generate data that satisfy the special relativity, and the latent space, since all internal parameters are Lorentz tensors, can possibly be more physically interpretable. 
+The diagram for a message passing is shown below.
+<center>
+<img src="assets/LGAE-MPNN.png" width="60%">
+</center>
 
 ## Download Dataset
 To download data:
@@ -103,7 +107,10 @@ python test.py \
 
 ## Results
 ### Equivariance Tests
-Boost and rotational equivariance tests were done on the model. The rotation angles range from $0$ to $2\pi$, and the Lorentz factors range from $0$ to $11013.2$. The model is equivariant with respect to rotation up to floating point errors and is equivariant with respect to boost in the physically relevant region (the errors increase as the Lorentz factor increases because of the floating point sensitivity of boost). See [`results/equivariance_tests`](results/equivariance_tests) for more details.
+Boost and rotational equivariance tests were done on the model. The rotation angles range from $0$ to $2\pi$, and the Lorentz factors range from $0$ to $11013.2$. The model is equivariant with respect to rotation up to floating point errors and is equivariant with respect to boost in the physically relevant region (the errors increase as the Lorentz factor increases because of the floating point sensitivity of boost). 
+<center>
+<img src="assets/equivariance-p4.png" width=80%>
+</center>
 
 
 
