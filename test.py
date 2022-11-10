@@ -306,7 +306,7 @@ def setup_argparse():
     # Plots
     parse_plot_settings(parser)
 
-    # Convariance tests
+    # Covariance tests
     parse_covariance_test_settings(parser)
     parser.add_argument(
         "--anomaly-detection",
