@@ -5,7 +5,7 @@ This jet data generative model exploits the symmetry of the [Lorentz Group](http
 To achieve Lorentz equivariance, the model works on the [irreducible representations](https://en.wikipedia.org/wiki/Irreducible_representation) of the [Lorentz group](https://en.wikipedia.org/wiki/Representation_theory_of_the_Lorentz_group) $\mathrm{SO}(1,3)$. For instance, Lorentz scalars are $(0,0)$ representations, and 4-vectors, such as the particle 4-momenta, are $(1/2,1/2)$ representations. Each representation has its transformation rules. That the model is equivariant implies that each parameter in the model will transform according to its corresponding transformation rule if the input undergoes a Lorentz transformation. In this way, the model can always generate data that satisfy the special relativity, and the latent space, since all internal parameters are Lorentz tensors, can possibly be more physically interpretable. 
 The diagram for a message passing is shown below.
 <center>
-<img src="assets/LGAE-MPNN.png" width="60%">
+<img src="assets/LGAE-architecture.png" width="100%">
 </center>
 
 ## Download Dataset
