@@ -35,7 +35,9 @@ class CGModule(nn.Module):
         Data type to initialize the module and Clebsch-Gordan dictionary to.
     """
 
-    def __init__(self, cg_dict=None, maxdim=None, device=None, dtype=None, *args, **kwargs):
+    def __init__(
+        self, cg_dict=None, maxdim=None, device=None, dtype=None, *args, **kwargs
+    ):
         self._init_device_dtype(device, dtype)
         self._init_cg_dict(cg_dict, maxdim)
 
@@ -53,15 +55,21 @@ class CGModule(nn.Module):
 
         """
         if device is None:
-            self._device = torch.device('cpu')
+            self._device = torch.device("cpu")
         else:
             self._device = device
 
         if dtype is None:
             self._dtype = torch.float64
         else:
-            if not (dtype == torch.half or dtype == torch.float64 or dtype == torch.double):
-                raise ValueError('CG Module only takes internal data types of half/float/double. Got: {}'.format(dtype))
+            if not (
+                dtype == torch.half or dtype == torch.float64 or dtype == torch.double
+            ):
+                raise ValueError(
+                    "CG Module only takes internal data types of half/float/double. Got: {}".format(
+                        dtype
+                    )
+                )
             self._dtype = dtype
 
     def _init_cg_dict(self, cg_dict, maxdim):
@@ -80,16 +88,28 @@ class CGModule(nn.Module):
         # If cg_dict is defined, check it has the right properties
         if cg_dict is not None:
             if cg_dict.dtype != self.dtype:
-                raise ValueError(f'CGDict dtype ({cg_dict.dtype}) not match CGModule() device ({self.dtype})')
+                raise ValueError(
+                    f"CGDict dtype ({cg_dict.dtype}) not match CGModule() device ({self.dtype})"
+                )
 
             if cg_dict.device != self.device:
-                raise ValueError(f'CGDict device ({cg_dict.device}) not match CGModule() device ({self.device})')
+                raise ValueError(
+                    f"CGDict device ({cg_dict.device}) not match CGModule() device ({self.device})"
+                )
 
             if maxdim is None:
-                Warning('maxdim is not defined, setting maxdim based upon CGDict maxdim ({}!'.format(cg_dict.maxdim))
+                Warning(
+                    "maxdim is not defined, setting maxdim based upon CGDict maxdim ({}!".format(
+                        cg_dict.maxdim
+                    )
+                )
 
             elif maxdim > cg_dict.maxdim:
-                Warning('CGDict maxdim ({}) is smaller than CGModule() maxdim ({}). Updating!'.format(cg_dict.maxdim, maxdim))
+                Warning(
+                    "CGDict maxdim ({}) is smaller than CGModule() maxdim ({}). Updating!".format(
+                        cg_dict.maxdim, maxdim
+                    )
+                )
                 cg_dict.update_maxdim(maxdim)
 
             self.cg_dict = cg_dict
@@ -135,11 +155,11 @@ class CGModule(nn.Module):
 
     def cuda(self, device=None):
         if device is None:
-            device = torch.device('cuda')
+            device = torch.device("cuda")
         elif device in range(torch.cuda.device_count()):
-            device = torch.device('cuda:{}'.format(device))
+            device = torch.device("cuda:{}".format(device))
         else:
-            ValueError('Incorrect choice of device!')
+            ValueError("Incorrect choice of device!")
 
         super().cuda(device=device)
 
@@ -154,9 +174,9 @@ class CGModule(nn.Module):
         super().cpu()
 
         if self.cg_dict is not None:
-            self.cg_dict.to(device=torch.device('cpu'))
+            self.cg_dict.to(device=torch.device("cpu"))
 
-        self._device = torch.device('cpu')
+        self._device = torch.device("cpu")
 
         return self
 

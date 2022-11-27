@@ -45,11 +45,15 @@ class GScalar(GTensor):
 
     def check_data(self, data):
         if any(part.numel() == 0 for part in data.values()):
-            raise NotImplementedError('Non-zero parts in GScalars not currrently enabled!')
+            raise NotImplementedError(
+                "Non-zero parts in GScalars not currrently enabled!"
+            )
 
         shapes = {key: part.shape[self.bdim] for key, part in data.items()}
         if len(set(shapes.values())) > 1:
-            raise ValueError('Batch dimensions are not identical!')
+            raise ValueError("Batch dimensions are not identical!")
 
         if any(part.shape[self.zdim] != 2 for part in data.values()):
-            raise ValueError(f'Complex dimension (dim={self.zdim}) of each tensor should have length 2! Found: {shapes[self.zdim]}')
+            raise ValueError(
+                f"Complex dimension (dim={self.zdim}) of each tensor should have length 2! Found: {shapes[self.zdim]}"
+            )

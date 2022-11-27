@@ -36,11 +36,19 @@ class BasicMLP(nn.Module):
         The data type to which the module is initialized.
     """
 
-    def __init__(self, num_in, num_out, num_hidden=1, layer_width=256, activation='leakyrelu',
-                 device=None, dtype=torch.float64):
+    def __init__(
+        self,
+        num_in,
+        num_out,
+        num_hidden=1,
+        layer_width=256,
+        activation="leakyrelu",
+        device=None,
+        dtype=torch.float64,
+    ):
 
         if device is None:
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         super(BasicMLP, self).__init__()
 
@@ -111,20 +119,20 @@ class BasicMLP(nn.Module):
 
 def get_activation_fn(activation):
     activation = activation.lower()
-    if activation == 'leakyrelu':
+    if activation == "leakyrelu":
         activation_fn = nn.LeakyReLU()
-    elif activation == 'relu':
+    elif activation == "relu":
         activation_fn = nn.ReLU()
-    elif activation == 'elu':
+    elif activation == "elu":
         activation_fn = nn.ELU()
-    elif activation == 'sigmoid':
+    elif activation == "sigmoid":
         activation_fn = nn.Sigmoid()
-    elif activation == 'logsigmoid':
+    elif activation == "logsigmoid":
         activation_fn = nn.LogSigmoid()
-    elif activation == 'atan':
+    elif activation == "atan":
         activation_fn = ATan()
     else:
-        raise ValueError(f'Activation function {activation} not implemented!')
+        raise ValueError(f"Activation function {activation} not implemented!")
     return activation_fn
 
 

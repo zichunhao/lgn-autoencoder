@@ -4,18 +4,15 @@ from lgn.cg_lib.zonal_functions import p_cplx_to_rep, repdot
 from utils.utils import get_p_polar
 
 
-def convert_to_complex(
-    real_ps: torch.Tensor, 
-    eps: float = 0
-) -> torch.Tensor:
-    """Extend real jet 4-momenta from the dataset 
+def convert_to_complex(real_ps: torch.Tensor, eps: float = 0) -> torch.Tensor:
+    """Extend real jet 4-momenta from the dataset
     to complex field (with imaginary dimension begin 0 tensors)
 
     :param real_ps: real 4-momenta of the jets.
         Shape: `(batch_size, num_particles, 4)`.
     :type: torch.Tensor
-    :return: 4-momenta extended to the field of complex numbers, 
-    with 0s in the imaginary components. 
+    :return: 4-momenta extended to the field of complex numbers,
+    with 0s in the imaginary components.
     The shape is `(2, batch_size, num_particles, 4)`
     :rtype: torch.Tensor
     """
@@ -96,10 +93,7 @@ def normsq_real(p4: torch.Tensor) -> torch.Tensor:
     return 2 * p4_norm[..., 0] - p4_norm.sum(dim=-1)
 
 
-def normsq_p3(
-    p4: torch.Tensor, 
-    im: bool = True
-) -> torch.Tensor:
+def normsq_p3(p4: torch.Tensor, im: bool = True) -> torch.Tensor:
     """Calculate the norm square of the 3-momentum. This is useful when particle mass is neglible.
     1. Norm of p4 is taken so that it only contains real components.
     Shape: `(OTHER_DIMENSIONS, 4)`
@@ -116,11 +110,7 @@ def normsq_p3(
     return p_real + p_im
 
 
-def normsq_polar(
-    p: torch.Tensor, 
-    q: torch.Tensor, 
-    im: bool = True
-) -> torch.Tensor:
+def normsq_polar(p: torch.Tensor, q: torch.Tensor, im: bool = True) -> torch.Tensor:
     """Calculate the norm square of the 3-momentum in polar coordinates.
 
     :param p: input tensor in Cartesian coordinates.
@@ -138,16 +128,18 @@ def normsq_polar(
         p_polar = get_p_polar(p, keep_p0=True)
         q_polar = torch.stack((q_polar, q_polar), dim=0)
         q_polar[1, ..., -1] = 0
-    return torch.sum(torch.pow(p_polar - q_polar, 2), dim=-1)  # ΔE^2 + ΔpT^2 + Δphi^2 + Δeta^2ß
+    return torch.sum(
+        torch.pow(p_polar - q_polar, 2), dim=-1
+    )  # ΔE^2 + ΔpT^2 + Δphi^2 + Δeta^2ß
 
 
 def pairwise_distance_sq(
-    p: torch.Tensor, 
-    q: torch.Tensor, 
-    norm_choice: str, 
-    eps: float = 1e-16, 
+    p: torch.Tensor,
+    q: torch.Tensor,
+    norm_choice: str,
+    eps: float = 1e-16,
     im: bool = True,
-    device: torch.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu"),
 ) -> torch.Tensor:
     """Compute the pairwise distance between jet 4-momenta p and q.
 
@@ -172,12 +164,18 @@ def pairwise_distance_sq(
     :return: batched distance between each pair of the two collections of row vectors.
     :rtype: torch.Tensor
     """
-    if (p.shape[1] != q.shape[1]):
-        raise ValueError(f"The batch size of p and q are not equal! p.shape[1] is {p.shape[1]}, whereas q.shape[1] is {q.shape[1]}!")
-    if (p.shape[-1] != 4):
-        raise ValueError(f"p should consist of 4-vectors, but p.shape[-1] is {p.shape[-1]}.")
-    if (q.shape[-1] != 4):
-        raise ValueError(f"q should consist of 4-vectors, but q.shape[-1] is {q.shape[-1]}.")
+    if p.shape[1] != q.shape[1]:
+        raise ValueError(
+            f"The batch size of p and q are not equal! p.shape[1] is {p.shape[1]}, whereas q.shape[1] is {q.shape[1]}!"
+        )
+    if p.shape[-1] != 4:
+        raise ValueError(
+            f"p should consist of 4-vectors, but p.shape[-1] is {p.shape[-1]}."
+        )
+    if q.shape[-1] != 4:
+        raise ValueError(
+            f"q should consist of 4-vectors, but q.shape[-1] is {q.shape[-1]}."
+        )
 
     batch_size = p.shape[1]
     num_row = p.shape[-2]
@@ -187,13 +185,13 @@ def pairwise_distance_sq(
     p1 = p.repeat(1, 1, 1, num_col).view(2, batch_size, -1, num_col, vec_dim).to(device)
     q1 = q.repeat(1, 1, num_row, 1).view(2, batch_size, num_row, -1, vec_dim).to(device)
 
-    if norm_choice.lower() == 'real':
+    if norm_choice.lower() == "real":
         dist = normsq_real(p1 - q1) + eps
-    elif norm_choice.lower() == 'canonical':
+    elif norm_choice.lower() == "canonical":
         dist = normsq_canonical(p1 - q1)
-    elif norm_choice.lower() in ['cplx', 'complex']:
+    elif norm_choice.lower() in ["cplx", "complex"]:
         dist = normsq_cplx(p1 - q1)
-    elif norm_choice.lower() == 'polar':
+    elif norm_choice.lower() == "polar":
         dist = normsq_polar(p1, q1, im=im)
     else:
         dist = normsq_p3(p1 - q1, im=im)
@@ -201,10 +199,10 @@ def pairwise_distance_sq(
 
 
 def pairwise_distance_sq_real(
-    p: torch.Tensor, 
-    q: torch.Tensor, 
-    eps: float = 1e-16, 
-    device: torch.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    p: torch.Tensor,
+    q: torch.Tensor,
+    eps: float = 1e-16,
+    device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu"),
 ) -> torch.Tensor:
     """Compute the pairwise distance between jet 4-momenta p and q.
 
@@ -226,13 +224,19 @@ def pairwise_distance_sq_real(
     :rtype: torch.Tensor
     """
     # check
-    if (p.shape[0] != q.shape[0]):
-        raise ValueError(f"The batch size of p and q are not equal! p.shape[0] is {p.shape[0]}, whereas q.shape[0] is {q.shape[0]}!")
+    if p.shape[0] != q.shape[0]:
+        raise ValueError(
+            f"The batch size of p and q are not equal! p.shape[0] is {p.shape[0]}, whereas q.shape[0] is {q.shape[0]}!"
+        )
     if (p.shape[-1] != 4) and (p.shape[-1] != 3):
-        raise ValueError(f"p should consist of 3-vectors or 4-vectors, but p.shape[-1] is {p.shape[-1]}.")
+        raise ValueError(
+            f"p should consist of 3-vectors or 4-vectors, but p.shape[-1] is {p.shape[-1]}."
+        )
     if (q.shape[-1] != 4) and (q.shape[-1] != 4):
-        raise ValueError(f"q should consist of 3-vectors or 4-vectors, but q.shape[-1] is {q.shape[-1]}.")
-    
+        raise ValueError(
+            f"q should consist of 3-vectors or 4-vectors, but q.shape[-1] is {q.shape[-1]}."
+        )
+
     # preprocess to match feature dimension
     if (p.shape[-1] == 4) and (q.shape[-1] == 3):
         p = p[..., 1:]
@@ -249,19 +253,19 @@ def pairwise_distance_sq_real(
     q1 = q.repeat(1, num_row, 1).view(batch_size, num_row, -1, vec_dim).to(device)
 
     if vec_dim == 4:
-        dist = norm_sq(p1-q1)
+        dist = norm_sq(p1 - q1)
     elif vec_dim == 3:
-        dist = norm_sq_p3(p1-q1)
+        dist = norm_sq_p3(p1 - q1)
 
     return torch.sqrt(dist + eps)
 
 
 def cdist(
-    x1: torch.Tensor, 
-    x2: torch.Tensor, 
+    x1: torch.Tensor,
+    x2: torch.Tensor,
     p: float = 2,
     eps: Optional[float] = 1e-16,
-    device: torch.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu"),
 ) -> torch.Tensor:
     """self implemented version of torch.cdist for 3- and 4-vectors
     that does not result in gradient clipping by adding eps.
@@ -283,22 +287,20 @@ def cdist(
     """
     if (eps is None) or (eps == 0):
         return torch.cdist(x1, x2, p=2)
-    
+
     x1 = x1.to(device)
     x2 = x2.to(device)
-    
+
     if x1.shape[-1] in (3, 4) or x2.shape[-1] in (3, 4):
-        diffs = - (torch.unsqueeze(x1, -2) -
-                   torch.unsqueeze(x2, -3))
+        diffs = -(torch.unsqueeze(x1, -2) - torch.unsqueeze(x2, -3))
     else:
         raise ValueError(
             f"x1 and x2 must be both 3- or 4-vectors. Found: {x1.shape[-1]=} and {x2.shape[-1]=}."
         )
-    
-    if (p % 2 == 0):
-        return torch.sum(diffs ** p, dim=-1)
+
+    if p % 2 == 0:
+        return torch.sum(diffs**p, dim=-1)
     else:
         return torch.sum(torch.abs(diffs + eps) ** p, dim=-1)
-        
+
     # return torch.pow(dist_sq + eps, 1/p)
-    

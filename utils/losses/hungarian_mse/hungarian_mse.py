@@ -12,13 +12,13 @@ class HungarianMSELoss(nn.Module):
         super(HungarianMSELoss, self).__init__()
 
     def forward(
-        self, 
-        recons: torch.Tensor, 
-        target: torch.Tensor, 
-        abs_coord: bool = True, 
-        polar_coord: bool = False
+        self,
+        recons: torch.Tensor,
+        target: torch.Tensor,
+        abs_coord: bool = True,
+        polar_coord: bool = False,
     ) -> torch.Tensor:
-        '''
+        """
         :param recons: the reconstructed jet feature.
             Shape: (batch_size, num_particles, 4)
         :type recons: torch.Tensor
@@ -31,25 +31,27 @@ class HungarianMSELoss(nn.Module):
         :param polar_coord: whether to calculate the MSE in polar coordinates (pt, eta, phi), defaults to False.
             If False, the features are assumed to be in Cartesian coordinates.
         :type polar_coord: bool, optional
-        
+
         :return: The Hungarian MSE Loss.
         :rtype: torch.Tensor
-        '''
+        """
         self.abs_coord = abs_coord
         self.polar_coord = polar_coord
         self.device = recons.device
-        return jet_mse_loss(recons, target, abs_coord=abs_coord, polar_coord=polar_coord)
+        return jet_mse_loss(
+            recons, target, abs_coord=abs_coord, polar_coord=polar_coord
+        )
 
 
 def jet_mse_loss(
-    recons: torch.Tensor, 
-    target: torch.Tensor, 
-    abs_coord: bool = True, 
-    polar_coord: bool = False
+    recons: torch.Tensor,
+    target: torch.Tensor,
+    abs_coord: bool = True,
+    polar_coord: bool = False,
 ) -> torch.Tensor:
     """
     Get the permutation invariant MSE Loss for jets (Hungarian algorithm).
-    
+
     :param recons: reconstructed particle momenta in absolute Cartesian coordinates.
         Shape: (batch_size, num_particles, 3) or (batch_size, num_particles, 4).
     :type recons: torch.Tensor
@@ -64,7 +66,9 @@ def jet_mse_loss(
     :type polar_coord: bool, optional
     :return: The particle-wise MSE loss after finding the match between target and reconstructed/generated jet.
     """
-    recons, target = preprocess(recons, target, abs_coord=abs_coord, polar_coord=polar_coord)
+    recons, target = preprocess(
+        recons, target, abs_coord=abs_coord, polar_coord=polar_coord
+    )
     recons._requires_grad = True
     device = recons.device
 
@@ -81,10 +85,10 @@ def jet_mse_loss(
 
 
 def preprocess(
-    recons: torch.Tensor, 
-    target: torch.Tensor, 
-    abs_coord: bool = True, 
-    polar_coord: bool = False
+    recons: torch.Tensor,
+    target: torch.Tensor,
+    abs_coord: bool = True,
+    polar_coord: bool = False,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """Preprocess target and recons by converting jets into desired coordinates.
 

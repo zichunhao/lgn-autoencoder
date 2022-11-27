@@ -37,7 +37,9 @@ def save_grads(reps):
             if grad is not None:
                 part.add_(grad)
             return None
+
         return assign_grad
+
     grads = {key: torch.zeros_like(part) for key, part in reps}
     for key in grads.keys():
         reps[key].register_hook(closure(grads[key]))
@@ -46,13 +48,17 @@ def save_grads(reps):
 
 
 def save_reps(reps_dict, to_save, retain_grad=False):
-    if 'reps_out' not in to_save:
-        to_save.append('reps_out')
+    if "reps_out" not in to_save:
+        to_save.append("reps_out")
 
-    reps_dict = {key: val for key, val in reps_dict.items() if (key in to_save and len(val) > 0)}
+    reps_dict = {
+        key: val for key, val in reps_dict.items() if (key in to_save and len(val) > 0)
+    }
 
     if retain_grad:
-        reps_dict.update({key + '_grad': save_grads(val) for key, val in reps_dict.items()})
+        reps_dict.update(
+            {key + "_grad": save_grads(val) for key, val in reps_dict.items()}
+        )
 
     return reps_dict
 

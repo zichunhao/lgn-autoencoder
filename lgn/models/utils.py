@@ -25,14 +25,16 @@ def adapt_var_list(var, num_cg_levels):
         elif len(var) == num_cg_levels:
             var_list = var
         elif len(var) > num_cg_levels:
-            var_list = var[:num_cg_levels - 1]
+            var_list = var[: num_cg_levels - 1]
         else:
-            raise ValueError(f'Invalid length of var: {len(var)}')
+            raise ValueError(f"Invalid length of var: {len(var)}")
     elif type(var) in [float, int]:
         var_list = [var] * num_cg_levels
     else:
-        raise ValueError(f'Incorrect type of variables: {type(var)}. '
-                         'The allowed data types are list, float, or int')
+        raise ValueError(
+            f"Incorrect type of variables: {type(var)}. "
+            "The allowed data types are list, float, or int"
+        )
     return var_list
 
 
@@ -49,7 +51,7 @@ def detectnan_tensor(data):
     if isinstance(data, torch.Tensor):
         if (data != data).any():
             print(data)
-            raise RuntimeError('NaN data!')
+            raise RuntimeError("NaN data!")
 
 
 def detectnan_dict(data):
@@ -57,7 +59,7 @@ def detectnan_dict(data):
         if (data[weight] != data[weight]).any():
             print(f"key = {weight}")
             print(data[weight])
-            raise RuntimeError('NaN data!')
+            raise RuntimeError("NaN data!")
 
 
 def detectnan_list(data):

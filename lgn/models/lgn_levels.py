@@ -37,11 +37,21 @@ class LGNNodeLevel(nn.Module):
         The CG dictionary as a reference for taking CG decompositions.
     """
 
-    def __init__(self, tau_in, tau_pos, maxdim, num_channels, level_gain, weight_init,
-                 device=None, dtype=torch.float64, cg_dict=None):
+    def __init__(
+        self,
+        tau_in,
+        tau_pos,
+        maxdim,
+        num_channels,
+        level_gain,
+        weight_init,
+        device=None,
+        dtype=torch.float64,
+        cg_dict=None,
+    ):
 
         if device is None:
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         super(LGNNodeLevel, self).__init__()
         self.maxdim = maxdim
@@ -52,16 +62,36 @@ class LGNNodeLevel(nn.Module):
 
         # Operations linear in input reps
         # Self-interactions
-        self.cg_power = CGProduct(tau_in, tau_in, maxdim=self.maxdim,
-                                  device=device, dtype=dtype, cg_dict=cg_dict)
+        self.cg_power = CGProduct(
+            tau_in,
+            tau_in,
+            maxdim=self.maxdim,
+            device=device,
+            dtype=dtype,
+            cg_dict=cg_dict,
+        )
         tau_sq = self.cg_power.tau_out
         # Mutual interactions
-        self.cg_aggregate = CGProduct(tau_in, tau_pos, maxdim=self.maxdim,
-                                      aggregate=True, device=device, dtype=dtype, cg_dict=cg_dict)
+        self.cg_aggregate = CGProduct(
+            tau_in,
+            tau_pos,
+            maxdim=self.maxdim,
+            aggregate=True,
+            device=device,
+            dtype=dtype,
+            cg_dict=cg_dict,
+        )
         tau_ag = self.cg_aggregate.tau_out
         # Message aggregation
-        self.cat_mix = CatMixReps([tau_ag, tau_in, tau_sq], num_channels, maxdim=self.maxdim,
-                                  weight_init=weight_init, gain=level_gain, device=device, dtype=dtype)
+        self.cat_mix = CatMixReps(
+            [tau_ag, tau_in, tau_sq],
+            num_channels,
+            maxdim=self.maxdim,
+            weight_init=weight_init,
+            gain=level_gain,
+            device=device,
+            dtype=dtype,
+        )
         self.tau_out = self.cat_mix.taus_out
 
     def forward(self, node_feature, edge_feature, mask):
@@ -119,11 +149,18 @@ class CGMLP(nn.Module):
         The data type to which the module is initialized.
     """
 
-    def __init__(self, tau, num_hidden=3, layer_width_mul=2, activation='sigmoid',
-                 device=None, dtype=torch.float64):
+    def __init__(
+        self,
+        tau,
+        num_hidden=3,
+        layer_width_mul=2,
+        activation="sigmoid",
+        device=None,
+        dtype=torch.float64,
+    ):
 
         if device is None:
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         super(CGMLP, self).__init__()
 
@@ -186,7 +223,9 @@ class CGMLP(nn.Module):
         if mask is not None:
             x = torch.where(mask, x, self.zero)
 
-        node_feature_out[(0, 0)] = x.view(s[1:]+(2,)).permute(3, 0, 1, 2).unsqueeze(-1)
+        node_feature_out[(0, 0)] = (
+            x.view(s[1:] + (2,)).permute(3, 0, 1, 2).unsqueeze(-1)
+        )
         return node_feature_out
 
     def scale_weights(self, scale):

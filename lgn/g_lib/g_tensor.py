@@ -20,8 +20,11 @@ class GTensor(ABC):
         if isinstance(data, type(self)):
             data = data.data
 
-        data = {key: val for key, val in data.items() if (
-            type(key) is tuple and torch.is_tensor(val) and val.numel() > 0)}
+        data = {
+            key: val
+            for key, val in data.items()
+            if (type(key) is tuple and torch.is_tensor(val) and val.numel() > 0)
+        }
 
         if not ignore_check:
             self.check_data(data)
@@ -34,14 +37,21 @@ class GTensor(ABC):
         Implement a data checking method.
         """
         if type(data) is not dict:
-            raise ValueError('data must be a dictionary!')
+            raise ValueError("data must be a dictionary!")
         if not (type(key) is tuple for key in data.keys()):
-            raise ValueError('Keys in data must be tuples of ints! {}'.format(data.keys()))
+            raise ValueError(
+                "Keys in data must be tuples of ints! {}".format(data.keys())
+            )
         if not all(torch.is_tensor(part) for part in data.values()):
-            raise ValueError('Values in data must be torch tensors! {}'.format(
-                {key: type(val) for key, val in data.items()}))
-        if not all(val.shape[-1] == (key[0]+1)*(key[1]+1) for key, val in data):
-            raise ValueError('The last dimension of each torch tensor in data must match the dimension of the irrep labeled by the key, that is, dim((k,n))=(k+1)*(n+1)!')
+            raise ValueError(
+                "Values in data must be torch tensors! {}".format(
+                    {key: type(val) for key, val in data.items()}
+                )
+            )
+        if not all(val.shape[-1] == (key[0] + 1) * (key[1] + 1) for key, val in data):
+            raise ValueError(
+                "The last dimension of each torch tensor in data must match the dimension of the irrep labeled by the key, that is, dim((k,n))=(k+1)*(n+1)!"
+            )
 
     @property
     @abstractmethod
@@ -139,7 +149,7 @@ class GTensor(ABC):
         bshapes = {key: p.shape[self.bdim] for key, p in self}
 
         if len(set(bshapes)) != 1:
-            raise ValueError('Every part must have the same shape! {}'.format(bshapes))
+            raise ValueError("Every part must have the same shape! {}".format(bshapes))
 
         return bshapes
 
@@ -160,15 +170,21 @@ class GTensor(ABC):
 
     @property
     def device(self):
-        if any(list(self._data.values())[0].device != part.device for part in self._data.values()):
-            raise ValueError('Not all parts on same device!')
+        if any(
+            list(self._data.values())[0].device != part.device
+            for part in self._data.values()
+        ):
+            raise ValueError("Not all parts on same device!")
 
         return list(self._data.values())[0].device
 
     @property
     def dtype(self):
-        if any(list(self._data.values())[0].dtype != part.dtype for part in self._data.values()):
-            raise ValueError('Not all parts using same data type!')
+        if any(
+            list(self._data.values())[0].dtype != part.dtype
+            for part in self._data.values()
+        ):
+            raise ValueError("Not all parts using same data type!")
 
         return list(self._data.values())[0].dtype
 
@@ -201,7 +217,7 @@ class GTensor(ABC):
         if type(key) is tuple:
             return self._data[key]
         else:
-            raise ValueError('Keys of G tensors must be tuples of ints! {}'.format(key))
+            raise ValueError("Keys of G tensors must be tuples of ints! {}".format(key))
 
     def __setitem__(self, key, val):
         """
@@ -223,8 +239,10 @@ class GTensor(ABC):
         Check equality of two `GTensor` compatible objects.
         """
         if len(rep1) != len(rep2):
-            raise ValueError('')
-        return all(torch.allclose(part1, part2, **kwargs) for part1, part2 in zip(rep1, rep2))
+            raise ValueError("")
+        return all(
+            torch.allclose(part1, part2, **kwargs) for part1, part2 in zip(rep1, rep2)
+        )
 
     def __and__(self, other):
         return self.cat([self, other])
@@ -242,7 +260,9 @@ class GTensor(ABC):
         return cls([t.requires_grad() for t in self._data.values()])
 
     def requires_grad_(self, requires_grad=True):
-        self._data = {key: t.requires_grad_(requires_grad) for key, t in self._data.items()}
+        self._data = {
+            key: t.requires_grad_(requires_grad) for key, t in self._data.items()
+        }
         return self
 
     def to(self, *args, **kwargs):
@@ -384,8 +404,14 @@ class GTensor(ABC):
         """
 
         shapes = {key: cls._get_shape(batch, key, t) for key, t in tau.items()}
-        out = cls({key: torch.rand(shape, device=device, dtype=dtype,
-                                   requires_grad=requires_grad) for key, shape in shapes.items()})
+        out = cls(
+            {
+                key: torch.rand(
+                    shape, device=device, dtype=dtype, requires_grad=requires_grad
+                )
+                for key, shape in shapes.items()
+            }
+        )
         if real:
             out = cls({key: torch.stack([t[0], 0 * t[0]]) for key, t in out.items()})
         return out
@@ -398,8 +424,14 @@ class GTensor(ABC):
 
         shapes = {key: cls._get_shape(batch, key, t) for key, t in tau.items()}
 
-        return cls({key: torch.randn(shape, device=device, dtype=dtype,
-                                     requires_grad=requires_grad) for key, shape in shapes.items()})
+        return cls(
+            {
+                key: torch.randn(
+                    shape, device=device, dtype=dtype, requires_grad=requires_grad
+                )
+                for key, shape in shapes.items()
+            }
+        )
 
     @classmethod
     def zeros(cls, tau, batch, device=None, dtype=None, requires_grad=False):
@@ -409,8 +441,14 @@ class GTensor(ABC):
 
         shapes = {key: cls._get_shape(batch, key, t) for key, t in tau.items()}
 
-        return cls({key: torch.zeros(shape, device=device, dtype=dtype,
-                                     requires_grad=requires_grad) for key, shape in shapes.items()})
+        return cls(
+            {
+                key: torch.zeros(
+                    shape, device=device, dtype=dtype, requires_grad=requires_grad
+                )
+                for key, shape in shapes.items()
+            }
+        )
 
     @classmethod
     def ones(cls, tau, batch, device=None, dtype=None, requires_grad=False):
@@ -420,9 +458,15 @@ class GTensor(ABC):
 
         shapes = {key: cls._get_shape(batch, key, t) for key, t in tau.items()}
 
-        return cls({key: torch.ones(shape, device=device, dtype=dtype,
-                                    requires_grad=requires_grad) for key, shape in shapes.items()})
-        
+        return cls(
+            {
+                key: torch.ones(
+                    shape, device=device, dtype=dtype, requires_grad=requires_grad
+                )
+                for key, shape in shapes.items()
+            }
+        )
+
     def __repr__(self) -> str:
         shape_dict = {k: v.shape for k, v in self._data.items()}
         return f"{self.__class__.__name__}({shape_dict})"

@@ -19,10 +19,10 @@ def mix_zweight_zvec(weight, part, zdim=0):
     weight_r, weight_i = unbind_cplx_tensor(weight, zdim)
     part_r, part_i = unbind_cplx_tensor(part, zdim)
 
-    return torch.stack([
-        weight_r@part_r - weight_i@part_i,
-        weight_i@part_r + weight_r@part_i
-    ], dim=zdim)
+    return torch.stack(
+        [weight_r @ part_r - weight_i @ part_i, weight_i @ part_r + weight_r @ part_i],
+        dim=zdim,
+    )
 
 
 def mix_zweight_zscalar(weight, part, zdim=0):
@@ -42,13 +42,14 @@ def mix_zweight_zscalar(weight, part, zdim=0):
     part_r, part_i = unbind_cplx_tensor(part, zdim)
 
     # # Since the dimension to be mixed in part is the right-most,
-    return torch.stack([
-        part_r@weight_r - part_i@weight_i,
-        part_r@weight_i + part_i@weight_r
-    ], dim=zdim)
+    return torch.stack(
+        [part_r @ weight_r - part_i @ weight_i, part_r @ weight_i + part_i @ weight_r],
+        dim=zdim,
+    )
 
 
 #########  Multiply  ###########
+
 
 def mul_zscalar_zirrep(scalar, part, rdim=-1, zdim=0):
     """
@@ -65,10 +66,10 @@ def mul_zscalar_zirrep(scalar, part, rdim=-1, zdim=0):
     scalar_r, scalar_i = unbind_cplx_tensor(scalar.unsqueeze(rdim), zdim)
     part_r, part_i = unbind_cplx_tensor(part, zdim)
 
-    return torch.stack([
-        part_r * scalar_r - part_i * scalar_i,
-        part_r * scalar_i + part_i * scalar_r
-    ], dim=zdim)
+    return torch.stack(
+        [part_r * scalar_r - part_i * scalar_i, part_r * scalar_i + part_i * scalar_r],
+        dim=zdim,
+    )
 
 
 def mul_zscalar_zscalar(scalar1, scalar2, zdim=0):
@@ -90,11 +91,14 @@ def mul_zscalar_zscalar(scalar1, scalar2, zdim=0):
     scalar1_r, scalar1_i = unbind_cplx_tensor(scalar1, zdim)
     scalar2_r, scalar2_i = unbind_cplx_tensor(scalar2, zdim)
 
-    return torch.stack([
-        scalar1_r*scalar2_r - scalar1_i*scalar2_i,
-        scalar1_r*scalar2_i + scalar1_i*scalar2_r
-    ], dim=zdim)
-    
+    return torch.stack(
+        [
+            scalar1_r * scalar2_r - scalar1_i * scalar2_i,
+            scalar1_r * scalar2_i + scalar1_i * scalar2_r,
+        ],
+        dim=zdim,
+    )
+
 
 def unbind_cplx_tensor(
     z: torch.Tensor,
@@ -108,7 +112,7 @@ def unbind_cplx_tensor(
     :type zdim: int
     :return: real and imaginary components of z
     :rtype: Tuple[torch.Tensor, torch.Tensor]
-    """    
+    """
     # some common dimensions to prevent UnbindBackward error
     if zdim == 0:
         return (z[0], z[1])
@@ -132,5 +136,3 @@ def unbind_cplx_tensor(
         return (z[..., 0, :, :], z[..., 1, :, :])
     else:
         return z.unbind(zdim)
-
-

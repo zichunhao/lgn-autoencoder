@@ -38,10 +38,18 @@ class RadPolyTrig(nn.Module):
         The data type to which the module is initialized.
     """
 
-    def __init__(self, max_zf, num_basis_fn, num_channels, mix=True, input_basis='cartesian',
-                 device=None, dtype=torch.float64):
+    def __init__(
+        self,
+        max_zf,
+        num_basis_fn,
+        num_channels,
+        mix=True,
+        input_basis="cartesian",
+        device=None,
+        dtype=torch.float64,
+    ):
         if device is None:
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         super(RadPolyTrig, self).__init__()
 
         self.max_zf = max_zf
@@ -49,7 +57,7 @@ class RadPolyTrig(nn.Module):
         self.num_basis_fn = num_basis_fn
         self.num_channels = num_channels
 
-        if input_basis.lower() not in ['cartesian', 'canonical']:
+        if input_basis.lower() not in ["cartesian", "canonical"]:
             raise ValueError("Input basis can only be 'cartesian' or 'canonical'!")
         self.input_basis = input_basis
 
@@ -66,25 +74,43 @@ class RadPolyTrig(nn.Module):
 
         # If desired, mix the radial components to a desired shape
         self.mix = mix
-        if (mix == 'cplx') or (mix is True):  # default
-            if self.input_basis == 'canonical':  # Deal with the case of complex input from the latent space
-                self.linear = nn.ModuleList([nn.Linear(2 * self.num_basis_fn, self.num_channels).to(device=device, dtype=dtype)
-                                             for _ in range(max_zf + 1)])
+        if (mix == "cplx") or (mix is True):  # default
+            if (
+                self.input_basis == "canonical"
+            ):  # Deal with the case of complex input from the latent space
+                self.linear = nn.ModuleList(
+                    [
+                        nn.Linear(2 * self.num_basis_fn, self.num_channels).to(
+                            device=device, dtype=dtype
+                        )
+                        for _ in range(max_zf + 1)
+                    ]
+                )
             else:
-                self.linear = nn.ModuleList([nn.Linear(2 * self.num_basis_fn, 2 * self.num_channels).to(device=device, dtype=dtype)
-                                             for _ in range(max_zf + 1)])
+                self.linear = nn.ModuleList(
+                    [
+                        nn.Linear(2 * self.num_basis_fn, 2 * self.num_channels).to(
+                            device=device, dtype=dtype
+                        )
+                        for _ in range(max_zf + 1)
+                    ]
+                )
             self.radial_types = (num_channels,) * (max_zf)
-        elif mix == 'real':
+        elif mix == "real":
             self.linear = nn.ModuleList(
-                [nn.Linear(2 * self.num_basis_fn, self.num_channels).to(device=device, dtype=dtype)
-                 for _ in range(max_zf + 1)]
+                [
+                    nn.Linear(2 * self.num_basis_fn, self.num_channels).to(
+                        device=device, dtype=dtype
+                    )
+                    for _ in range(max_zf + 1)
+                ]
             )
             self.radial_types = (num_channels,) * (max_zf)
-        elif (mix == 'none') or (mix is False):
+        elif (mix == "none") or (mix is False):
             self.linear = None
             self.radial_types = (self.num_basis_fn,) * (max_zf)
         else:
-            raise ValueError(f'Can only specify mix = real, cplx, or none: {mix}')
+            raise ValueError(f"Can only specify mix = real, cplx, or none: {mix}")
 
         self.zero = torch.tensor(0, device=device, dtype=dtype)
         self.device = device
@@ -115,36 +141,72 @@ class RadPolyTrig(nn.Module):
         norms = norms.unsqueeze(-1)
 
         # Lorentzian-bell radial functions: a + 1 / (b + c^2 p^2) when not masked
-        rad_trig = torch.where(edge_mask, self.b * (torch.ones_like(self.b) + (self.c * norms).pow(2) + 1e-16).pow(-1) + self.a, self.zero).unsqueeze(-1)
+        rad_trig = torch.where(
+            edge_mask,
+            self.b * (torch.ones_like(self.b) + (self.c * norms).pow(2) + 1e-16).pow(-1)
+            + self.a,
+            self.zero,
+        ).unsqueeze(-1)
 
-        if self.input_basis == 'canonical':
-            rad_prod = rad_trig.view(s + (-1, 2 * self.num_basis_fn,))
+        if self.input_basis == "canonical":
+            rad_prod = rad_trig.view(
+                s
+                + (
+                    -1,
+                    2 * self.num_basis_fn,
+                )
+            )
         else:
-            rad_prod = rad_trig.view(s + (1, 2 * self.num_basis_fn,))
+            rad_prod = rad_trig.view(
+                s
+                + (
+                    1,
+                    2 * self.num_basis_fn,
+                )
+            )
 
         # Apply linear mixing function, if desired
-        if self.mix == 'cplx' or (self.mix is True):
+        if self.mix == "cplx" or (self.mix is True):
             if len(s) == 3:
-                radial_functions = [linear(rad_prod).view(
-                    s + (self.num_channels, 2)).permute(4, 0, 1, 2, 3) for linear in self.linear]
+                radial_functions = [
+                    linear(rad_prod)
+                    .view(s + (self.num_channels, 2))
+                    .permute(4, 0, 1, 2, 3)
+                    for linear in self.linear
+                ]
             elif len(s) == 2:
-                radial_functions = [linear(rad_prod).view(
-                    s + (self.num_channels, 2)).permute(3, 0, 1, 2) for linear in self.linear]
+                radial_functions = [
+                    linear(rad_prod)
+                    .view(s + (self.num_channels, 2))
+                    .permute(3, 0, 1, 2)
+                    for linear in self.linear
+                ]
             elif len(s) == 4:
-                if self.input_basis == 'canonical':
-                    radial_functions = [linear(rad_prod).view(
-                        s + (self.num_channels, )) for linear in self.linear]
+                if self.input_basis == "canonical":
+                    radial_functions = [
+                        linear(rad_prod).view(s + (self.num_channels,))
+                        for linear in self.linear
+                    ]
                 else:
                     raise NotImplementedError(
-                        "Complex cartesian not implemented. Consider converting node features to the canonical basis using p_cplx_to_rep.")
-        elif self.mix == 'real':
-            radial_functions = [linear(rad_prod).view(s + (self.num_channels,))
-                                for linear in self.linear]
-        elif (self.mix == 'none') or (self.mix is False):
-            radial_functions = [rad_prod.view(
-                s + (self.num_basis_fn, 2)).permute(4, 0, 1, 2, 3)] * (self.max_zf)
+                        "Complex cartesian not implemented. Consider converting node features to the canonical basis using p_cplx_to_rep."
+                    )
+        elif self.mix == "real":
+            radial_functions = [
+                linear(rad_prod).view(s + (self.num_channels,))
+                for linear in self.linear
+            ]
+        elif (self.mix == "none") or (self.mix is False):
+            radial_functions = [
+                rad_prod.view(s + (self.num_basis_fn, 2)).permute(4, 0, 1, 2, 3)
+            ] * (self.max_zf)
 
-        return GScalar({(l, l): radial_function for l, radial_function in enumerate(radial_functions)})
+        return GScalar(
+            {
+                (l, l): radial_function
+                for l, radial_function in enumerate(radial_functions)
+            }
+        )
 
 
 class RadialFilters(nn.Module):
@@ -184,20 +246,41 @@ class RadialFilters(nn.Module):
         The data type to which the module is initialized.
     """
 
-    def __init__(self, max_zf, num_basis_fn, num_channels_out, num_levels, mix=True, input_basis='cartesian',
-                 device=None, dtype=torch.float64):
+    def __init__(
+        self,
+        max_zf,
+        num_basis_fn,
+        num_channels_out,
+        num_levels,
+        mix=True,
+        input_basis="cartesian",
+        device=None,
+        dtype=torch.float64,
+    ):
         if device is None:
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         super(RadialFilters, self).__init__()
 
         self.num_levels = num_levels
         self.max_zf = max_zf
 
-        rad_funcs = [RadPolyTrig(max_zf[level], num_basis_fn, num_channels_out[level], mix=mix, input_basis=input_basis,
-                                 device=device, dtype=dtype) for level in range(self.num_levels)]
+        rad_funcs = [
+            RadPolyTrig(
+                max_zf[level],
+                num_basis_fn,
+                num_channels_out[level],
+                mix=mix,
+                input_basis=input_basis,
+                device=device,
+                dtype=dtype,
+            )
+            for level in range(self.num_levels)
+        ]
         self.rad_funcs = nn.ModuleList(rad_funcs)
-        self.tau = [{(l, l): rad_func.radial_types[l - 1] for l in range(0, max_zf + 1)}
-                    for rad_func, max_zf in zip(self.rad_funcs, max_zf)]
+        self.tau = [
+            {(l, l): rad_func.radial_types[l - 1] for l in range(0, max_zf + 1)}
+            for rad_func, max_zf in zip(self.rad_funcs, max_zf)
+        ]
 
         if len(self.tau) > 0:
             self.num_rad_channels = self.tau[0][(1, 1)]
@@ -206,7 +289,7 @@ class RadialFilters(nn.Module):
 
         self.zero = torch.tensor(0, device=device, dtype=dtype)
 
-    def forward(self, norms, base_mask, basis='cartesian'):
+    def forward(self, norms, base_mask, basis="cartesian"):
         """
         The forward pass of the network.
 

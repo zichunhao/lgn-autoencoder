@@ -68,27 +68,39 @@ class GWignerD(GTensor):
 
     @staticmethod
     def _get_shape(batch, key, channels):
-        return (2, (key[0]+1)*(key[1]+1), (key[0]+1)*(key[1]+1))
+        return (2, (key[0] + 1) * (key[1] + 1), (key[0] + 1) * (key[1] + 1))
 
     def check_data(self, data):
         if any(part.numel() == 0 for part in data.values()):
-            raise NotImplementedError('Non-zero parts in GWignerD not currrently enabled!')
+            raise NotImplementedError(
+                "Non-zero parts in GWignerD not currrently enabled!"
+            )
 
         shapes = {key: part.shape for key, part in data.items()}
 
         zdims = {key: shape[self.zdim] for key, shape in shapes.items()}
-        rdims = {key: (shape[self.rdim1], shape[self.rdim2]) for key, shape in shapes.items()}
+        rdims = {
+            key: (shape[self.rdim1], shape[self.rdim2]) for key, shape in shapes.items()
+        }
 
-        if not all(rdims[key][0] == (key[0]+1)*(key[1]+1) and rdims[key][1] == (key[0]+1)*(key[1]+1) for key in data.keys()):
-            raise ValueError(f'Irrep dimension (dim={self.rdim}) of each tensor should have shape 2*l+1! Found: {rdims}')
+        if not all(
+            rdims[key][0] == (key[0] + 1) * (key[1] + 1)
+            and rdims[key][1] == (key[0] + 1) * (key[1] + 1)
+            for key in data.keys()
+        ):
+            raise ValueError(
+                f"Irrep dimension (dim={self.rdim}) of each tensor should have shape 2*l+1! Found: {rdims}"
+            )
 
         if not all(zdim == 2 for zdim in zdims.values()):
-            raise ValueError(f'Complex dimension (dim={self.zdim}) of each tensor should have length 2! Found: {zdims}')
+            raise ValueError(
+                f"Complex dimension (dim={self.zdim}) of each tensor should have length 2! Found: {zdims}"
+            )
 
     @staticmethod
     def _bin_op_type_check(type1, type2):
         if type1 == GWignerD and type2 == GWignerD:
-            raise ValueError('Cannot multiply two GWignerD!')
+            raise ValueError("Cannot multiply two GWignerD!")
 
     @staticmethod
     def euler(maxdim, angles=None, device=None, dtype=None, requires_grad=False):
@@ -103,31 +115,34 @@ class GWignerD(GTensor):
             alpha, beta, gamma = torch.rand(3) * 2 * pi + 1j * torch.rand(3) * 2 * pi
             beta = beta / 2
 
-        wigner_d = {(k, n): rot.LorentzD((k, n), alpha, beta, gamma, device=device, dtype=dtype)
-                    for k in range(maxdim) for n in range(maxdim)}
+        wigner_d = {
+            (k, n): rot.LorentzD((k, n), alpha, beta, gamma, device=device, dtype=dtype)
+            for k in range(maxdim)
+            for n in range(maxdim)
+        }
 
         return GWignerD(wigner_d)
 
     @staticmethod
     def rand(maxdim, device=None, dtype=None, requires_grad=False):
-        """ Overwrite factor method inherited from `GTensor` since
-        it would break covariance """
-        raise NotImplementedError('Does not make sense as it would break covariance!')
+        """Overwrite factor method inherited from `GTensor` since
+        it would break covariance"""
+        raise NotImplementedError("Does not make sense as it would break covariance!")
 
     @staticmethod
     def randn(maxdim, device=None, dtype=None, requires_grad=False):
-        """ Overwrite factor method inherited from `GTensor` since
-        it would break covariance """
-        raise NotImplementedError('Does not make sense as it would break covariance!')
+        """Overwrite factor method inherited from `GTensor` since
+        it would break covariance"""
+        raise NotImplementedError("Does not make sense as it would break covariance!")
 
     @staticmethod
     def zeros(maxdim, device=None, dtype=None, requires_grad=False):
-        """ Overwrite factor method inherited from `GTensor` since
-        it would break covariance """
-        raise NotImplementedError('Does not make sense as it would break covariance!')
+        """Overwrite factor method inherited from `GTensor` since
+        it would break covariance"""
+        raise NotImplementedError("Does not make sense as it would break covariance!")
 
     @staticmethod
     def ones(maxdim, device=None, dtype=None, requires_grad=False):
-        """ Overwrite factor method inherited from `GTensor` since
-        it would break covariance """
-        raise NotImplementedError('Does not make sense as it would break covariance!')
+        """Overwrite factor method inherited from `GTensor` since
+        it would break covariance"""
+        raise NotImplementedError("Does not make sense as it would break covariance!")

@@ -1,8 +1,9 @@
 import torch
+
 # from itertools import zip_longest
 
 
-class GTau():
+class GTau:
     """
     Class for keeping track of multiplicity (number of channels) of a G
     vector.
@@ -16,14 +17,20 @@ class GTau():
     def __init__(self, tau):
         if type(tau) is dict:
             if not all(type(t) == int for t in tau.values()):
-                raise ValueError(f'Input must be a dict of int values! {type(tau)}, values:{[type(t) for t in tau.values()]}')
+                raise ValueError(
+                    f"Input must be a dict of int values! {type(tau)}, values:{[type(t) for t in tau.values()]}"
+                )
             if not all(type(t) == tuple for t in tau.keys()):
-                raise ValueError(f'Input must be a dict with tuple keys! {type(tau)}, keys:{[type(t) for t in tau.keys()]}')
+                raise ValueError(
+                    f"Input must be a dict with tuple keys! {type(tau)}, keys:{[type(t) for t in tau.keys()]}"
+                )
         else:
             try:
                 tau = tau.tau
             except AttributeError:
-                raise AttributeError(f'Input is of type {type(tau)}, which does not have a defined .tau property!')
+                raise AttributeError(
+                    f"Input is of type {type(tau)}, which does not have a defined .tau property!"
+                )
 
         self._tau = dict(tau)
 
@@ -141,9 +148,11 @@ class GTau():
             return rep.tau
 
         if torch.is_tensor(rep):
-            raise ValueError('Input not compatible with GTensor')
-        elif type(rep) is dict and any(type(irrep) != torch.Tensor for irrep in rep.values()):
-            raise ValueError('Input not compatible with GTensor')
+            raise ValueError("Input not compatible with GTensor")
+        elif type(rep) is dict and any(
+            type(irrep) != torch.Tensor for irrep in rep.values()
+        ):
+            raise ValueError("Input not compatible with GTensor")
 
         tau = {key: irrep.shape[-2] for key, irrep in rep.items()}
 

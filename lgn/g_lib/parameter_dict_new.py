@@ -2,7 +2,7 @@ from torch.nn import ParameterDict
 
 
 class ParameterDictNew(ParameterDict):
-    """ We modify ParameterDict so that keys can be non-strings.
+    """We modify ParameterDict so that keys can be non-strings.
     In our case, tuples of integers, but this code is universal."""
 
     def __getitem__(self, key):

@@ -4,8 +4,8 @@ import numpy as np
 from lgn.cg_lib import CGDict
 
 
-def rotate_part(D, z, side='left', autoconvert=True, conjugate=False):
-    """ Apply a D matrix using complex broadcast matrix multiplication. """
+def rotate_part(D, z, side="left", autoconvert=True, conjugate=False):
+    """Apply a D matrix using complex broadcast matrix multiplication."""
     if autoconvert:
         D = D.to(z.device, z.dtype)
     if conjugate:
@@ -13,19 +13,42 @@ def rotate_part(D, z, side='left', autoconvert=True, conjugate=False):
     Dr, Di = unbind_cplx_tensor(D)
     zr, zi = unbind_cplx_tensor(z)
 
-    if side == 'left':
-        return torch.stack((torch.matmul(zr, Dr) + torch.matmul(zi, Di),
-                            - torch.matmul(zr, Di) + torch.matmul(zi, Dr)), 0)
-    elif side == 'right':
-        return torch.stack((torch.matmul(Dr, zr) + torch.matmul(Di, zi),
-                            - torch.matmul(Di, zr) + torch.matmul(Dr, zi)), 0)
+    if side == "left":
+        return torch.stack(
+            (
+                torch.matmul(zr, Dr) + torch.matmul(zi, Di),
+                -torch.matmul(zr, Di) + torch.matmul(zi, Dr),
+            ),
+            0,
+        )
+    elif side == "right":
+        return torch.stack(
+            (
+                torch.matmul(Dr, zr) + torch.matmul(Di, zi),
+                -torch.matmul(Di, zr) + torch.matmul(Dr, zi),
+            ),
+            0,
+        )
     else:
-        raise ValueError('Must choose side: left/right.')
+        raise ValueError("Must choose side: left/right.")
 
-def rotate_rep(rep, alpha, beta, gamma, side='left', conjugate=False, cg_dict=None):
-    """ Apply a part-wise left/right sided D-matrix to a (matrix) representation. """
+
+def rotate_rep(rep, alpha, beta, gamma, side="left", conjugate=False, cg_dict=None):
+    """Apply a part-wise left/right sided D-matrix to a (matrix) representation."""
     device, dtype = rep.device, rep.dtype
-    return rep.__class__({key: rotate_part(LorentzD(key, alpha, beta, gamma, cg_dict=cg_dict, device=device, dtype=dtype), part, side=side, conjugate=conjugate) for key, part in rep.items()})
+    return rep.__class__(
+        {
+            key: rotate_part(
+                LorentzD(
+                    key, alpha, beta, gamma, cg_dict=cg_dict, device=device, dtype=dtype
+                ),
+                part,
+                side=side,
+                conjugate=conjugate,
+            )
+            for key, part in rep.items()
+        }
+    )
 
 
 def create_J(j):
@@ -67,7 +90,15 @@ def littled(j, beta):
     return d
 
 
-def WignerD(j, alpha, beta, gamma, numpy_test=False, dtype=torch.float64, device=torch.device('cpu')):
+def WignerD(
+    j,
+    alpha,
+    beta,
+    gamma,
+    numpy_test=False,
+    dtype=torch.float64,
+    device=torch.device("cpu"),
+):
     d = littled(j, beta)
 
     Jz = np.arange(-j, j + 1)
@@ -85,14 +116,39 @@ def WignerD(j, alpha, beta, gamma, numpy_test=False, dtype=torch.float64, device
     return D
 
 
-def LorentzD(key, alpha, beta, gamma, numpy_test=False, dtype=torch.float64, device=torch.device('cpu'), cg_dict=None):
+def LorentzD(
+    key,
+    alpha,
+    beta,
+    gamma,
+    numpy_test=False,
+    dtype=torch.float64,
+    device=torch.device("cpu"),
+    cg_dict=None,
+):
 
     (k, n) = key
     if cg_dict is None:
-        cg_dict = CGDict(maxdim=max(k, n) + 1, transpose=True, dtype=dtype, device=device)._cg_dict
+        cg_dict = CGDict(
+            maxdim=max(k, n) + 1, transpose=True, dtype=dtype, device=device
+        )._cg_dict
 
-    D = complex_tensor_prod(WignerD(k / 2, alpha, beta, gamma, numpy_test=numpy_test, dtype=dtype, device=device),
-                            conj(WignerD(n / 2, -alpha, beta, -gamma, numpy_test=numpy_test, dtype=dtype, device=device)))
+    D = complex_tensor_prod(
+        WignerD(
+            k / 2, alpha, beta, gamma, numpy_test=numpy_test, dtype=dtype, device=device
+        ),
+        conj(
+            WignerD(
+                n / 2,
+                -alpha,
+                beta,
+                -gamma,
+                numpy_test=numpy_test,
+                dtype=dtype,
+                device=device,
+            )
+        ),
+    )
     cg_mat = cg_dict[((k, 0), (0, n))][(k, n)]
     D_re, D_im = unbind_cplx_tensor(D)
     D_re = torch.matmul(torch.matmul(cg_mat, D_re), cg_mat.t())
@@ -113,8 +169,8 @@ def conj(D):
     return D
 
 
-def complex_from_numpy(z, dtype=torch.float64, device=torch.device('cpu')):
-    """ Take a numpy array and output a complex array of the same size. """
+def complex_from_numpy(z, dtype=torch.float64, device=torch.device("cpu")):
+    """Take a numpy array and output a complex array of the same size."""
     zr = torch.from_numpy(z.real).to(dtype=dtype, device=device)
     zi = torch.from_numpy(z.imag).to(dtype=dtype, device=device)
 
@@ -126,12 +182,17 @@ def complex_tensor_prod(d1, d2):
     d2_re, d2_im = unbind_cplx_tensor(d2, zdim=0)
     s1 = d1.shape[1:]
     s2 = d2.shape[1:]
-    assert len(s1) == 2 and len(s2) == 2, "Both tensors must be of rank 2 (and complex)!"
-    d_re = d1_re.view(s1[0], 1, s1[1], 1) * d2_re.view(1, s2[0], 1, s2[1]) - \
-        d1_im.view(s1[0], 1, s1[1], 1) * d2_im.view(1, s2[0], 1, s2[1])
-    d_im = d1_re.view(s1[0], 1, s1[1], 1) * d2_im.view(1, s2[0], 1, s2[1]) + \
-        d1_im.view(s1[0], 1, s1[1], 1) * d2_re.view(1, s2[0], 1, s2[1])
+    assert (
+        len(s1) == 2 and len(s2) == 2
+    ), "Both tensors must be of rank 2 (and complex)!"
+    d_re = d1_re.view(s1[0], 1, s1[1], 1) * d2_re.view(1, s2[0], 1, s2[1]) - d1_im.view(
+        s1[0], 1, s1[1], 1
+    ) * d2_im.view(1, s2[0], 1, s2[1])
+    d_im = d1_re.view(s1[0], 1, s1[1], 1) * d2_im.view(1, s2[0], 1, s2[1]) + d1_im.view(
+        s1[0], 1, s1[1], 1
+    ) * d2_re.view(1, s2[0], 1, s2[1])
     return torch.stack((d_re, d_im), 0).view(2, s1[0] * s2[0], s1[1] * s2[1])
+
 
 def unbind_cplx_tensor(
     z: torch.Tensor,
@@ -145,7 +206,7 @@ def unbind_cplx_tensor(
     :type zdim: int
     :return: real and imaginary components of z
     :rtype: Tuple[torch.Tensor, torch.Tensor]
-    """    
+    """
     # some common dimensions to prevent UnbindBackward error
     if zdim == 0:
         return (z[0], z[1])

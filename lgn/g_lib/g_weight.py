@@ -58,29 +58,46 @@ class GWeight(GTensor):
 
     def check_data(self, data):
         if any(part.numel() == 0 for part in data.values()):
-            raise NotImplementedError('Non-zero parts in GWeights not currrently enabled!')
+            raise NotImplementedError(
+                "Non-zero parts in GWeights not currrently enabled!"
+            )
 
         shapes = set(part.shape for part in data.values())
         shape = shapes.pop()
 
         if not shape[self.zdim] == 2:
-            raise ValueError(f'Complex dimension (dim={self.zdim}) of each tensor should have length 2! Found: {shape[self.zdim]}')
+            raise ValueError(
+                f"Complex dimension (dim={self.zdim}) of each tensor should have length 2! Found: {shape[self.zdim]}"
+            )
 
     def as_parameter(self):
         """
         Return the weight as a `ParameterList` of `Parameter` so
         the weights can be added as parameters to a `torch.Module`.
         """
-        return ParameterDictNew({key: Parameter(weight) for key, weight in self.items()})
+        return ParameterDictNew(
+            {key: Parameter(weight) for key, weight in self.items()}
+        )
 
     def rand(tau_in, tau_out, device=None, dtype=None, requires_grad=False):
         """
         Factory method to create a new random `GWeight`.
         """
-        assert tau_out.keys() <= tau_in.keys(), "Tau after mixing can't include more irreps than before!"
+        assert (
+            tau_out.keys() <= tau_in.keys()
+        ), "Tau after mixing can't include more irreps than before!"
 
-        return GWeight({key: torch.rand((2, tau_out[key], tau_in[key]), device=device, dtype=dtype,
-                                        requires_grad=requires_grad) for key in tau_out.keys()})
+        return GWeight(
+            {
+                key: torch.rand(
+                    (2, tau_out[key], tau_in[key]),
+                    device=device,
+                    dtype=dtype,
+                    requires_grad=requires_grad,
+                )
+                for key in tau_out.keys()
+            }
+        )
 
     @staticmethod
     def randn(tau_in, tau_out, device=None, dtype=None, requires_grad=False):
@@ -88,11 +105,21 @@ class GWeight(GTensor):
         Factory method to create a new random-normal `GWeight`.
         """
 
-        assert tau_out.keys() <= tau_in.keys(
+        assert (
+            tau_out.keys() <= tau_in.keys()
         ), f"Tau ({tau_out.keys()}) after mixing can't include more irreps than before ({tau_in.keys()})!"
 
-        return GWeight({key: torch.randn((2, tau_out[key], tau_in[key]), device=device, dtype=dtype,
-                                         requires_grad=requires_grad) for key in tau_out.keys()})
+        return GWeight(
+            {
+                key: torch.randn(
+                    (2, tau_out[key], tau_in[key]),
+                    device=device,
+                    dtype=dtype,
+                    requires_grad=requires_grad,
+                )
+                for key in tau_out.keys()
+            }
+        )
 
     @staticmethod
     def zeros(tau_in, tau_out, device=None, dtype=None, requires_grad=False):
@@ -100,10 +127,21 @@ class GWeight(GTensor):
         Factory method to create a new random `GWeight`.
         """
 
-        assert tau_out.keys() <= tau_in.keys(), "Tau after mixing can't include more irreps than before!"
+        assert (
+            tau_out.keys() <= tau_in.keys()
+        ), "Tau after mixing can't include more irreps than before!"
 
-        return GWeight({key: torch.zeros((2, tau_out[key], tau_in[key]), device=device, dtype=dtype,
-                                         requires_grad=requires_grad) for key in tau_out.keys()})
+        return GWeight(
+            {
+                key: torch.zeros(
+                    (2, tau_out[key], tau_in[key]),
+                    device=device,
+                    dtype=dtype,
+                    requires_grad=requires_grad,
+                )
+                for key in tau_out.keys()
+            }
+        )
 
     @staticmethod
     def ones(tau_in, tau_out, device=None, dtype=None, requires_grad=False):
@@ -111,7 +149,18 @@ class GWeight(GTensor):
         Factory method to create a new all-ones `GWeight`.
         """
 
-        assert tau_out.keys() <= tau_in.keys(), "Tau after mixing can't include more irreps than before!"
+        assert (
+            tau_out.keys() <= tau_in.keys()
+        ), "Tau after mixing can't include more irreps than before!"
 
-        return GWeight({key: torch.ones((2, tau_out[key], tau_in[key]), device=device, dtype=dtype,
-                                        requires_grad=requires_grad) for key in tau_out.keys()})
+        return GWeight(
+            {
+                key: torch.ones(
+                    (2, tau_out[key], tau_in[key]),
+                    device=device,
+                    dtype=dtype,
+                    requires_grad=requires_grad,
+                )
+                for key in tau_out.keys()
+            }
+        )

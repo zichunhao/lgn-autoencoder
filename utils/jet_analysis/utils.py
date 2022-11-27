@@ -4,7 +4,7 @@ import torch
 import numpy as np
 from scipy import stats
 
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 NUM_BINS = 81  # Number of bins for all histograms
 PLOT_FONT_SIZE = 14
 
@@ -32,8 +32,7 @@ def get_magnitude(p, gpu=True):
         elif p.shape[-1] == 4:
             return np.linalg.norm(p[..., 1:], axis=-1)
         else:
-            raise ValueError(
-                f'p must be 3- or 4-vector. Found: {p.shape[-1]=}.')
+            raise ValueError(f"p must be 3- or 4-vector. Found: {p.shape[-1]=}.")
 
     elif isinstance(p, torch.Tensor):
         if gpu:
@@ -43,12 +42,12 @@ def get_magnitude(p, gpu=True):
         elif p.shape[-1] == 4:
             return torch.norm(p[..., 1:], dim=-1)
         else:
-            raise ValueError(
-                f'p must be 3- or 4-vector. Found: {p.shape[-1]=}.')
+            raise ValueError(f"p must be 3- or 4-vector. Found: {p.shape[-1]=}.")
 
     else:
         raise ValueError(
-            f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p)}.")
+            f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p)}."
+        )
 
 
 def get_p_cartesian(jets, cutoff=1e-6, return_arr: bool = False):
@@ -92,7 +91,7 @@ def get_p_cartesian(jets, cutoff=1e-6, return_arr: bool = False):
 
     if cutoff > 0:
         p = get_magnitude(jets)  # |p| of 3-momenta
-        mask = (p > cutoff)
+        mask = p > cutoff
         px = px[mask]
         py = py[mask]
         pz = pz[mask]
@@ -107,7 +106,7 @@ def get_p_polar(
     cutoff: float = 1e-6,
     eps: float = 1e-12,
     gpu: float = True,
-    return_arr: float = False
+    return_arr: float = False,
 ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
     Get (pt, eta, phi) from the jet data.
@@ -123,7 +122,7 @@ def get_p_polar(
     """
     if isinstance(p4, np.ndarray):
         px, py, pz = get_p_cartesian(p4, cutoff=cutoff)
-        pt = np.sqrt(px ** 2 + py ** 2 + eps)
+        pt = np.sqrt(px**2 + py**2 + eps)
         eta = np.arcsinh(pz / pt)
         phi = np.arctan2(py, px + eps)
     elif isinstance(p4, torch.Tensor):
@@ -137,13 +136,14 @@ def get_p_polar(
 
         if cutoff > 0:
             p = get_magnitude(p4).detach().cpu().numpy()
-            mask = (p > cutoff)
+            mask = p > cutoff
             pt = pt[mask]
             eta = eta[mask]
             phi = phi[mask]
     else:
         raise TypeError(
-            f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p4)}.")
+            f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p4)}."
+        )
 
     if return_arr:
         return np.stack((pt, eta, phi), axis=-1)
@@ -152,10 +152,10 @@ def get_p_polar(
 
 
 def get_p4_cartesian_from_polar(p: torch.Tensor) -> torch.Tensor:
-    '''
+    """
     (pt, eta, phi) -> (E, px, py, pz) or
     (E, pt, eta, phi) -> (E, px, py, pz).
-    '''
+    """
     if p.shape[-1] == 4:
         E_idx, pt_idx, eta_idx, phi_idx = 0, 1, 2, 3
         E = (p[..., E_idx]).unsqueeze(-1)
@@ -163,7 +163,7 @@ def get_p4_cartesian_from_polar(p: torch.Tensor) -> torch.Tensor:
         pt_idx, eta_idx, phi_idx = 0, 1, 2
         E = (p[..., pt_idx] * torch.cosh(p[..., eta_idx])).unsqueeze(-1)
     else:
-        raise ValueError(f'Invalid shape of feature dimension: {p.shape[-1]}.')
+        raise ValueError(f"Invalid shape of feature dimension: {p.shape[-1]}.")
 
     px = (p[..., pt_idx] * torch.cos(p[..., phi_idx])).unsqueeze(-1)
     py = (p[..., pt_idx] * torch.sin(p[..., phi_idx])).unsqueeze(-1)
@@ -172,10 +172,7 @@ def get_p4_cartesian_from_polar(p: torch.Tensor) -> torch.Tensor:
     return torch.cat((E, px, py, pz), dim=-1)
 
 
-def get_p_polar_tensor(
-    p: torch.Tensor,
-    eps: float = 1e-16
-) -> torch.Tensor:
+def get_p_polar_tensor(p: torch.Tensor, eps: float = 1e-16) -> torch.Tensor:
     """(E, px, py, pz) -> (pt, eta, phi)"""
     if p.shape[-1] == 4:
         p0, px, py, pz = p.unbind(-1)
@@ -183,10 +180,10 @@ def get_p_polar_tensor(
         px, py, pz = p.unbind(-1)
     else:
         raise ValueError(
-            f'Invalid error. p.shape[-1] should be either 3 or 4. Found: {p.shape[-1]}.'
+            f"Invalid error. p.shape[-1] should be either 3 or 4. Found: {p.shape[-1]}."
         )
 
-    pt = torch.sqrt(px ** 2 + py ** 2)
+    pt = torch.sqrt(px**2 + py**2)
     try:
         eta = torch.asinh(pz / (pt + eps))
     except AttributeError:
@@ -196,10 +193,7 @@ def get_p_polar_tensor(
     return torch.stack((pt, eta, phi), dim=-1)
 
 
-def get_p4_polar_tensor(
-    p: torch.Tensor,
-    eps: float = 1e-16
-) -> torch.Tensor:
+def get_p4_polar_tensor(p: torch.Tensor, eps: float = 1e-16) -> torch.Tensor:
     """(E, px, py, pz) -> (pt, eta, phi)"""
     if p.shape[-1] == 4:
         p0, px, py, pz = p.unbind(dim=-1)
@@ -207,9 +201,10 @@ def get_p4_polar_tensor(
         px, py, pz = p.unbind(dim=-1)
     else:
         raise ValueError(
-            f'Invalid error. p.shape[-1] should be either 3 or 4. Found: {p.shape[-1]}.')
+            f"Invalid error. p.shape[-1] should be either 3 or 4. Found: {p.shape[-1]}."
+        )
 
-    pt = torch.sqrt(px ** 2 + py ** 2)
+    pt = torch.sqrt(px**2 + py**2)
     try:
         eta = torch.asinh(pz / (pt + eps))
     except AttributeError:
@@ -218,10 +213,8 @@ def get_p4_polar_tensor(
 
     return torch.stack((pt, eta, phi), dim=-1)
 
-def get_p_polarrel_tensor(
-    p: torch.Tensor,
-    eps: float = 1e-16
-) -> torch.Tensor:
+
+def get_p_polarrel_tensor(p: torch.Tensor, eps: float = 1e-16) -> torch.Tensor:
     """(E, px, py, pz) -> (pt, eta, phi)"""
     # particle features
     pt, eta, phi = get_p_polar_tensor(p, eps=eps).unbind(dim=-1)
@@ -234,22 +227,21 @@ def get_p_polarrel_tensor(
     phi_rel = Phi - phi
     phi_rel = (phi_rel + np.pi) % (2 * np.pi) - np.pi  # [-pi, pi]
     return torch.stack((pt_rel, eta_rel, phi_rel), dim=-1)
-    
 
 
 def arcsinh(z: torch.Tensor) -> torch.Tensor:
-    '''Self defined arcsinh function if torch is not up to date.'''
+    """Self defined arcsinh function if torch is not up to date."""
     return torch.log(z + torch.sqrt(1 + torch.pow(z, 2)))
 
 
 def get_jet_feature_cartesian(
-    p4: Union[np.ndarray, torch.Tensor],
-    gpu: bool = True,
-    return_arr: bool = False
-) -> Union[np.ndarray,
-           Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
-           torch.Tensor,
-           Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]:
+    p4: Union[np.ndarray, torch.Tensor], gpu: bool = True, return_arr: bool = False
+) -> Union[
+    np.ndarray,
+    Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+    torch.Tensor,
+    Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
+]:
     """
     Get jet (m, pt, eta, phi) from the jet data.
 
@@ -272,8 +264,7 @@ def get_jet_feature_cartesian(
 
     if isinstance(p4, np.ndarray):
         jet_p4 = np.sum(p4, axis=-2)
-        msq = jet_p4[..., 0] ** 2 - \
-            np.sum(np.power(jet_p4, 2)[..., 1:], axis=-1)
+        msq = jet_p4[..., 0] ** 2 - np.sum(np.power(jet_p4, 2)[..., 1:], axis=-1)
         jet_mass = np.sqrt(np.abs(msq)) * np.sign(msq)
         jet_px = jet_p4[..., 1]
         jet_py = jet_p4[..., 2]
@@ -286,9 +277,8 @@ def get_jet_feature_cartesian(
             p4 = p4.to(device=DEVICE)
         jet_p4 = torch.sum(p4, dim=-2)
         jet_p0, jet_px, jet_py, jet_pz = jet_p4.unbind(dim=-1)
-        msq = jet_p0 ** 2 - jet_px ** 2 - jet_py ** 2 - jet_pz ** 2
-        jet_mass = (torch.sqrt(torch.abs(msq)) *
-                    torch.sign(msq)).detach().cpu()
+        msq = jet_p0**2 - jet_px**2 - jet_py**2 - jet_pz**2
+        jet_mass = (torch.sqrt(torch.abs(msq)) * torch.sign(msq)).detach().cpu()
         jet_px = jet_px.detach().cpu()
         jet_py = jet_py.detach().cpu()
         jet_pz = jet_pz.detach().cpu()
@@ -297,7 +287,8 @@ def get_jet_feature_cartesian(
 
     else:
         raise ValueError(
-            f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p4)}.")
+            f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p4)}."
+        )
 
     return jet_mass, jet_px, jet_py, jet_pz
 
@@ -306,9 +297,8 @@ def get_jet_feature_polar(
     p4: Union[np.ndarray, torch.Tensor],
     gpu: bool = True,
     eps: float = 1e-16,
-    return_arr: bool = False
-) -> Union[np.ndarray,
-           Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]]:
+    return_arr: bool = False,
+) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]]:
     """
     Get jet (m, pt, eta, phi) from the jet data.
 
@@ -329,7 +319,7 @@ def get_jet_feature_polar(
     m, px, py, pz = get_jet_feature_cartesian(p4)
 
     if isinstance(p4, np.ndarray):
-        pt = np.sqrt(px ** 2 + py ** 2)
+        pt = np.sqrt(px**2 + py**2)
         eta = np.arcsinh(pz / (pt + eps))
         phi = np.arctan2(py, px)
         if return_arr:
@@ -338,7 +328,7 @@ def get_jet_feature_polar(
     elif isinstance(p4, torch.Tensor):
         if gpu:
             p4 = p4.to(device=DEVICE)
-        pt = torch.sqrt(px ** 2 + py ** 2)
+        pt = torch.sqrt(px**2 + py**2)
         try:
             eta = torch.arcsinh(pz / (pt + eps))
         except AttributeError:
@@ -353,7 +343,8 @@ def get_jet_feature_polar(
 
     else:
         raise ValueError(
-            f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p4)}.")
+            f"The input must be numpy.ndarray or torch.Tensor. Found: {type(p4)}."
+        )
 
     return m, pt, eta, phi
 
@@ -395,11 +386,10 @@ def get_stats(res, bins):
 
     skew = stats.skew(res)
     skew = None if np.isnan(skew) else skew
-    
 
     kurtosis = stats.kurtosis(res)
     kurtosis = None if np.isnan(kurtosis) else kurtosis
-    
+
     # outlier insensitive measures
     med = np.median(res)
     quartile_first = np.quantile(res, 0.25)
@@ -413,38 +403,39 @@ def get_stats(res, bins):
     idr = np.quantile(res, 0.9) - np.quantile(res, 0.1)
 
     return {
-        'median': med,
-        'IQR': quartile_third - quartile_first,
-        'first_quartile': quartile_first,
-        'third_quartile': quartile_third,
-        'IDR': idr,
-        'MAD': mad,
-        'mean': mean,
-        'max': max_val,
-        'min': min_val,
-        'abs_min': abs_min,
-        'std_dev': std_dev,
-        'skew': skew,
-        'kurtosis': kurtosis,
-        'FWHM': find_fwhm(res, bins)
+        "median": med,
+        "IQR": quartile_third - quartile_first,
+        "first_quartile": quartile_first,
+        "third_quartile": quartile_third,
+        "IDR": idr,
+        "MAD": mad,
+        "mean": mean,
+        "max": max_val,
+        "min": min_val,
+        "abs_min": abs_min,
+        "std_dev": std_dev,
+        "skew": skew,
+        "kurtosis": kurtosis,
+        "FWHM": find_fwhm(res, bins),
     }
 
 
 def get_jet_name(jet_type):
-    if jet_type == 'g':
-        jet_name = 'gluon'
-    elif jet_type == 'q':
-        jet_name = 'light quark'
-    elif jet_type == 't':
-        jet_name = 'top quark'
-    elif jet_type == 'w':
-        jet_name = 'W boson'
-    elif jet_type == 'z':
-        jet_name = 'Z boson'
-    elif jet_type.lower() == 'qcd':
-        jet_name = 'QCD'
+    if jet_type == "g":
+        jet_name = "gluon"
+    elif jet_type == "q":
+        jet_name = "light quark"
+    elif jet_type == "t":
+        jet_name = "top quark"
+    elif jet_type == "w":
+        jet_name = "W boson"
+    elif jet_type == "z":
+        jet_name = "Z boson"
+    elif jet_type.lower() == "qcd":
+        jet_name = "QCD"
     else:
         import logging
+
         logging.warning(f"Unknown jet type: {jet_type}.")
         jet_name = jet_type
     return jet_name
@@ -468,62 +459,74 @@ def get_recons_err_ranges(args):
 
 def _get_particle_recons_ranges(args):
 
-    rel_err_cartesian = tuple([
-        np.linspace(
-            args.particle_rel_err_min_cartesian[i],
-            args.particle_rel_err_max_cartesian[i],
-            NUM_BINS
-        )
-        for i in range(3)
-    ])
+    rel_err_cartesian = tuple(
+        [
+            np.linspace(
+                args.particle_rel_err_min_cartesian[i],
+                args.particle_rel_err_max_cartesian[i],
+                NUM_BINS,
+            )
+            for i in range(3)
+        ]
+    )
 
-    rel_err_polar = tuple([
-        np.linspace(
-            args.particle_rel_err_min_polar[i],
-            args.particle_rel_err_max_polar[i],
-            NUM_BINS
-        )
-        for i in range(3)
-    ])
+    rel_err_polar = tuple(
+        [
+            np.linspace(
+                args.particle_rel_err_min_polar[i],
+                args.particle_rel_err_max_polar[i],
+                NUM_BINS,
+            )
+            for i in range(3)
+        ]
+    )
 
-    padded_recons_cartesian = tuple([
-        np.linspace(
-            args.particle_padded_recons_min_cartesian[i],
-            args.particle_padded_recons_max_cartesian[i],
-            NUM_BINS
-        )
-        for i in range(3)
-    ])
+    padded_recons_cartesian = tuple(
+        [
+            np.linspace(
+                args.particle_padded_recons_min_cartesian[i],
+                args.particle_padded_recons_max_cartesian[i],
+                NUM_BINS,
+            )
+            for i in range(3)
+        ]
+    )
 
-    padded_recons_polar = tuple([
-        np.linspace(
-            args.particle_padded_recons_min_polar[i],
-            args.particle_padded_recons_max_polar[i],
-            NUM_BINS
-        )
-        for i in range(3)
-    ])
+    padded_recons_polar = tuple(
+        [
+            np.linspace(
+                args.particle_padded_recons_min_polar[i],
+                args.particle_padded_recons_max_polar[i],
+                NUM_BINS,
+            )
+            for i in range(3)
+        ]
+    )
 
-    return ((rel_err_cartesian, padded_recons_cartesian),
-            (rel_err_polar, padded_recons_polar))
+    return (
+        (rel_err_cartesian, padded_recons_cartesian),
+        (rel_err_polar, padded_recons_polar),
+    )
 
 
 def _get_jet_recons_ranges(args):
-    rel_err_cartesian = tuple([
-        np.linspace(
-            args.jet_rel_err_min_cartesian[i],
-            args.jet_rel_err_max_cartesian[i],
-            NUM_BINS
-        )
-        for i in range(4)
-    ])
-    rel_err_polar = tuple([
-        np.linspace(
-            args.jet_rel_err_min_polar[i],
-            args.jet_rel_err_max_polar[i],
-            NUM_BINS
-        )
-        for i in range(4)
-    ])
+    rel_err_cartesian = tuple(
+        [
+            np.linspace(
+                args.jet_rel_err_min_cartesian[i],
+                args.jet_rel_err_max_cartesian[i],
+                NUM_BINS,
+            )
+            for i in range(4)
+        ]
+    )
+    rel_err_polar = tuple(
+        [
+            np.linspace(
+                args.jet_rel_err_min_polar[i], args.jet_rel_err_max_polar[i], NUM_BINS
+            )
+            for i in range(4)
+        ]
+    )
 
     return (rel_err_cartesian, rel_err_polar)

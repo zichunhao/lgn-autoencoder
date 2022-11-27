@@ -97,7 +97,7 @@ def test(args):
     torch.save(jet_images_same_norm, osp.join(test_path, "jet_images_same_norm.pt"))
     torch.save(jet_images, osp.join(test_path, "jet_images.pt"))
     logging.info("Plots finished.")
-    
+
     # Lorentz group equivariance tests
     if args.equivariance_test:
         logging.info("Running equivariance tests.")
@@ -227,8 +227,6 @@ def test(args):
         logging.error("No signal paths given for anomaly detection.")
 
 
-
-
 def setup_argparse():
     parser = argparse.ArgumentParser(description="LGN Autoencoder on Test Dataset")
 
@@ -342,7 +340,7 @@ def setup_argparse():
         "--include-emd",
         default=False,
         action="store_true",
-        help="Include EMD as a score for anomaly detection."
+        help="Include EMD as a score for anomaly detection.",
     )
     parser.add_argument(
         "--plot-num-rocs",

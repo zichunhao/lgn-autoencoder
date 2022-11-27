@@ -40,12 +40,20 @@ class MaskLevel(nn.Module):
         The data type to which the module is initialized.
     """
 
-    def __init__(self, num_channels, hard_cut_rad, soft_cut_rad, soft_cut_width, cutoff_type,
-                 gaussian_mask=False, eps=1e-16,
-                 device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
-                 dtype=torch.float64):
+    def __init__(
+        self,
+        num_channels,
+        hard_cut_rad,
+        soft_cut_rad,
+        soft_cut_width,
+        cutoff_type,
+        gaussian_mask=False,
+        eps=1e-16,
+        device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+        dtype=torch.float64,
+    ):
         if device is None:
-            device = torch.device('cpu')
+            device = torch.device("cpu")
         super(MaskLevel, self).__init__()
 
         self.gaussian_mask = gaussian_mask
@@ -60,18 +68,27 @@ class MaskLevel(nn.Module):
         self.soft_cut_rad = None
         self.soft_cut_width = None
 
-        if 'hard' in cutoff_type:
+        if "hard" in cutoff_type:
             self.hard_cut_rad = hard_cut_rad
 
-        if ('soft' in cutoff_type) or ('learn' in cutoff_type) or ('learn_rad' in cutoff_type) or ('learn_width' in cutoff_type):
+        if (
+            ("soft" in cutoff_type)
+            or ("learn" in cutoff_type)
+            or ("learn_rad" in cutoff_type)
+            or ("learn_width" in cutoff_type)
+        ):
 
-            self.soft_cut_rad = soft_cut_rad * torch.ones(num_channels, device=device, dtype=dtype).view((1, 1, 1, -1))
-            self.soft_cut_width = soft_cut_width * torch.ones(num_channels, device=device, dtype=dtype).view((1, 1, 1, -1))
+            self.soft_cut_rad = soft_cut_rad * torch.ones(
+                num_channels, device=device, dtype=dtype
+            ).view((1, 1, 1, -1))
+            self.soft_cut_width = soft_cut_width * torch.ones(
+                num_channels, device=device, dtype=dtype
+            ).view((1, 1, 1, -1))
 
-            if ('learn' in cutoff_type) or ('learn_rad' in cutoff_type):
+            if ("learn" in cutoff_type) or ("learn_rad" in cutoff_type):
                 self.soft_cut_rad = nn.Parameter(self.soft_cut_rad)
 
-            if ('learn' in cutoff_type) or ('learn_width' in cutoff_type):
+            if ("learn" in cutoff_type) or ("learn_width" in cutoff_type):
                 self.soft_cut_width = nn.Parameter(self.soft_cut_width)
 
     def forward(self, edge_net, edge_mask, norms, sq_norms):
@@ -96,7 +113,7 @@ class MaskLevel(nn.Module):
 
         # Use hard cut
         if self.hard_cut_rad is not None:
-            edge_mask = (edge_mask * (norms < self.hard_cut_rad))
+            edge_mask = edge_mask * (norms < self.hard_cut_rad)
 
         edge_mask = edge_mask.to(self.dtype).unsqueeze(-1).to(self.dtype)
 
@@ -106,9 +123,13 @@ class MaskLevel(nn.Module):
             cut_rad = torch.max(self.eps, self.soft_cut_rad.abs())
 
             if self.gaussian_mask:  # Use Gaussian mask
-                edge_mask = edge_mask * torch.exp(-(sq_norms.unsqueeze(-1)/cut_rad.pow(2)))
+                edge_mask = edge_mask * torch.exp(
+                    -(sq_norms.unsqueeze(-1) / cut_rad.pow(2))
+                )
             else:  # Use sigmoid mask
-                edge_mask = edge_mask * torch.sigmoid((cut_rad - norms.unsqueeze(-1))/cut_width)
+                edge_mask = edge_mask * torch.sigmoid(
+                    (cut_rad - norms.unsqueeze(-1)) / cut_width
+                )
 
         edge_mask = edge_mask.unsqueeze(-1)
         edge_net = edge_net * edge_mask

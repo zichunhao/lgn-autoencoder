@@ -53,9 +53,24 @@ class LGNCG(CGModule):
         The CG dictionary as a reference for taking CG decompositions.
     """
 
-    def __init__(self, maxdim, max_zf, tau_in, tau_pos, num_cg_levels, num_channels,
-                 level_gain, weight_init, mlp=True, mlp_depth=None, mlp_width=None, activation='leakyrelu',
-                 device=None, dtype=None, cg_dict=None):
+    def __init__(
+        self,
+        maxdim,
+        max_zf,
+        tau_in,
+        tau_pos,
+        num_cg_levels,
+        num_channels,
+        level_gain,
+        weight_init,
+        mlp=True,
+        mlp_depth=None,
+        mlp_width=None,
+        activation="leakyrelu",
+        device=None,
+        dtype=None,
+        cg_dict=None,
+    ):
 
         super().__init__(device=device, dtype=dtype, cg_dict=cg_dict)
         device, dtype, cg_dict = self.device, self.dtype, self.cg_dict
@@ -64,7 +79,7 @@ class LGNCG(CGModule):
         self.mlp = mlp
         tau_node_in = tau_in.tau if type(tau_in) is CGModule else tau_in
 
-        logging.info(f'tau_node_in in LGNCG: {tau_node_in}')
+        logging.info(f"tau_node_in in LGNCG: {tau_node_in}")
 
         node_levels = nn.ModuleList()
         if mlp:
@@ -73,18 +88,33 @@ class LGNCG(CGModule):
         tau_node = tau_node_in  # initial tau
 
         for layer in range(num_cg_levels):
-            node_lvl = LGNNodeLevel(tau_node, tau_pos[layer], maxdim[layer], num_channels[layer+1],
-                                    level_gain[layer], weight_init, device=device, dtype=dtype, cg_dict=cg_dict)
+            node_lvl = LGNNodeLevel(
+                tau_node,
+                tau_pos[layer],
+                maxdim[layer],
+                num_channels[layer + 1],
+                level_gain[layer],
+                weight_init,
+                device=device,
+                dtype=dtype,
+                cg_dict=cg_dict,
+            )
             node_levels.append(node_lvl)
 
             if mlp:
-                mlp_lvl = CGMLP(node_lvl.tau_out, activation=activation, num_hidden=mlp_depth,
-                                layer_width_mul=mlp_width, device=device, dtype=dtype)
+                mlp_lvl = CGMLP(
+                    node_lvl.tau_out,
+                    activation=activation,
+                    num_hidden=mlp_depth,
+                    layer_width_mul=mlp_width,
+                    device=device,
+                    dtype=dtype,
+                )
                 mlp_levels.append(mlp_lvl)
 
             tau_node = node_lvl.tau_out  # update tau
 
-            logging.info(f'layer {layer} tau_node: {tau_node}')
+            logging.info(f"layer {layer} tau_node: {tau_node}")
 
         self.node_levels = node_levels
         if mlp:
@@ -123,16 +153,22 @@ class LGNCG(CGModule):
         """
 
         if len(self.node_levels) != len(rad_funcs):
-            raise ValueError(f'The number of layer ({len(self.node_levels)}) and '
-                             f'the number of available radial functions ({len(rad_funcs)}) '
-                             'are not equal!')
+            raise ValueError(
+                f"The number of layer ({len(self.node_levels)}) and "
+                f"the number of available radial functions ({len(rad_funcs)}) "
+                "are not equal!"
+            )
         # message passing
         # node features in each round of message passing; to be concatenated
         nodes_features = [node_feature]
         if self.mlp:
-            for idx, (node_level, mlp_level) in enumerate(zip(self.node_levels, self.mlp_levels)):
+            for idx, (node_level, mlp_level) in enumerate(
+                zip(self.node_levels, self.mlp_levels)
+            ):
                 edge = rad_funcs[idx] * zonal_functions  # edge features
-                node_feature = node_level(node_feature, edge, node_mask)  # message aggregation
+                node_feature = node_level(
+                    node_feature, edge, node_mask
+                )  # message aggregation
                 node_feature = mlp_level(node_feature)  # the additional MLP layer
                 nodes_features.append(node_feature)
 

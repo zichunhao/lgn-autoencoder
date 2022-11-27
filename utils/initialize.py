@@ -13,10 +13,10 @@ import torch
 
 def initialize_data(
     paths: Union[str, Path, List[str], List[Path]],
-    batch_size: int, 
-    train_fraction: float, 
+    batch_size: int,
+    train_fraction: float,
     num_val: Optional[int] = None,
-    save_path: Optional[Union[str, Path]] = None
+    save_path: Optional[Union[str, Path]] = None,
 ) -> Tuple[DataLoader, DataLoader]:
     if isinstance(paths, (list, tuple)):
         if len(paths) <= 0:
@@ -39,7 +39,9 @@ def initialize_data(
             num_val = num_jets - num_train
 
         num_others = len(jet_data) - num_train - num_val
-        train_set, val_set, _ = torch.utils.data.random_split(jet_data, [num_train, num_val, num_others])
+        train_set, val_set, _ = torch.utils.data.random_split(
+            jet_data, [num_train, num_val, num_others]
+        )
         train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
         valid_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True)
         return train_loader, valid_loader
@@ -55,19 +57,18 @@ def initialize_data(
     if save_path is not None:
         save_path = Path(save_path)
         save_path.mkdir(parents=True, exist_ok=True)
-        torch.save(train_set, save_path / 'train_set.pt')
-        torch.save(val_set, save_path / 'val_set.pt')
+        torch.save(train_set, save_path / "train_set.pt")
+        torch.save(val_set, save_path / "val_set.pt")
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
     valid_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True)
 
-    logging.info('Data loaded')
+    logging.info("Data loaded")
 
     return train_loader, valid_loader
 
 
 def initialize_test_data(
-    paths: Union[str, Path, List[str], List[Path]], 
-    batch_size: int
+    paths: Union[str, Path, List[str], List[Path]], batch_size: int
 ) -> DataLoader:
     if isinstance(paths, (list, tuple)):
         if len(paths) <= 0:
@@ -84,8 +85,7 @@ def initialize_test_data(
 
 
 def initialize_autoencoder(
-    args: Namespace,
-    print_models: bool = True
+    args: Namespace, print_models: bool = True
 ) -> Tuple[LGNEncoder, LGNDecoder]:
     encoder = LGNEncoder(
         num_input_particles=args.num_jet_particles,
@@ -94,50 +94,54 @@ def initialize_autoencoder(
         map_to_latent=args.map_to_latent,
         tau_latent_scalars=args.tau_latent_scalars,
         tau_latent_vectors=args.tau_latent_vectors,
-        maxdim=args.maxdim, 
+        maxdim=args.maxdim,
         max_zf=[1],
         num_channels=args.encoder_num_channels,
-        weight_init=args.weight_init, 
+        weight_init=args.weight_init,
         level_gain=args.level_gain,
-        num_basis_fn=args.num_basis_fn, 
-        activation=args.activation, 
+        num_basis_fn=args.num_basis_fn,
+        activation=args.activation,
         scale=args.scale,
         jet_features=args.jet_features,
-        mlp=args.mlp, 
-        mlp_depth=args.mlp_depth, 
+        mlp=args.mlp,
+        mlp_depth=args.mlp_depth,
         mlp_width=args.mlp_width,
-        device=args.device, 
-        dtype=args.dtype
+        device=args.device,
+        dtype=args.dtype,
     )
-    logging.info(f"LGNEncoder initialized with {encoder.num_learnable_parameters} learnable parameters.")
-    
+    logging.info(
+        f"LGNEncoder initialized with {encoder.num_learnable_parameters} learnable parameters."
+    )
+
     # multiplicity gets larger when concatenation is used
-    mult = len(args.map_to_latent.split('&')) if '&' in args.map_to_latent else 1    
+    mult = len(args.map_to_latent.split("&")) if "&" in args.map_to_latent else 1
     tau_latent_scalars = args.tau_latent_scalars * mult
     tau_latent_vectors = args.tau_latent_vectors * mult
-    
+
     decoder = LGNDecoder(
         tau_latent_scalars=tau_latent_scalars,
         tau_latent_vectors=tau_latent_vectors,
         num_output_particles=args.num_jet_particles,
         tau_output_scalars=args.tau_jet_scalars,
         tau_output_vectors=args.tau_jet_vectors,
-        maxdim=args.maxdim, 
+        maxdim=args.maxdim,
         max_zf=[1],
         num_channels=args.decoder_num_channels,
-        weight_init=args.weight_init, 
+        weight_init=args.weight_init,
         level_gain=args.level_gain,
-        num_basis_fn=args.num_basis_fn, 
+        num_basis_fn=args.num_basis_fn,
         activation=args.activation,
-        mlp=args.mlp, 
-        mlp_depth=args.mlp_depth, 
+        mlp=args.mlp,
+        mlp_depth=args.mlp_depth,
         mlp_width=args.mlp_width,
-        cg_dict=encoder.cg_dict, 
-        device=args.device, 
-        dtype=args.dtype
+        cg_dict=encoder.cg_dict,
+        device=args.device,
+        dtype=args.dtype,
     )
-    logging.info(f"LGNDecoder initialized with {encoder.num_learnable_parameters} learnable parameters.")
-    
+    logging.info(
+        f"LGNDecoder initialized with {encoder.num_learnable_parameters} learnable parameters."
+    )
+
     if print_models:
         logging.info(f"{encoder=}")
         logging.info(f"{decoder=}")
@@ -146,16 +150,18 @@ def initialize_autoencoder(
 
 
 def initialize_optimizers(
-    args: Namespace, 
-    encoder: LGNEncoder, 
-    decoder: LGNDecoder
+    args: Namespace, encoder: LGNEncoder, decoder: LGNDecoder
 ) -> Tuple[Optimizer, Optimizer]:
-    if args.optimizer.lower() == 'adam':
+    if args.optimizer.lower() == "adam":
         optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.lr)
         optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.lr)
-    elif args.optimizer.lower() == 'rmsprop':
-        optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.lr, eps=get_eps(args.dtype), momentum=0.9)
-        optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.lr, eps=get_eps(args.dtype), momentum=0.9)
+    elif args.optimizer.lower() == "rmsprop":
+        optimizer_encoder = torch.optim.RMSprop(
+            encoder.parameters(), lr=args.lr, eps=get_eps(args.dtype), momentum=0.9
+        )
+        optimizer_decoder = torch.optim.RMSprop(
+            decoder.parameters(), lr=args.lr, eps=get_eps(args.dtype), momentum=0.9
+        )
     else:
         raise NotImplementedError(
             f"""
