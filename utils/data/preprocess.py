@@ -13,9 +13,13 @@ def prepare(
     normalize: bool = False
 ):
     logging.info(f"Downloading data ({jet_type=}) from JetNet.")
+    if args.jetnet_dir is not None:
+        jetnet_dir = args.jetnet_dir
+    else:
+        jetnet_dir = save_dir / "hdf5"
     data = jetnet.datasets.JetNet(
         jet_type=jet_type,
-        data_dir=save_dir / "hdf5"
+        data_dir=jetnet_dir
     )
     logging.info(f"Preparing data ({jet_type=}).")
     
@@ -107,6 +111,11 @@ if __name__ == "__main__":
         '-s', '--save-dir',
         type=str, required=True,
         help='Directory to save preprocessed data.'
+    )
+    parser.add_argument(
+        '--jetnet-dir',
+        type=str, default=None,
+        help='Directory to save jetnet data if different from save-dir.'
     )
     parser.add_argument(
         '-t', '--test-portion',
