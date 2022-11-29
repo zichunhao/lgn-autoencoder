@@ -56,6 +56,11 @@ def prepare(
     
     p4 = torch.from_numpy(np.stack([p0, px, py, pz], axis=-1))
     p4 = p4 * mask.unsqueeze(-1)
+    
+    if args.cm:
+        jet = p4.sum(dim=-2).unsqueeze(-2)
+        p4 = p4 - jet  # CM frame
+    
     if not normalize:
         p4 = p4 / 1000  # GeV -> TeV
     else:
@@ -112,6 +117,11 @@ if __name__ == "__main__":
         '--normalize',
         action='store_true', default=False,
         help="Normalize the data by the global maximum (of the absolute value)."
+    )
+    parser.add_argument(
+        '--cm',
+        action='store_true', default=False,
+        help="Get features in the center of mass frame."
     )
     args = parser.parse_args()
     logging.info(f"{args=}")
