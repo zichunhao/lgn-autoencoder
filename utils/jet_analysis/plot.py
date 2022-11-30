@@ -1,4 +1,5 @@
 from argparse import Namespace
+import logging
 from typing import Optional, Tuple
 
 import torch
@@ -234,27 +235,30 @@ def plot_p(
 
     particle_recons_ranges, jet_recons_ranges = get_recons_err_ranges(args)
 
-    plot_particle_recon_err(
-        p_target=p4_target,
-        p_recons=p4_recons,
-        abs_coord=args.abs_coord,
-        custom_particle_recons_ranges=args.custom_particle_recons_ranges,
-        find_match=("mse" not in args.loss_choice.lower()),
-        ranges=particle_recons_ranges,
-        save_dir=save_dir,
-        epoch=epoch,
-    )
+    try:
+        plot_particle_recon_err(
+            p_target=p4_target,
+            p_recons=p4_recons,
+            abs_coord=args.abs_coord,
+            custom_particle_recons_ranges=args.custom_particle_recons_ranges,
+            find_match=("mse" not in args.loss_choice.lower()),
+            ranges=particle_recons_ranges,
+            save_dir=save_dir,
+            epoch=epoch,
+        )
 
-    plot_jet_recon_err(
-        jet_target_cartesian=jet_target_cartesian,
-        jet_recons_cartesian=jet_recons_cartesian,
-        abs_coord=args.abs_coord,
-        jet_target_polar=jet_target_polar,
-        jet_recons_polar=jet_recons_polar,
-        custom_jet_recons_ranges=args.custom_jet_recons_ranges,
-        save_dir=save_dir,
-        ranges=jet_recons_ranges,
-        epoch=epoch,
-    )
+        plot_jet_recon_err(
+            jet_target_cartesian=jet_target_cartesian,
+            jet_recons_cartesian=jet_recons_cartesian,
+            abs_coord=args.abs_coord,
+            jet_target_polar=jet_target_polar,
+            jet_recons_polar=jet_recons_polar,
+            custom_jet_recons_ranges=args.custom_jet_recons_ranges,
+            save_dir=save_dir,
+            ranges=jet_recons_ranges,
+            epoch=epoch,
+        )
+    except IndexError as e:
+        logging.error(f"IndexError: {e}")
 
     return tuple(jet_images_list)
