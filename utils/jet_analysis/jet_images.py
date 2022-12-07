@@ -454,13 +454,17 @@ def normalize(jet: np.ndarray, jet_vecs: ak.Array) -> np.ndarray:
     :rtype: np.ndarray
     """
     # pt
-    jet[:, :, 0] /= ak.to_numpy(jet_vecs.pt)
-    # eta
-    jet[:, :, 1] -= ak.to_numpy(jet_vecs.eta)
-    # phi
-    jet[:, :, 2] -= ak.to_numpy(jet_vecs.phi)
-    # modulus so that phi is in [-pi, pi)
-    jet[:, :, 2] = (jet[:, :, 2] + np.pi) % (2 * np.pi) - np.pi
+    Pt = ak.to_numpy(jet_vecs.pt)
+    if not np.isclose(Pt, 0).all():
+        jet[:, :, 0] /= ak.to_numpy(jet_vecs.pt)
+        # eta
+        jet[:, :, 1] -= ak.to_numpy(jet_vecs.eta)
+        # phi
+        jet[:, :, 2] -= ak.to_numpy(jet_vecs.phi)
+        # modulus so that phi is in [-pi, pi)
+        jet[:, :, 2] = (jet[:, :, 2] + np.pi) % (2 * np.pi) - np.pi
+    else:  # center of mass frame -> no need to normalize
+        pass
     return jet
 
 
