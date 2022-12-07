@@ -62,8 +62,8 @@ def prepare(
     p4 = p4 * mask.unsqueeze(-1)
     
     if args.cm:
-        jet = p4.sum(dim=-2).unsqueeze(-2)
-        p4 = p4 - jet  # CM frame
+        jet = p4.sum(-2, keepdim=True)
+        p4 = p4 - jet / jet.shape[-2]  # CM frame
     
     if not normalize:
         p4 = p4 / 1000  # GeV -> TeV
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         description='Prepare dataset for LGN Autoencoder'
     )
     parser.add_argument(
-        '-j', '--jet_types',
+        '-j', '--jet-types',
         nargs='+', type=str, default=['g', 'q', 't', 'w', 'z'],
         help='List of jet types to download and preprocess.'
     )
