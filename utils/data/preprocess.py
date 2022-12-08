@@ -63,7 +63,7 @@ def prepare(
     
     if args.cm:
         jet = p4.sum(-2, keepdim=True)
-        p4 = p4 - jet / jet.shape[-2]  # CM frame
+        p4 = p4 - jet / p4.shape[-2]  # CM frame
     
     if not normalize:
         p4 = p4 / 1000  # GeV -> TeV
