@@ -78,7 +78,7 @@ def parse_model_settings(parser: argparse.ArgumentParser) -> argparse.ArgumentPa
         metavar="",
         help="The method to map to latent space. "
         "Choice: ('sum', 'mix', 'mean', 'min', 'max') "
-        "or any combinations with '+' (for addition) or '&' (for concatenation)."
+        "or any combinations with '+' (for addition) or '&' (for concatenation).",
     )
     parser.add_argument(
         "--tau-latent-scalars",
