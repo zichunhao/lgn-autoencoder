@@ -40,13 +40,32 @@ def apply_lorentz_transformation(mat: torch.Tensor, p4: torch.Tensor) -> torch.T
     mat = mat.to(p4.device, p4.dtype)
 
     # apply transformation
-    if len(p4.shape) == 3:  # (batch_size, num_particles, 4)
-        return torch.einsum("ij,bnj->bni", mat, p4)
-    if len(p4.shape) == 2:  # (num_particles, 4)
-        return torch.einsum("ij,nj->ni", mat, p4)
+    if len(p4.shape) == 3:  # (b, n, 4)
+        if len(mat.shape) == 2:  # (4, 4)
+            return torch.einsum("...ij,...nj->ni", mat, p4)
+        elif len(mat.shape) == 3:  # (b, 4, 4)
+            return torch.einsum("bij,bnj->bni", mat, p4)
+        elif len(mat.shape) == 4:  # (b, n, 4, 4)
+            return torch.einsum("bnij,bnj->bni", mat, p4)
+        else:
+            raise RuntimeError(
+                f"Invalid dimensions of mat: {mat.shape=}."
+                "Must be (b, n, 4, 4), (n, 4, 4) or (4, 4)."
+            )
+    if len(p4.shape) == 2:  # (n, 4)
+        if len(mat.shape) == 2:  # (4, 4)
+            return torch.einsum("ij,nj->ni", mat, p4)
+        elif len(mat.shape) == 3:  # (n, 4, 4)
+            return torch.einsum("nij,nj->ni", mat, p4)
+        else:
+            raise RuntimeError(
+                f"Invalid dimensions of mat: {mat.shape=}."
+                "Must be (n, 4, 4) or (4, 4)."
+            )
+
     if len(p4.shape) == 1:  # a single 4-vector
         return mat @ p4
     # invalid dimensions
     raise ValueError(
-        f"p4 must have the dimensions (batch_size, num_particles, 4), (num_particles, 4), or (4, ). Found: {p4.shape=}"
+        f"p4 must have the dimensions (n, b, 4), (n, 4), or (4, ). Found: {p4.shape=}"
     )
