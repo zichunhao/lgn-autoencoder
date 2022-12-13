@@ -1,4 +1,7 @@
 # Lorentz Group Equivariant Jet Autoencoder
+
+[![DOI](https://zenodo.org/badge/361547423.svg)](https://zenodo.org/badge/latestdoi/361547423)
+
 ## Descriptions
 This jet data generative model exploits the symmetry of the [Lorentz Group](https://en.wikipedia.org/wiki/Lorentz_group), a [Lie group](https://en.wikipedia.org/wiki/Lie_group) that represents a fundamental symmetry of spacetime and describes the dynamics of relativistic objects such as elementary particles in a particle physics experiment. The model is built using the architecture of the [Lorentz Group Network](https://github.com/fizisist/LorentzGroupNetwork) introduced by Bogatskiy et al. in [arXiv:2006.04780](https://arxiv.org/abs/2006.04780) (see the `README` file in each directory for more details).
 
