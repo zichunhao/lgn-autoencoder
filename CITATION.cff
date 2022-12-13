@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Hao
+    given-names: Zichun
+    orcid: https://orcid.org/0000-0002-5624-4907
+  - family-names: Kansal
+    given-names: Raghav
+    orcid: https://orcid.org/0000-0003-2445-1060
+  - family-names: Duarte
+    given-names: Javier
+    orcid: https://orcid.org/0000-0002-5076-7096
+  - family-names: Chernyavskaya
+    given-names: Nadezda
+    orcid: https://orcid.org/0000-0002-2264-2229
+title: "Lorentz Group Equivariance Autoencoders"
+version: 1.0.0
+doi: 10.5281/zenodo.7434799
+date-released: 2022-12-13
