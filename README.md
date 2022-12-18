@@ -1,4 +1,4 @@
-# Lorentz Group Equivariant Jet Autoencoder
+# Lorentz Group Equivariant Autoencoders
 
 [![DOI](https://zenodo.org/badge/361547423.svg)](https://zenodo.org/badge/latestdoi/361547423)
 
