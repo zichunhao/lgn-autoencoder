@@ -234,6 +234,9 @@ def get_jet_rel(jets: Union[np.ndarray, torch.Tensor]) -> np.ndarray:
     :return: jet momenta in relative coordinates with shape (num_jets, 3, num_jet_particles)
     :rtype: np.ndarray
     """
+    if jets.shape[-1] == 4:
+        # remove energy column
+        jets = jets[..., 1:]
     import awkward as ak
     from coffea.nanoevents.methods import vector
 
