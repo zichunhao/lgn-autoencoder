@@ -23,10 +23,10 @@ def plot_jet_image(
     num_jet_images: int,
     jet_image_npix: int,
     abs_coord: bool,
-    jet_type: bool = "",
+    jet_type: Optional[str] = "",
     same_norm: bool = True,
-    maxR: bool = 0.5,
-    vmin: bool = 1e-8,
+    maxR: float = 0.5,
+    vmin: float = 1e-8,
     show: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Plot average jet image and one-to-one jet images
@@ -270,7 +270,7 @@ def get_average_jet_image(
     maxR: float = 0.5,
     npix: int = 64,
     abs_coord: bool = True,
-):
+) -> np.ndarray:
     """Get the average jet image from a collection of jets.
 
     :param jets: collection of jets in polar coordinates.
@@ -281,8 +281,8 @@ def get_average_jet_image(
     :type npix: int, optional
     :param abs_coord: _description_, defaults to True
     :type abs_coord: bool, optional
-    :return: _description_
-    :rtype: _type_
+    :return: average jet image with shape (npix, npix)
+    :rtype: np.ndarray
     """
     if abs_coord:
         jets = get_jet_rel(jets)
