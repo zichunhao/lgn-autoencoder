@@ -140,6 +140,7 @@ def polarrel_from_p4_polar_massless(
 
     # jet (PT, Eta, Phi)
     p4 = p4_cartesian_from_p4_polar_massless(p4_polar)
+    jet_cartesian = __sum(p4, axis=-2)
     # expand dimension to (..., 1, 4) to match p4 shape
     if isinstance(jet_cartesian, torch.Tensor):
         jet_cartesian = jet_cartesian.unsqueeze(-2)
@@ -340,6 +341,19 @@ def __sqrt(x: Union[np.ndarray, torch.Tensor]) -> Union[np.ndarray, torch.Tensor
         raise TypeError(
             f"x must be either a numpy array or a torch tensor, not {type(x)}"
         )
+        
+
+def __sum(
+    x: Union[np.ndarray, torch.Tensor], axis: int, keepdims: bool = False
+) -> Union[np.ndarray, torch.Tensor]:
+    """Sum function that works with np.ndarray and torch.Tensor."""
+    if isinstance(x, torch.Tensor):
+        return x.sum(axis, keepdim=keepdims)
+    elif isinstance(x, np.ndarray):
+        return np.sum(x, axis=axis, keepdims=keepdims)
+    else:
+        raise TypeError(
+            f"x must be either a numpy array or a torch tensor, not {type(x)}")
 
 
 def __get_default_eps(x: Union[np.ndarray, torch.Tensor]) -> float:
