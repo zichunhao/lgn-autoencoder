@@ -151,7 +151,6 @@ def plot_particle_recon_err(
         err_dict_coordinate = {"rel_err": [], "pad_recons": []}
         ranges_real, ranges_padded = bin_tuple
         fig, axs = plt.subplots(2, 3, figsize=FIGSIZE, sharey=False)
-
         for i, (ax, bins, label) in enumerate(zip(axs[0], ranges_real, labels)):
             res = rel_err[..., i].cpu().detach().numpy()
             stats = get_stats(res, bins)
@@ -186,6 +185,9 @@ def plot_particle_recon_err(
 
         for i, (ax, bins, label) in enumerate(zip(axs[1], ranges_padded, labels)):
             p = p_padded_recons[..., i]
+            if len(p) == 0:
+                # no padded particles, skip
+                continue
             if isinstance(p, torch.Tensor):
                 p = p.cpu().detach().numpy()
 
