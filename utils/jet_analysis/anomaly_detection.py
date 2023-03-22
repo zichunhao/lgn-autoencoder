@@ -141,6 +141,8 @@ def plot_roc_curves(
     ax.set_xlabel("True Positive Rate")
     ax.set_ylabel("False Positive Rate")
     ax.set_yscale("log")
+    ax.set_xlim(0, 1)
+    # ax.set_ylim(1e-3, 1)
 
     for kind, auc in aucs:
         fpr, tpr, thresholds = roc_curves[kind]
