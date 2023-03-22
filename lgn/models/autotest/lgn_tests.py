@@ -23,7 +23,6 @@ SEPARATOR = "=" * 50
 def _gen_rot(
     angles, maxdim, device=torch.device("cpu"), dtype=torch.float64, cg_dict=None
 ):
-
     # save the dictionary of Lorentz-D matrices
     D = {
         (k, n): rot.LorentzD(
@@ -90,7 +89,6 @@ def covariance_test(
     cg_dict=None,
     unit="GeV",
 ):
-
     if cg_dict is None:
         cg_dict = encoder.cg_dict
 

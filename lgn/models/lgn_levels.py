@@ -49,7 +49,6 @@ class LGNNodeLevel(nn.Module):
         dtype=torch.float64,
         cg_dict=None,
     ):
-
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -158,7 +157,6 @@ class CGMLP(nn.Module):
         device=None,
         dtype=torch.float64,
     ):
-
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -214,7 +212,7 @@ class CGMLP(nn.Module):
         x = x.permute(1, 2, 3, 0).contiguous().view(s[1:3] + (self.num_scalars,))
 
         # Loop over a linear layer followed by a non-linear activation.
-        for (lin, activation) in zip(self.linear, self.activations):
+        for lin, activation in zip(self.linear, self.activations):
             x = activation(lin(x))
         # After last non-linearity, apply a final linear mixing layer
         x = self.linear[-1](x)

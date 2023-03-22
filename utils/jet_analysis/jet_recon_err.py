@@ -77,7 +77,6 @@ def plot_jet_recon_err(
         stats_coordinate_list = []
         fig, axs = plt.subplots(1, 4, figsize=FIGSIZE, sharey=False)
         for ax, rel_err, bins, label in zip(axs, rel_err_coordinate, bin_tuple, labels):
-
             stats = get_stats(rel_err, bins)
             stats_coordinate_list.append(stats)
 

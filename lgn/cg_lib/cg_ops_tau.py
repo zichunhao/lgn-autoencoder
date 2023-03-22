@@ -30,8 +30,8 @@ def cg_product_tau(tau1, tau2, maxdim=inf):
     tau2 = GTau(tau2)
     tau = {}
 
-    for (k1, n1) in tau1.keys():
-        for (k2, n2) in tau2.keys():
+    for k1, n1 in tau1.keys():
+        for k2, n2 in tau2.keys():
             if max(k1, n1, k2, n2) >= maxdim:
                 continue
             kmin, kmax = abs(k1 - k2), min(k1 + k2, maxdim - 1)

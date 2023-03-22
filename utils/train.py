@@ -257,7 +257,6 @@ def train(
     for_test: bool = False,
     device: torch.device = None,
 ):
-
     if is_train:
         if (optimizer_encoder is None) or (optimizer_decoder is None):
             raise ValueError("Please specify the optimizers.")
@@ -279,7 +278,6 @@ def train(
         epoch_total_loss = 0
 
     for i, batch in enumerate(tqdm(loader)):
-
         if args.normalize:
             # normalize the features based on the max entry of each jet
             batch["p4"], norm_factor = normalize_p4(batch["p4"], args.normalize_method)

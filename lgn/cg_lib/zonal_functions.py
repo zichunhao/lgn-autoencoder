@@ -45,7 +45,6 @@ class ZonalFunctionsRel(CGModule):
         dtype=torch.float64,
         device=torch.device("cpu"),
     ):
-
         super(ZonalFunctionsRel, self).__init__(
             cg_dict=cg_dict, maxdim=maxdim, device=device, dtype=dtype
         )

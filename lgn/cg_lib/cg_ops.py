@@ -60,7 +60,6 @@ class CGProduct(CGModule):
         dtype=None,
         device=None,
     ):
-
         self.aggregate = aggregate
 
         if (maxdim == inf) and cg_dict:

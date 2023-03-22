@@ -341,7 +341,7 @@ def __sqrt(x: Union[np.ndarray, torch.Tensor]) -> Union[np.ndarray, torch.Tensor
         raise TypeError(
             f"x must be either a numpy array or a torch tensor, not {type(x)}"
         )
-        
+
 
 def __sum(
     x: Union[np.ndarray, torch.Tensor], axis: int, keepdims: bool = False
@@ -353,7 +353,8 @@ def __sum(
         return np.sum(x, axis=axis, keepdims=keepdims)
     else:
         raise TypeError(
-            f"x must be either a numpy array or a torch tensor, not {type(x)}")
+            f"x must be either a numpy array or a torch tensor, not {type(x)}"
+        )
 
 
 def __get_default_eps(x: Union[np.ndarray, torch.Tensor]) -> float:

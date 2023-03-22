@@ -46,7 +46,6 @@ class BasicMLP(nn.Module):
         device=None,
         dtype=torch.float64,
     ):
-
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -90,7 +89,7 @@ class BasicMLP(nn.Module):
             Updated features
         """
 
-        for (lin, activation) in zip(self.linear, self.activations):
+        for lin, activation in zip(self.linear, self.activations):
             x = lin(x)
             x = activation(x)
 

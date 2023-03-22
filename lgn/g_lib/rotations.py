@@ -126,7 +126,6 @@ def LorentzD(
     device=torch.device("cpu"),
     cg_dict=None,
 ):
-
     (k, n) = key
     if cg_dict is None:
         cg_dict = CGDict(

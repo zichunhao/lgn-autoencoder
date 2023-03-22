@@ -94,7 +94,6 @@ class LGNDecoder(CGModule):
         dtype: torch.dtype = None,
         cg_dict: CGDict = None,
     ):
-
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

@@ -77,7 +77,6 @@ class MaskLevel(nn.Module):
             or ("learn_rad" in cutoff_type)
             or ("learn_width" in cutoff_type)
         ):
-
             self.soft_cut_rad = soft_cut_rad * torch.ones(
                 num_channels, device=device, dtype=dtype
             ).view((1, 1, 1, -1))

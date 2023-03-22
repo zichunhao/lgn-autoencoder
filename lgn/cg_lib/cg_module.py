@@ -117,7 +117,6 @@ class CGModule(nn.Module):
 
         # If cg_dict is not defined, but
         elif cg_dict is None and maxdim is not None:
-
             self.cg_dict = CGDict(maxdim=maxdim, device=self.device, dtype=self.dtype)
             self._maxdim = maxdim
 

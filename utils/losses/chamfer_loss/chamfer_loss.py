@@ -14,7 +14,6 @@ class ChamferLoss(nn.Module):
         )
 
     def forward(self, x: torch.Tensor, y: torch.Tensor, jet_features: bool = False):
-
         dist = cdist(x, y, device=self.device)
 
         # Computer chamfer loss

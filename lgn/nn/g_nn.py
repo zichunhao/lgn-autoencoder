@@ -238,7 +238,6 @@ class CatMixReps(CGModule):
         device=None,
         dtype=torch.float64,
     ):
-
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

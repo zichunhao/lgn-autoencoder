@@ -71,7 +71,6 @@ class LGNCG(CGModule):
         dtype=None,
         cg_dict=None,
     ):
-
         super().__init__(device=device, dtype=dtype, cg_dict=cg_dict)
         device, dtype, cg_dict = self.device, self.dtype, self.cg_dict
 

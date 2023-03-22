@@ -47,7 +47,6 @@ class CGDict:
     """
 
     def __init__(self, maxdim=None, transpose=True, dtype=torch.float64, device=None):
-
         self.dtype = dtype
         if device is None:
             self.device = torch.device("cpu")
@@ -240,7 +239,6 @@ def memoize(func):  # create a cached version of any function for fast repeated 
 
 
 def clebschSU2mat(j1, j2, j3):
-
     mat = np.zeros((int(2 * j1 + 1), int(2 * j2 + 1), int(2 * j3 + 1)))
     if int(2 * j3) in range(int(2 * abs(j1 - j2)), int(2 * (j1 + j2)) + 1, 2):
         for m1 in (x / 2 for x in range(-int(2 * j1), int(2 * j1) + 1, 2)):
