@@ -1,6 +1,7 @@
 from torch.utils.data import Dataset
 import torch
 import logging
+from typing import Dict, Union
 
 
 class JetDataset(Dataset):
@@ -8,7 +9,7 @@ class JetDataset(Dataset):
     PyTorch dataset.
     """
 
-    def __init__(self, data, num_pts=-1, shuffle=True):
+    def __init__(self, data: Dict[str, torch.Tensor], num_pts: Union[int, float] = -1, shuffle: bool = True):
 
         self.data = data
         self.shuffle = shuffle
@@ -18,20 +19,27 @@ class JetDataset(Dataset):
             except KeyError:
                 data['Nobj'] = data['masks'].sum(dim=-1)
 
+        total_pts = len(data['Nobj'])
         if num_pts < 0:
-            self.num_pts = len(data['Nobj'])
+            self.num_pts = total_pts
+        elif num_pts <= 1:
+            # num_pts is a fraction of the total number of data points
+            self.num_pts = int(num_pts * total_pts)
         else:
-            if num_pts > len(data['Nobj']):
+            # num_pts is an absolute number of data points
+            if num_pts > total_pts:
                 logging.warn(f'Desired number of points ({num_pts}) is greater than '
                              f'the number of data points ({len(data)}) available in the dataset!')
-                self.num_pts = len(data['Nobj'])
+                self.num_pts = total_pts
             else:
                 self.num_pts = num_pts
+        
+        logging.info(f'Using {self.num_pts} data points out of {len(data["Nobj"])} available.')
 
         if shuffle:
-            self.perm = torch.randperm(len(data['Nobj']))[:self.num_pts]
+            self.perm = torch.randperm(total_pts)[:self.num_pts]
         else:
-            self.perm = None
+            self.perm = torch.arange(self.num_pts)
 
     def __len__(self):
         return self.num_pts

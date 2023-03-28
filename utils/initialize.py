@@ -17,20 +17,21 @@ def initialize_data(
     train_fraction: float,
     num_val: Optional[int] = None,
     save_path: Optional[Union[str, Path]] = None,
+    train_set_portion: Union[int, float] = -1,
 ) -> Tuple[DataLoader, DataLoader]:
     if isinstance(paths, (list, tuple)):
         if len(paths) <= 0:
             raise ValueError(f"{paths=} is empty.")
         logging.info(f"loading {paths[0]}")
         data = torch.load(paths[0])
-        jet_data = JetDataset(data, shuffle=False)
+        jet_data = JetDataset(data, shuffle=False, num_pts=train_set_portion)
         for path in paths[1:]:
             logging.info(f"loading {path}")
             data = torch.load(path)
             jet_data.add(data)
     else:
         data = torch.load(paths)
-        jet_data = JetDataset(data, shuffle=False)
+        jet_data = JetDataset(data, shuffle=False, num_pts=train_set_portion)
 
     if train_fraction > 1:
         num_train = int(train_fraction)
@@ -47,7 +48,7 @@ def initialize_data(
         return train_loader, valid_loader
     else:
         if train_fraction < 0:
-            train_fraction = 0.8
+            train_fraction = 0.8  # default
         num_jets = len(jet_data)
         num_train = int(num_jets * train_fraction)
         num_val = num_jets - num_train

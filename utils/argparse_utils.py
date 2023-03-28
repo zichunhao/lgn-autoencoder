@@ -412,6 +412,16 @@ def parse_data_settings(
         help="The paths of the training data.",
     )
     parser.add_argument(
+        "--train-set-portion",
+        type=float,
+        default=-1,
+        metavar="",
+        help="The portion of the training-validation set to be used as training set. "
+        "Default: -1, which means using all the data as training set."
+        "If in the range (0, 1], it will be used as the portion of the training set. "
+        "If in the range (1, infinity), it will be used as the number of events in the training set. ",
+    )
+    parser.add_argument(
         "--test-data-paths",
         nargs="+",
         type=str,

@@ -63,6 +63,7 @@ def main(args):
         save_path=Path(outpath) / "datasets"
         if "emd" in args.loss_choice.lower()
         else None,
+        train_set_portion=args.train_set_portion,
     )
     test_loader = initialize_test_data(
         paths=args.test_data_paths, batch_size=args.test_batch_size
