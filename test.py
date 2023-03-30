@@ -36,6 +36,13 @@ def test(args):
     )
     encoder.load_state_dict(torch.load(encoder_path, map_location=args.device))
     decoder.load_state_dict(torch.load(decoder_path, map_location=args.device))
+    path_test_info = Path(args.model_path) / "test_info.pt"
+    if path_test_info.exists():
+        test_info = torch.load(path_test_info)
+        test_info.append(args.load_epoch)
+    else:
+        test_info = [args.load_epoch]
+    torch.save(test_info, path_test_info)
 
     if args.plot_only:
         test_path = osp.join(
