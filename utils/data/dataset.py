@@ -20,6 +20,7 @@ class JetDataset(Dataset):
                 data['Nobj'] = data['masks'].sum(dim=-1)
 
         total_pts = len(data['Nobj'])
+        self.num_pts_param = num_pts
         if num_pts < 0:
             self.num_pts = total_pts
         elif num_pts <= 1:
@@ -54,4 +55,4 @@ class JetDataset(Dataset):
             key: torch.cat([self.data[key], data[key]], dim=0) 
             for key in self.data.keys()
         }
-        self.__init__(self.data, num_pts=self.num_pts, shuffle=self.shuffle)
+        self.__init__(data, num_pts=self.num_pts_param, shuffle=self.shuffle)
