@@ -26,6 +26,11 @@ import argparse
 
 
 def main(args):
+    
+    if args.seed is not None and args.seed >= 0:
+        logging.info(f"Setting random seed to {args.seed}")
+        torch.manual_seed(args.seed)
+    
     compression_rate = get_compression_rate(
         ls=args.tau_latent_scalars,
         lv=args.tau_latent_vectors,
@@ -220,6 +225,10 @@ def main(args):
 
 def setup_argparse():
     parser = argparse.ArgumentParser(description="LGN Autoencoder Options")
+    
+    parser.add_argument(
+        '--seed', type=int, default=-1, help='Random seed for reproducibility. Default: -1 (no seed)'
+    )
 
     # Data
     parse_data_settings(parser, training=True)
