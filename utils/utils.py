@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple, Union
 import torch
 import matplotlib.pyplot as plt
 import glob
+import numpy as np
 
 
 def create_model_folder(args: Namespace) -> str:
@@ -100,6 +101,8 @@ def plot_eval_results(
             valid = valid.detach().cpu().numpy()
         plt.plot(x, train, label="Train", alpha=0.8)
         plt.plot(x, valid, label="Valid", alpha=0.8)
+        if (np.array(train) > 0).all() and (np.array(valid) > 0).all():
+            plt.yscale("log")
         plt.legend()
     # only one type of data (e.g. dt)
     else:
