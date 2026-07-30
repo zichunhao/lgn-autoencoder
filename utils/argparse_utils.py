@@ -85,14 +85,28 @@ def parse_model_settings(parser: argparse.ArgumentParser) -> argparse.ArgumentPa
         type=int,
         default=1,
         metavar="",
-        help="Multiplicity of scalars per particle in the latent space.",
+        help="Multiplicity of scalars (0,0) per particle in the latent space. "
+        "Used only when --tau-latent-irreps is not given.",
     )
     parser.add_argument(
         "--tau-latent-vectors",
         type=int,
         default=1,
         metavar="",
-        help="Multiplicity of 4-vectors per particle the latent space.",
+        help="Multiplicity of 4-vectors (1,1) per particle in the latent space. "
+        "Used only when --tau-latent-irreps is not given.",
+    )
+    parser.add_argument(
+        "--tau-latent-irreps",
+        nargs="+",
+        type=str,
+        default=None,
+        metavar="",
+        help="General latent-space irreps as 'k,n:mult' tokens, e.g. "
+        "--tau-latent-irreps 0,0:1 1,1:8 2,2:2. Overrides --tau-latent-scalars/"
+        "--tau-latent-vectors. Every irrep must be produced by the last CG layer "
+        "(only (0,0) and (1,1) exist for --maxdim 2; higher irreps such as (2,2), "
+        "(0,2), (2,0) require --maxdim 3 or more). The 4-vector (1,1) is required.",
     )
     parser.add_argument(
         "--jet-features",

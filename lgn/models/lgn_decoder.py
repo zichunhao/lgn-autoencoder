@@ -10,7 +10,7 @@ from lgn.g_lib import GTau, GVec
 from lgn.models.lgn_cg import LGNCG
 from lgn.nn import RadialFilters, MixReps
 
-from lgn.models.utils import adapt_var_list
+from lgn.models.utils import adapt_var_list, resolve_tau_latent
 
 
 class LGNDecoder(CGModule):
@@ -19,10 +19,19 @@ class LGNDecoder(CGModule):
 
     Attributes
     ----------
-    tau_latent_scalar : int
-        The multiplicity of scalars per particle in the latent space.
-    tau_latent_vector : int
-        The multiplicity of vectors per particle in the latent space.
+    tau_latent : dict of {(k, n): int}, list of str, or None
+        Multiplicity of each Lorentz irrep (k, n) in the latent space, matching the
+        encoder's latent, e.g. ``{(0, 0): 1, (1, 1): 8, (2, 2): 2}``. A list of
+        ``"k,n:mult"`` tokens is also accepted. Irreps other than the scalar (0, 0) and
+        4-vector (1, 1) are injected as extra per-particle node features seeding the
+        decoder's CG layers (the (1, 1) latent still provides the particle positions).
+        If None, falls back to the legacy ``tau_latent_scalars``/``tau_latent_vectors``.
+    tau_latent_scalars : int
+        Legacy shortcut for the multiplicity of scalars (0, 0) in the latent space.
+        Used only when ``tau_latent`` is None.
+    tau_latent_vectors : int
+        Legacy shortcut for the multiplicity of 4-vectors (1, 1) in the latent space.
+        Used only when ``tau_latent`` is None.
     num_output_particles : int
         The number of particles of jets in the latent space.
         For the hls4ml 150-p jet data, this should be 150.
@@ -75,8 +84,6 @@ class LGNDecoder(CGModule):
 
     def __init__(
         self,
-        tau_latent_scalars: int,
-        tau_latent_vectors: int,
         num_output_particles: int,
         tau_output_scalars: int,
         tau_output_vectors: int,
@@ -86,6 +93,9 @@ class LGNDecoder(CGModule):
         max_zf: List[int],
         weight_init: List[float],
         level_gain: List[float],
+        tau_latent: dict = None,
+        tau_latent_scalars: int = None,
+        tau_latent_vectors: int = None,
         activation: str = "leakyrelu",
         mlp: bool = True,
         mlp_depth: int = None,
@@ -99,6 +109,11 @@ class LGNDecoder(CGModule):
 
         if dtype is None:
             dtype = torch.float64
+
+        # Latent-space irreps as a {(k, n): multiplicity} dict (with legacy fallback).
+        tau_latent = resolve_tau_latent(
+            tau_latent, tau_latent_scalars, tau_latent_vectors
+        )
 
         num_cg_levels = len(num_channels) - 1
 
@@ -116,11 +131,26 @@ class LGNDecoder(CGModule):
 
         # Member varibles
         self.input_basis = "canonical"  # Will convert it from Cartesian
-        self.tau_latent_scalars = tau_latent_scalars
-        self.tau_latent_vectors = tau_latent_vectors
-        self.tau_dict = {
-            "input": GTau({(0, 0): tau_latent_scalars, (1, 1): tau_latent_vectors})
-        }
+
+        # The 4-vector irrep (1, 1) seeds the particle positions, so it is required.
+        if (1, 1) not in tau_latent:
+            raise ValueError(
+                "The decoder requires the 4-vector irrep (1, 1) in the latent space "
+                "(it seeds the particle positions). "
+                f"Found latent irreps: {sorted(tau_latent.keys())}."
+            )
+        self.tau_latent = GTau({weight: int(mult) for weight, mult in tau_latent.items()})
+        self.tau_latent_scalars = self.tau_latent[(0, 0)] if (0, 0) in tau_latent else 0
+        self.tau_latent_vectors = self.tau_latent[(1, 1)]
+        self.latent_weights = list(self.tau_latent.keys())
+        # Irreps beyond the scalar/4-vector; injected as extra CG-layer seed features.
+        self.extra_weights = [
+            weight for weight in self.latent_weights if weight not in [(0, 0), (1, 1)]
+        ]
+        # Irreps seeding the CG layers: scalar + 4-vector (from the positions' zonal
+        # functions) plus any extra latent irreps.
+        self.seed_weights = [(0, 0), (1, 1)] + self.extra_weights
+        self.tau_dict = {"input": dict(self.tau_latent)}
 
         self.num_output_particles = num_output_particles
 
@@ -134,19 +164,20 @@ class LGNDecoder(CGModule):
         self.mlp_width = mlp_width
         self.activation = activation
 
+        # Expand the latent into num_output_particles per-particle features for every
+        # latent irrep (the multiplicity axis becomes the particle axis downstream).
         tau_mix_to_graph = GTau(
-            {
-                **{weight: self.num_output_particles for weight in [(0, 0), (1, 1)]},
-                **{(l, l): 1 for l in range(2, max_zf[0] + 1)},
-            }
+            {weight: self.num_output_particles for weight in self.latent_weights}
         )
         self.latent_to_graph = MixReps(
-            tau_in=self.tau_dict["input"], tau_out=tau_mix_to_graph, **misc_info
+            tau_in=self.tau_latent, tau_out=tau_mix_to_graph, **misc_info
         )
 
-        tau_mix_to_cg = GTau({weight: num_channels[0] for weight in [(0, 0), (1, 1)]})
+        tau_mix_to_cg = GTau(
+            {weight: num_channels[0] for weight in self.seed_weights}
+        )
         self.input_func_node = MixReps(
-            tau_in=GTau({weight: 1 for weight in [(0, 0), (1, 1)]}),
+            tau_in=GTau({weight: 1 for weight in self.seed_weights}),
             tau_out=tau_mix_to_cg,
             **misc_info,
         )
@@ -250,7 +281,7 @@ class LGNDecoder(CGModule):
                 "covariance_test is set to True, but the full node features from the encoder is not passed in!"
             )
         # Get data
-        node_ps, node_scalars, node_mask, edge_mask = self._prepare_input(
+        node_ps, node_scalars, node_mask, edge_mask, extra_reps = self._prepare_input(
             latent_features
         )
 
@@ -262,7 +293,17 @@ class LGNDecoder(CGModule):
 
         if self.num_cg_levels > 0:
             rad_func_levels = self.rad_funcs(norms, edge_mask * (norms != 0).byte())
-            node_reps_in = self.input_func_node(zonal_functions_in)
+            # Seed the CG layers with the positions' zonal functions ((0, 0) and (1, 1))
+            # plus any extra latent irreps carried as per-particle node features.
+            seed = GVec(
+                {
+                    weight: extra_reps[weight]
+                    if weight in extra_reps
+                    else zonal_functions_in[weight]
+                    for weight in self.seed_weights
+                }
+            )
+            node_reps_in = self.input_func_node(seed)
             decoder_nodes_all.append(node_reps_in)
         else:
             rad_func_levels = []
@@ -304,32 +345,46 @@ class LGNDecoder(CGModule):
 
     def _prepare_input(
         self, latent_features: GVec
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, dict]:
         """
-        Extract input from data.
+        Expand the latent features into per-particle seeds for the decoder graph.
 
         Parameters
         ----------
-        data : `dict`
-            The jet data.
+        latent_features : `GVec`
+            The latent representation from the encoder.
 
         Returns
         -------
-        scalars : `torch.Tensor`
-            Tensor of scalars for each node.
-        node_ps: : `torch.Tensor`
-            Momenta of the nodes
+        node_ps : `torch.Tensor`
+            Momenta of the nodes (particle positions), in the canonical basis.
+        node_scalars : `torch.Tensor` or None
+            Tensor of scalars for each node (None if (0, 0) is absent from the latent).
         node_mask : `torch.Tensor`
             Node mask used for batching data.
-        edge_mask: `torch.Tensor`
+        edge_mask : `torch.Tensor`
             Edge mask used for batching data.
+        extra_reps : dict of {(k, n): `torch.Tensor`}
+            Per-particle features for latent irreps other than (0, 0) and (1, 1),
+            used as additional CG-layer seeds.
         """
         node_features = self.latent_to_graph(latent_features)
+        # The per-irrep multiplicity axis becomes the particle axis: (2, batch, N, dim).
         node_features = {
             weight: value.squeeze(-3) for weight, value in node_features.items()
         }
         node_ps = node_features[(1, 1)].to(device=self.device)
-        node_scalars = node_features[(0, 0)].to(device=self.device)
+        node_scalars = (
+            node_features[(0, 0)].to(device=self.device)
+            if (0, 0) in node_features
+            else None
+        )
+        # Extra latent irreps as per-particle seed features (add a tau=1 axis):
+        # (2, batch, N, 1, dim). They are already in the canonical basis.
+        extra_reps = {
+            weight: node_features[weight].unsqueeze(-2).to(device=self.device)
+            for weight in self.extra_weights
+        }
 
         batch_size = node_ps.shape[1]
         node_mask = torch.zeros(2, batch_size, self.num_output_particles).to(
@@ -342,7 +397,7 @@ class LGNDecoder(CGModule):
         node_ps = p_cplx_to_rep(node_ps)[(1, 1)].to(
             device=self.device
         )  # Convert to canonical basis
-        return node_ps, node_scalars, node_mask, edge_mask
+        return node_ps, node_scalars, node_mask, edge_mask, extra_reps
 
     @property
     def num_learnable_parameters(self) -> int:

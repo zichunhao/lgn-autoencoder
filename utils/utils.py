@@ -15,6 +15,28 @@ def create_model_folder(args: Namespace) -> str:
     return make_dir(osp.join(args.save_dir, get_model_fname(args)))
 
 
+def get_latent_tag(args: Namespace) -> str:
+    """
+    Build a short filename tag describing the latent-space irreps.
+
+    The legacy ``tauLS{scalars}_tauLV{vectors}`` form is kept when the latent contains
+    only scalars (0,0) and 4-vectors (1,1); otherwise a general tag listing each irrep
+    and its multiplicity is used, e.g. ``tauLatent_0-0x1_1-1x8_2-2x2``.
+    """
+    from lgn.models.utils import resolve_tau_latent
+
+    tau_latent = resolve_tau_latent(
+        getattr(args, "tau_latent_irreps", None),
+        args.tau_latent_scalars,
+        args.tau_latent_vectors,
+    )
+    if set(tau_latent.keys()) <= {(0, 0), (1, 1)}:
+        return f"tauLS{tau_latent.get((0, 0), 0)}_tauLV{tau_latent.get((1, 1), 0)}"
+    return "tauLatent_" + "_".join(
+        f"{k}-{n}x{mult}" for (k, n), mult in sorted(tau_latent.items())
+    )
+
+
 def get_model_fname(args: Namespace) -> str:
     encoder_cg = ""
     decoder_cg = ""
@@ -22,7 +44,7 @@ def get_model_fname(args: Namespace) -> str:
         encoder_cg += str(args.encoder_num_channels[i])
     for i in range(len(args.decoder_num_channels)):
         decoder_cg += str(args.decoder_num_channels[i])
-    model_fname = f"LGNAutoencoder_{args.jet_type}Jet_{args.map_to_latent}_tauLS{args.tau_latent_scalars}_tauLV{args.tau_latent_vectors}_encoder{encoder_cg}_decoder{decoder_cg}"
+    model_fname = f"LGNAutoencoder_{args.jet_type}Jet_{args.map_to_latent}_{get_latent_tag(args)}_encoder{encoder_cg}_decoder{decoder_cg}"
     if args.custom_suffix is not None:
         model_fname += f"_{args.custom_suffix}"
     return model_fname
@@ -156,13 +178,27 @@ def arcsinh(z):
 
 
 def get_compression_rate(
-    ls: int, lv: int, map_to_latent: str, vec_dim: int = 4, num_particles: int = 30
+    tau_latent: dict,
+    map_to_latent: str,
+    vec_dim: int = 4,
+    num_particles: int = 30,
 ) -> float:
     """
-    Get the compression rate based on the multiplicities of scalars and vectors in the latent space.
+    Get the compression rate based on the latent-space irreps and their multiplicities.
+
+    Parameters
+    ----------
+    tau_latent : dict of {(k, n): int}
+        Multiplicity of each latent irrep. Each irrep (k, n) contributes
+        (k + 1) * (n + 1) real components per multiplicity.
+    map_to_latent : str
+        The aggregation method; ``&``-concatenation scales the latent size.
     """
     input_params = vec_dim * num_particles
-    latent_params = 2 * (ls + 4 * lv)  # Complexified
+    # Complexified: each irrep (k, n) has (k + 1) * (n + 1) components, times 2 (complex).
+    latent_params = 2 * sum(
+        mult * (k + 1) * (n + 1) for (k, n), mult in tau_latent.items()
+    )
     ratio = latent_params / input_params
     if "&" in map_to_latent:
         return len(map_to_latent.split("&")) * ratio

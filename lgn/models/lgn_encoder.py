@@ -5,14 +5,14 @@ import logging
 
 from lgn.cg_lib import CGModule, ZonalFunctionsRel, ZonalFunctions
 from lgn.cg_lib.cg_dict import CGDict
-from lgn.cg_lib.zonal_functions import normsq4, rep_to_p
+from lgn.cg_lib.zonal_functions import normsq4, rep_to_p, repdot
 from lgn.g_lib import GTau, GVec
 
 from lgn.models.lgn_cg import LGNCG
 from lgn.nn import RadialFilters
 from lgn.nn import MixReps
 
-from lgn.models.utils import adapt_var_list
+from lgn.models.utils import adapt_var_list, resolve_tau_latent
 
 IMPLEMENTED_AGGREGATIONS = ("mix", "sum", "mean", "average", "min", "max")
 
@@ -27,8 +27,6 @@ class LGNEncoder(CGModule):
         num_input_particles: int,
         tau_input_scalars: int,
         tau_input_vectors: int,
-        tau_latent_scalars: int,
-        tau_latent_vectors: int,
         maxdim: int,
         num_basis_fn: int,
         num_channels: List[int],
@@ -42,6 +40,9 @@ class LGNEncoder(CGModule):
         scale: float = 1.0,
         jet_features: bool = False,
         map_to_latent: str = "mean",
+        tau_latent: dict = None,
+        tau_latent_scalars: int = None,
+        tau_latent_vectors: int = None,
         device: torch.device = None,
         dtype: torch.dtype = None,
         cg_dict: CGDict = None,
@@ -57,10 +58,6 @@ class LGNEncoder(CGModule):
         tau_input_vectors : int
             The multiplicity of vectors per particle.
             e.g. For the hls4ml 150p or 30p jet data, it is 1 (namely the particle 4-momentum).
-        tau_latent_scalars : int
-            Multiplicity of Lorentz scalars (0,0) in the latent_space.
-        tau_latent_vectors : int
-            Multiplicity of Lorentz 4-vectors (1,1) in the latent_space.
         maxdim : list of int
             Maximum weight in the output of CG products, expanded or truncated to list of
             length len(num_channels) - 1.
@@ -89,6 +86,22 @@ class LGNEncoder(CGModule):
                 - 'max': taking the maximum over all nodes.
                 - Any combination of ('sum', 'mean', 'min', 'max') with '+' to add all features.
                 - Any combination of ('sum', 'mean', 'min', 'max') with '&' to concatenate all features.
+        tau_latent : dict of {(k, n): int}, list of str, or None
+            Optional, default: None
+            Multiplicity of each Lorentz irrep (k, n) to keep in the latent space, e.g.
+            ``{(0, 0): 1, (1, 1): 8, (2, 2): 2}``. A list of ``"k,n:mult"`` tokens is also
+            accepted. Every requested irrep must be produced by the last CG layer, which
+            is controlled by ``maxdim`` (only (0,0) and (1,1) exist for maxdim=2; higher
+            irreps such as (2,2), (0,2), (2,0) require maxdim >= 3). If None, the latent
+            space falls back to the legacy ``tau_latent_scalars``/``tau_latent_vectors``.
+        tau_latent_scalars : int
+            Optional, default: None
+            Legacy shortcut for the multiplicity of Lorentz scalars (0,0) in the latent
+            space. Used only when ``tau_latent`` is None.
+        tau_latent_vectors : int
+            Optional, default: None
+            Legacy shortcut for the multiplicity of Lorentz 4-vectors (1,1) in the latent
+            space. Used only when ``tau_latent`` is None.
         activation : str
             Optional, default: 'leakyrelu'
             The activation function for lgn.LGNCG
@@ -121,6 +134,11 @@ class LGNEncoder(CGModule):
 
         if dtype is None:
             dtype = torch.float64
+
+        # Latent-space irreps as a {(k, n): multiplicity} dict (with legacy fallback).
+        tau_latent = resolve_tau_latent(
+            tau_latent, tau_latent_scalars, tau_latent_vectors
+        )
 
         num_cg_levels = len(num_channels) - 1
 
@@ -231,16 +249,31 @@ class LGNEncoder(CGModule):
                 }
             )
 
-        self.tau_output = {weight: 1 for weight in self.tau_cg_levels_node[-1].keys()}
-        self.tau_output[(0, 0)] = tau_latent_scalars
-        self.tau_output[(1, 1)] = tau_latent_vectors
-        self.tau_dict["latent"] = self.tau_output
+        # Only irreps produced by the last CG layer can be kept in the latent space.
+        available_weights = list(self.tau_cg_levels_node[-1].keys())
+        missing = [weight for weight in tau_latent if weight not in available_weights]
+        if missing:
+            raise ValueError(
+                f"Requested latent irreps {missing} are not produced by the last CG "
+                f"layer. Available irreps: {sorted(available_weights)}. Increase "
+                "`maxdim` or choose from the available irreps (only (0,0) and (1,1) "
+                "exist for maxdim=2; higher irreps require maxdim >= 3)."
+            )
+
+        # `mix_reps` mixes every available irrep (multiplicity 1 by default); the
+        # requested latent irreps get their configured multiplicity. The forward pass
+        # then keeps only the requested `self.latent_weights`.
+        self.tau_output = {weight: 1 for weight in available_weights}
+        for weight, mult in tau_latent.items():
+            self.tau_output[weight] = int(mult)
+        self.latent_weights = list(tau_latent.keys())
+        self.tau_latent = GTau({weight: int(mult) for weight, mult in tau_latent.items()})
+        self.tau_dict["latent"] = dict(self.tau_latent)
         self.mix_reps = MixReps(
             self.tau_cg_levels_node[-1], self.tau_output, **misc_info
         )
 
         self.scale = scale
-        self.tau_latent = self.tau_output
 
         self.__num_param = sum(
             p.nelement() for p in self.parameters() if p.requires_grad
@@ -320,14 +353,16 @@ class LGNEncoder(CGModule):
         # Mix
         # node_all[-1] is the updated feature in the last layer
         latent_features = self.mix_reps(node_features)
+        # Keep only the requested latent irreps (any (k, n) produced by the last CG layer)
         latent_features = GVec(
-            {weight: latent_features[weight] for weight in [(0, 0), (1, 1)]}
-        )  # Truncate higher order irreps than (1, 1)
+            {weight: latent_features[weight] for weight in self.latent_weights}
+        )
 
         # latent_features = self._aggregate(latent_features)
-        latent_features[(1, 1)] = rep_to_p(
-            latent_features[(1, 1)]
-        )  # Convert to Cartesian coordinates
+        # The 4-vector irrep (1, 1) is expressed in Cartesian coordinates; every other
+        # irrep is kept in the canonical basis (it has no Cartesian counterpart).
+        if (1, 1) in latent_features.keys():
+            latent_features[(1, 1)] = rep_to_p(latent_features[(1, 1)])
         latent_features = aggregate(self.map_to_latent, latent_features)
 
         if not covariance_test:
@@ -421,7 +456,7 @@ def aggregate(map_to_latent: str, latent_features: Union[GVec, torch.Tensor]) ->
     if map_to_latent.lower() == "sum":
         return GVec(
             {
-                weight: torch.sum(value, dim=-3, keepdim=True).unsqueeze(dim=-3)
+                weight: torch.sum(value, dim=-3, keepdim=True)
                 for weight, value in latent_features.items()
             }
         )
@@ -435,19 +470,17 @@ def aggregate(map_to_latent: str, latent_features: Union[GVec, torch.Tensor]) ->
         )
 
     elif map_to_latent.lower() == "max":
-        p4 = latent_features[(1, 1)]
         return GVec(
             {
-                weight: get_max_features(value)
+                weight: get_max_features(value, weight)
                 for weight, value in latent_features.items()
             }
         )
 
     elif map_to_latent.lower() == "min":
-        p4 = latent_features[(1, 1)]
         return GVec(
             {
-                weight: get_min_features(value)
+                weight: get_min_features(value, weight)
                 for weight, value in latent_features.items()
             }
         )
@@ -537,11 +570,38 @@ def gather_righthand(src, index, check=True):
     return torch.gather(src, dim=t_dim, index=index_expand)
 
 
-def get_min_features(feature: torch.Tensor):
+def get_invariant_scalar(feature: torch.Tensor, weight) -> torch.Tensor:
+    """
+    Real part of the canonical-basis Lorentz-invariant norm-squared of an irrep.
+
+    Ranking particles by this invariant keeps the min/max aggregation Lorentz-
+    equivariant for a general irrep. The invariant is broadcast over the complex
+    dimension so the same particle is selected for the real and imaginary parts.
+
+    Parameters
+    ----------
+    feature : torch.Tensor
+        A single irrep of shape (2, batch_size, num_particles, tau, feature_dim).
+    weight : tuple of int
+        The irrep weight (k, n).
+
+    Returns
+    -------
+    torch.Tensor
+        Ranking scalar of shape (2, batch_size, num_particles, tau).
+    """
+    inv = repdot({weight: feature}, {weight: feature})[weight][0].squeeze(-1)
+    return inv.unsqueeze(0).expand(2, *inv.shape)
+
+
+def get_min_features(feature: torch.Tensor, weight=None):
     # (2, batch_size, num_particles, tau, feature_dim)
     # -> (2, batch_size, tau, num_particles, feature_dim)
     features_permute = feature.permute(0, 1, 3, 2, 4)
-    if feature.shape[-1] == 1:
+    if weight not in (None, (0, 0), (1, 1)):
+        # General irrep: rank by the Lorentz-invariant norm-squared.
+        scalar = get_invariant_scalar(feature, weight)
+    elif feature.shape[-1] == 1:
         scalar = feature.min(dim=-1).values
     elif feature.shape[-1] == 4:
         scalar = get_msq(feature, keep_dim=False)
@@ -558,23 +618,28 @@ def get_min_features(feature: torch.Tensor):
     return gather_righthand(features_permute, indices).permute(0, 1, 3, 2, 4)
 
 
-def get_max_features(feature: torch.Tensor):
+def get_max_features(feature: torch.Tensor, weight=None):
     """
     Get the maximum features per tau based on the reference and a map function.
     """
     # (2, batch_size, num_particles, tau, feature_dim)
     # -> (2, batch_size, tau, num_particles, feature_dim)
     features_permute = feature.permute(0, 1, 3, 2, 4)
-    scalar = get_msq(feature, keep_dim=False)
-    indices = torch.max(scalar, dim=-2).indices.unsqueeze(-1)
-    if feature.shape[-1] == 1:
-        scalar = feature.max(dim=-1).values
-    elif feature.shape[-1] == 4:
-        scalar = get_msq(feature, keep_dim=False)
+    if weight not in (None, (0, 0), (1, 1)):
+        # General irrep: rank by the Lorentz-invariant norm-squared.
+        scalar = get_invariant_scalar(feature, weight)
     else:
-        raise NotImplementedError(
-            f"feature dimension {feature.shape[-1]} not supported yet"
-        )
+        scalar = get_msq(feature, keep_dim=False)
+    indices = torch.max(scalar, dim=-2).indices.unsqueeze(-1)
+    if weight in (None, (0, 0), (1, 1)):
+        if feature.shape[-1] == 1:
+            scalar = feature.max(dim=-1).values
+        elif feature.shape[-1] == 4:
+            scalar = get_msq(feature, keep_dim=False)
+        else:
+            raise NotImplementedError(
+                f"feature dimension {feature.shape[-1]} not supported yet"
+            )
 
     # aggregated_permuted = gather_righthand(features_permute, indices)
 

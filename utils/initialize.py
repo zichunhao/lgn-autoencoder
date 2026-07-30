@@ -1,6 +1,7 @@
 from argparse import Namespace
 from typing import Iterable, List, Optional, Tuple, Union
 from lgn.models import LGNEncoder, LGNDecoder
+from lgn.models.utils import resolve_tau_latent
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from utils.data.dataset import JetDataset
@@ -88,13 +89,20 @@ def initialize_test_data(
 def initialize_autoencoder(
     args: Namespace, print_models: bool = True
 ) -> Tuple[LGNEncoder, LGNDecoder]:
+    # Resolve the latent-space irreps ({(k, n): multiplicity}); --tau-latent-irreps
+    # takes precedence over the legacy --tau-latent-scalars/--tau-latent-vectors.
+    tau_latent = resolve_tau_latent(
+        getattr(args, "tau_latent_irreps", None),
+        args.tau_latent_scalars,
+        args.tau_latent_vectors,
+    )
+
     encoder = LGNEncoder(
         num_input_particles=args.num_jet_particles,
         tau_input_scalars=args.tau_jet_scalars,
         tau_input_vectors=args.tau_jet_vectors,
         map_to_latent=args.map_to_latent,
-        tau_latent_scalars=args.tau_latent_scalars,
-        tau_latent_vectors=args.tau_latent_vectors,
+        tau_latent=tau_latent,
         maxdim=args.maxdim,
         max_zf=[1],
         num_channels=args.encoder_num_channels,
@@ -116,12 +124,10 @@ def initialize_autoencoder(
 
     # multiplicity gets larger when concatenation is used
     mult = len(args.map_to_latent.split("&")) if "&" in args.map_to_latent else 1
-    tau_latent_scalars = args.tau_latent_scalars * mult
-    tau_latent_vectors = args.tau_latent_vectors * mult
+    tau_latent_decoder = {weight: mult * mult_w for weight, mult_w in tau_latent.items()}
 
     decoder = LGNDecoder(
-        tau_latent_scalars=tau_latent_scalars,
-        tau_latent_vectors=tau_latent_vectors,
+        tau_latent=tau_latent_decoder,
         num_output_particles=args.num_jet_particles,
         tau_output_scalars=args.tau_jet_scalars,
         tau_output_vectors=args.tau_jet_vectors,
