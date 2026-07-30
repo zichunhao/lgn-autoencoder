@@ -31,9 +31,15 @@ def main(args):
         logging.info(f"Setting random seed to {args.seed}")
         torch.manual_seed(args.seed)
     
+    from lgn.models.utils import resolve_tau_latent
+
+    tau_latent = resolve_tau_latent(
+        getattr(args, "tau_latent_irreps", None),
+        args.tau_latent_scalars,
+        args.tau_latent_vectors,
+    )
     compression_rate = get_compression_rate(
-        ls=args.tau_latent_scalars,
-        lv=args.tau_latent_vectors,
+        tau_latent=tau_latent,
         map_to_latent=args.map_to_latent,
         vec_dim=4,
         num_particles=args.num_jet_particles,
